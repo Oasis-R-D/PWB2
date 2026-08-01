@@ -1,0 +1,6 @@
+name = [PWB2] BASE PACK
+author = PackMan09
+description = [noupload]Riveting sequel to PWB
+tags = Tool
+version = 2
+preview_image = preview.png
