@@ -83,8 +83,11 @@ client.weaponDraws = {}
 ----------------------------------------------------------------------------------------------
 
 -- TO-DO: 
--- - figure out classes. Each weapon is it's own class but has the same baseclass. Main.lua then calls the objects functions (tick, init etc.)
--- - Loop based sound system, will make it so sounds follow the player proper (only on firing client?)
+-- -  figure out classes. Each weapon has it's own class to override certain things in order to do it's unique functions but
+--    they all have the same baseclass which contains most of the shared code. Main.lua then calls the objects functions (tick, init etc.)
+--    (basically maximizing abstraction)
+
+-- -  Loop based sound system, will make it so sounds follow the player proper (only on firing client?)
 
 ----------------------------------------------------------------------------------------------
 
@@ -103,6 +106,12 @@ function server.tick(dt)
    end
 end
 
+function server.update(dt)
+   local count = GetEventCount("playerdied")
+   for i=1, count do
+      local pos, playerThrew, dir = GetEvent("playerdied", i)
+   end
+end
 -- Load haptics, amongst other things
 function client.init()
    for i = 1, GLOBAL_WEAPONS_AMNT do

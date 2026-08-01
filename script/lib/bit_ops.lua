@@ -67,7 +67,6 @@ function hasFlags_OR(var, ...)
 	return false
 end
 
--- UNTESTED
 function hasFlags_AND(var, ...)
 	local flag_count = select("#", ...)
     
