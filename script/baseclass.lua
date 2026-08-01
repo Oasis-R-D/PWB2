@@ -1,16 +1,19 @@
-#version 2
-
--- 1. Define the class table
 local baseWeap = {}
 baseWeap.__index = baseWeap
 
--- Constructor
-function baseWeap:new(name)
-    -- Create a new instance table
-    local instance = setmetatable({}, baseWeap)
-    
-    -- Initialize properties
-    instance.name = name or "Unknown"
-    
-    return instance
+-- Values that ALL weapons share/use
+function baseWeap:initVars()
+    self.var = 2
 end
+
+function baseWeap:new(obj)
+    obj = obj or {}
+    setmetatable(obj, self)
+
+    -- Set up variables
+    baseWeap:initVars()
+
+    return obj
+end
+
+

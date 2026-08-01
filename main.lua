@@ -55,29 +55,17 @@ GLOBAL_WEAPONS_AMNT = #GLOBAL_WEAPONS -- only calculate this once
 
 -- GLOBALS
 #include "script/include/player.lua"
-
 #include "script/temp_ent.lua"
 #include "script/util.lua"
 
 -- WEAPONS
-#include "script/weapon_smg1.lua"
-#include "script/weapon_ar2.lua"
-#include "script/weapon_shotgun.lua"
-#include "script/weapon_crossbow.lua"
-#include "script/weapon_python.lua"
 #include "script/weapon_pistol.lua"
 
 -- MELEE
-#include "script/melee/weapon_crowbar.lua"
-#include "script/melee/weapon_stunstick.lua"
 
 -- SPECIAL
--- NONE
 
 -- ITEMS
-#include "script/items/medkit.lua"
-#include "script/items/weapon_grenade.lua"
-#include "script/items/weapon_slam.lua"
 
 server.weaponTicks = {}
 client.weaponTicks = {}
@@ -95,7 +83,8 @@ client.weaponDraws = {}
 ----------------------------------------------------------------------------------------------
 
 -- TO-DO: 
--- - redo 357 model?
+-- - figure out classes. Each weapon is it's own class but has the same baseclass. Main.lua then calls the objects functions (tick, init etc.)
+-- - Loop based sound system, will make it so sounds follow the player proper (only on firing client?)
 
 ----------------------------------------------------------------------------------------------
 
