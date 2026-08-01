@@ -7,7 +7,14 @@ function baseWeap:initVars()
     self.nextFire           = 0
     self.nextAltFire        = 0
 
+    -- can be used for shotgun pumpping, bolt cycling
+    -- or any post firing stuff really
+    self.pumptime           = 0
+
     self.inReload           = false
+
+    -- used for shotgun reload interrupting
+    self.specialReload      = 0
 
     -- True when gun is empty and player
     -- is still holding down attack keys
@@ -21,7 +28,7 @@ function baseWeap:initVars()
     self.ammoLoaded         = 0
     self.ammoAltLoaded      = 0
     
-
+    self.WpnAnimator        = ToolAnimator()
 end
 
 function baseWeap:new(obj)
@@ -40,9 +47,16 @@ end
 
 WEAPON_NOCLIP = -1
 
+-- These are overriden per weapon
 function baseWeap:PrimaryAttack()   end
 function baseWeap:SecondaryAttack() end
+function baseWeap:Reload()          end
 
+function baseWeap:PlayEmptySound()
+	--PlaySound("MOD/snd/357_cock1.ogg", POS, 0.8)
+end
+
+-- TO-DO: add GetToolInfo function that populates a table in the class which sets max clip, name, id and so forth
 --=========================================================================
 -- ItemPostFrame - Handles player inputs
 --=========================================================================
@@ -75,7 +89,7 @@ function baseWeap:ItemPostFrame()
 		--m_pPlayer->TabulateAmmo()
 		self:SecondaryAttack()
 	elseif fireKeyDown and self:CanAttack(self.nextFire, curTime) then
-		if (self.ammoLoaded == 0 and self:pszAmmo1()) or (maxClip == WEAPON_NOCLIP and 0 == m_pPlayer->m_rgAmmo[PrimaryAmmoIndex()]) then
+		if (self.ammoLoaded == 0 and self:pszAmmo1()) or (maxClip == WEAPON_NOCLIP and 0 == GetToolAmmo(TOOLID, p)) then
 			self.fireOnEmpty = true
         end
 
@@ -84,16 +98,16 @@ function baseWeap:ItemPostFrame()
 		self:PrimaryAttack()
 	elseif InputPressed("r", p) and maxClip ~= WEAPON_NOCLIP and not self.inReload then
 		-- reload when reload is pressed, or if no buttons are down and weapon is empty.
-		self:reload()
+		self:Reload()
 	elseif not fireKeyDown and not InputDown("grab", p) then
 		-- no fire buttons down
 
 		self.fireOnEmpty = false
 
-		if IsUseable() or self.nextFire >= curTime then
+		if self:IsUseable() or self.nextFire >= curTime then
 			-- weapon is useable. Reload if empty and weapon has waited as long as it has to after firing
 			if self.ammoLoaded == 0 and self.nextFire < curTime and (iFlags() & ITEM_FLAG_NOAUTORELOAD) == 0 then
-				self:reload()
+				self:Reload()
 				return
 			end
 		end
