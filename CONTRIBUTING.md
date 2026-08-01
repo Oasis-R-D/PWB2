@@ -3,7 +3,8 @@
 ## Reporting bugs
 The following information might help identify and resolve the issue:
 
-Screenshots and videos (if they're applicable given the issue nature) - attach them to the issue post.
+Screenshots and videos (if they're applicable given the issue nature).
+
 Console logs
 
 ## Requesting features
