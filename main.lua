@@ -54,12 +54,13 @@ GLOBAL_WEAPONS_AMNT = #GLOBAL_WEAPONS -- only calculate this once
 ----------------------------------------------------------------------------------------------
 
 -- GLOBALS
+#include "script/baseclass.lua"
 #include "script/include/player.lua"
 #include "script/temp_ent.lua"
 #include "script/util.lua"
 
 -- WEAPONS
-#include "script/weapon_pistol.lua"
+#include "script/childclass.lua"
 
 -- MELEE
 
@@ -89,21 +90,18 @@ client.weaponDraws = {}
 
 -- -  Loop based sound system, will make it so sounds follow the player proper (only on firing client?)
 
+-- -  Use death event to reset dead player's data
+
 ----------------------------------------------------------------------------------------------
 
 -- Declares weapons, pickup amounts
 -- Server doesn't have an option to be turned off since all weapons need it. Could automate that in the future though!
 function server.init()
-   for i = 1, GLOBAL_WEAPONS_AMNT do
-      server["init" .. GLOBAL_WEAPONS[i][1]]()
-      table.insert(server.weaponTicks, server["tick" .. GLOBAL_WEAPONS[i][1]]) 
-   end
+   childWeap:init_sv()
 end
 
 function server.tick(dt)
-   for i = 1, GLOBAL_WEAPONS_AMNT do
-      server.weaponTicks[i](dt)
-   end
+
 end
 
 function server.update(dt)
@@ -112,38 +110,18 @@ function server.update(dt)
       local pos, playerThrew, dir = GetEvent("playerdied", i)
    end
 end
+
 -- Load haptics, amongst other things
 function client.init()
-   for i = 1, GLOBAL_WEAPONS_AMNT do
-
-      -- check init
-      if not hasFlag(GLOBAL_WEAPONS[i][2], MF_CL_NOINIT) then
-         client["init" .. GLOBAL_WEAPONS[i][1]]()
-      end
-
-      -- check tick
-      if not hasFlag(GLOBAL_WEAPONS[i][2], MF_CL_NOTICK) then
-         table.insert(client.weaponTicks, client["tick" .. GLOBAL_WEAPONS[i][1]])
-      end
-
-      -- check HUD draw
-      if not hasFlag(GLOBAL_WEAPONS[i][2], MF_CL_NODRAW) then
-         table.insert(client.weaponDraws, client["draw" .. GLOBAL_WEAPONS[i][1]])
-      end
-   end
-
-   GLOBAL_WEAPON_CL_TICKS_AMNT = #client.weaponTicks
-   GLOBAL_WEAPON_DRAWS_AMNT = #client.weaponDraws
+   childWeap:init_cl()
 end
 
 -- Runs most weapon code
 function client.tick(dt)
-   if not GLOBAL_WEAPON_CL_TICKS_AMNT then return end
-
-   for i = 1, GLOBAL_WEAPON_CL_TICKS_AMNT do
-      client.weaponTicks[i](dt)
+   if GetPlayerTool(GetLocalPlayer()) == childWeap.toolID then
+      childWeap:tickPlayer(dt)
    end
-   
+
    client.SRC_ApplyPlayerPunch(dt)
 end
 
@@ -159,11 +137,5 @@ end
 
 -- Draws the magazine hud and scopes
 function client.draw()
-   if not GLOBAL_WEAPON_DRAWS_AMNT then return end
-   
-	if GetPlayerHealth() <= 0 or GetPlayerVehicle() ~= 0 then return end
-   
-   for i = 1, GLOBAL_WEAPON_DRAWS_AMNT do
-      client.weaponDraws[i]()
-   end
+	childWeap:DrawHUD()
 end

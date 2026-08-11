@@ -1,0 +1,27 @@
+<group name="instance=MOD/models/xml/smg1.xml" pos="0.0 0.0 0.0" rot="0.0 0.0 0.0">
+	<group name="eye_space">
+		<location name="fp_action" 	tags="name=fp_action" 	pos="0.2 -0.3 -0.4" 	rot="3.0 1.0 0.0"/>
+		<location name="fp_run" 	tags="name=fp_run" 		pos="0.2 -0.4 -0.4" 	rot="20.0 40.0 0.0"/>
+		<location name="tp_action" 	tags="name=tp_action" 	pos="0.1 -0.2 -0.15"/>
+		<location name="tp_run" 	tags="name=tp_run" 		pos="0.1 -0.6 -0.1" 	rot="20.4 44.1 -22.5"/>
+		<location name="tp_crouch" 	tags="name=tp_crouch" 	pos="0.1 -0.5 -0.15" 	rot="20.4 64.1 -22.5"/>
+	</group>
+	<group name="tool_space">
+		<body pos="0.0 0.1 0.1" dynamic="false">
+			<vox pos="0.02 -0.08 -0.32" 	texture="12 0.5" blendtexture="3 0.1" file="MOD/models/smg1.vox" object="body" 		scale="0.2"/>
+			<vox pos="0.02 -0.22 -0.16" 	texture="12 0.5" blendtexture="3 0.1" file="MOD/models/smg1.vox" object="grip" 		scale="0.2"/>
+			<vox pos="0.02 -0.2 -0.48" 		texture="23 0.5" blendtexture="7 0.1" file="MOD/models/smg1.vox" object="foregrip" 	scale="0.1"/>
+			<vox pos="0.016 0.0667 -0.62" 	texture="11 0.5" blendtexture="2 0.1" file="MOD/models/smg1.vox" object="Barrels" 	scale="0.06666"/>
+			<vox pos="0.016 0.16 -0.3" 		texture="12 0.5" blendtexture="3 0.1" file="MOD/models/smg1.vox" object="rail" 		scale="0.1"/>
+			<vox pos="0.016 0.16 -0.24" 	texture="12 0.5" blendtexture="3 0.1" file="MOD/models/smg1.vox" object="sight" 	scale="0.1"/>
+		</body>
+		<location name="tp_action_rh" tags="name=tp_action_rh ik_hand" pos="0.0 -0.1 -0.2" rot="0.0 90.0 0.0"/>
+		<location name="tp_run_rh" tags="name=tp_run_rh ik_hand" pos="0.0 -0.1 -0.2" rot="0.0 90.0 0.0"/>
+		<location name="tp_crouch_rh" tags="name=tp_crouch_rh ik_hand" pos="0.0 -0.1 -0.2" rot="0.0 90.0 0.0"/>
+		<location name="tp_action_lh" tags="name=tp_action_lh ik_hand" pos="0.05 -0.1 -0.55" rot="0.0 90.0 0.0"/>
+		<location name="tp_run_lh" tags="name=tp_run_lh ik_hand" pos="0.05 -0.1 -0.5" rot="0.0 90.0 0.0"/>
+		<location name="tp_crouch_lh" tags="name=tp_crouch_lh ik_hand" pos="0.05 -0.1 -0.5" rot="0.0 90.0 0.0"/>
+		<location name="muzzle" tags="name=muzzle" pos="0.02 0.12 -0.7" rot="0 0 0"/>
+	</group>
+</group>
+
