@@ -3,6 +3,7 @@ local baseWeap = {}
 function baseWeap:toolInfo()
 	self.toolID = "pwb2weap"
 	self.toolName = "PWB2 Baseweapon"
+	self.ammoLoadedMax = 0
 end
 
 -- Values that ALL weapons share/use
@@ -73,15 +74,13 @@ end
 -- tickPlayer - Handles player inputs
 --=========================================================================
 function baseWeap:tickPlayer()
-	local maxClip = self:iMaxClip()
-
 	self.ammo = GetToolAmmo(self.toolID, self.owner)
 
     local curTime = GetTime()
 
 	if self.inReload and m_pPlayer->m_flNextAttack <= curTime then
 		-- complete the reload.
-		self.ammoLoaded = math.min(maxClip, m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType])
+		self.ammoLoaded = math.min(self:ammoLoadedMax, m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType])
 
 		self.inReload = false
     end
@@ -99,12 +98,12 @@ function baseWeap:tickPlayer()
 
 		self:SecondaryAttack()
 	elseif fireKeyDown and self:CanAttack(self.nextFire, curTime) then
-		if (self.ammoLoaded == 0 and self:pszAmmo1()) or (maxClip == WEAPON_NOCLIP and 0 == GetToolAmmo(TOOLID, p)) then
+		if (self.ammoLoaded == 0 and self:pszAmmo1()) or (self:ammoLoadedMax == WEAPON_NOCLIP and 0 == GetToolAmmo(TOOLID, p)) then
 			self.fireOnEmpty = true
         end
 
 		self:PrimaryAttack()
-	elseif InputPressed("r", self.owner) and maxClip ~= WEAPON_NOCLIP and not self.inReload then
+	elseif InputPressed("r", self.owner) and self:ammoLoadedMax ~= WEAPON_NOCLIP and not self.inReload then
 		-- reload when reload is pressed, or if no buttons are down and weapon is empty.
 		self:Reload()
 	elseif not fireKeyDown and not InputDown("grab", self.owner) then
