@@ -3,9 +3,6 @@ childWeap = {}
 -- Per weapon constants
 -- TO-DO: remove
 local RELOAD_TIME = 1.5 -- seconds
-local RELOAD_SOUND = "MOD/snd/smg1_reload.ogg"
-local ALT_FIRESOUND = "MOD/snd/smg1_altfire.ogg"
-local PRIM_FIRESOUND = "MOD/snd/smg1_fire.ogg"
 local RECOIL_AMNT = 0.1
 local FIRERATE = 0.075
 local ALTFIRERATE = 1
