@@ -338,6 +338,19 @@ end
 -- Weapon UTILs
 ----------------------------------------------------------------------------------------------
 
+-- Reset player data on death
+function checkDeathReset()
+	local count = GetEventCount("playerdied")
+   	for i=1, count do
+		local p, _, _ = GetEvent("playerdied", i)
+		
+		local wpns = PLAYER_WEAPONS[p]
+		for i=1, #wpns do
+			wpns[i]:initVars(p) -- this SHOULD reset weapons on death
+		end
+   	end
+end
+
 -- TO-DO: add firer's velocity?
 local MUZZLEFLASH_SPRITE = false
 function muzzleFlash(pos, size, color)

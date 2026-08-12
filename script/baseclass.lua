@@ -40,6 +40,10 @@ function baseWeap:WeaponSounds()
 end
 
 -- Values that ALL weapons share/use
+-- override initVars to add new variables
+-- add 'baseWeap.initVars(self, owner)'
+-- at the beginning to override vars
+-- or end to add more vars
 function baseWeap:initVars(owner)
 	-- CLIENT VARS
 	if client then

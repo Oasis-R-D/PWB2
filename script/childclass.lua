@@ -38,6 +38,15 @@ childWeap.ammoPickupSize	= childWeap.ammoLoadedMax	-- defaults to full mag
 childWeap.flags				= 0							-- weapon flags
 childWeap.snds				= 0							-- temp value, will be set to the sound array on init
 
+-- override initVars to add new variables
+function childWeap:initVars(owner)
+	if client then
+		self.timeFiring = 0
+	end
+
+	baseWeap.initVars(self, owner)
+end
+
 --=========================================================================
 -- Weapon functions
 --=========================================================================
@@ -69,19 +78,17 @@ function childWeap:PrimaryAttack()
 
 		ServerCall("server.PrimaryAttack", self.owner)
 
-		--client.DoMachineGunKick(1, self.timeFiring, 2)
+		client.DoMachineGunKick(1, self.timeFiring, 2)
 
 		-- shell ejection
 		ejectBrass(self.owner, CASING_ORG, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
 	end
 
-	--[[
 	if GetTime() - self.lastFireTime < 0.1 then
 		self.timeFiring = self.timeFiring + 0.1
 	else
 		self.timeFiring = 0
 	end
-	]]
 
 	muzzleFlash(mt.pos, 2)
 

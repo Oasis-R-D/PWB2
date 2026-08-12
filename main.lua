@@ -116,10 +116,7 @@ function server.tick(dt)
 end
 
 function server.update(dt)
-   local count = GetEventCount("playerdied")
-   for i=1, count do
-      local pos, playerThrew, dir = GetEvent("playerdied", i)
-   end
+   checkDeathReset()
 end
 
 -- Load haptics, amongst other things
@@ -159,6 +156,8 @@ end
 
 -- Global VFX
 function client.update(dt)
+   checkDeathReset()
+
    client.GS_ApplyPlayerPunch(dt)
 
    HUD_TempEntUpdate_(
@@ -170,6 +169,8 @@ end
 -- Draws the magazine hud and scopes
 function client.draw()
    if not PLAYER_WEAPONS then return end
+   
+   if GetPlayerHealth() <= 0 or GetPlayerVehicle() ~= 0 then return end
 
    local tool = GetPlayerTool(GetLocalPlayer())
    local wpns = PLAYER_WEAPONS[GetLocalPlayer()]
