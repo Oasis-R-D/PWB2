@@ -30,27 +30,6 @@ GLOBAL_10DEGREES = 0.08716
 GLOBAL_15DEGREES = 0.13053
 GLOBAL_20DEGREES = 0.17365
 
--- {func suffix, main flags}
-GLOBAL_WEAPONS = {
-   { "CRBR",    addFlag(0, MF_CL_NODRAW) },
-   { "STNSTK",  addFlag(0, MF_CL_NODRAW) },
-
-   { "SMG1",    0  },
-   { "AR2",     0  },
-   { "PYTH",    0  },
-   { "PIST9MM", 0  },
-   { "SG",      0  },
-
-   { "CROSS",   addFlag(0, MF_CL_NODRAW) },
-
-   { "FRAG",    addFlag(0, MF_CL_NODRAW) },
-   { "SLAM",    addFlag(0, MF_CL_NODRAW) },
-
-   { "MED",     addFlags(0, MF_CL_NODRAW, MF_CL_NOINIT, MF_CL_NOTICK) },
-}
-
-GLOBAL_WEAPONS_AMNT = #GLOBAL_WEAPONS -- only calculate this once
-
 ----------------------------------------------------------------------------------------------
 
 -- GLOBALS
@@ -71,6 +50,15 @@ GLOBAL_WEAPONS_AMNT = #GLOBAL_WEAPONS -- only calculate this once
 server.weaponTicks = {}
 client.weaponTicks = {}
 client.weaponDraws = {}
+
+GLOBAL_WEAPONS = {
+   g_childWeap,
+}
+
+GLOBAL_WEAPONS_AMNT = #GLOBAL_WEAPONS -- only calculate this once
+
+for weapon=0, GLOBAL_WEAPONS_AMNT in do
+end
 ----------------------------------------------------------------------------------------------
 
 -- this file calls all weapon functions. To add your weapon just add it's functions here (make sure to #include it's lua file).

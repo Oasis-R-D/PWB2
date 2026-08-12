@@ -1,3 +1,4 @@
+-- local for the table, global for the reference
 local childWeap = {}
 g_childWeap = childWeap
 
