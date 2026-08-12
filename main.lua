@@ -58,27 +58,13 @@ GLOBAL_20DEGREES = 0.17365
 -- add players via 'PLCHILD = baseWeap.new(CHILD, PLCHILD, owner)' 
 -- and then add PLCHILD's functions to the tick arrays
 ------------------------------------------------------------------
-GLOBAL_WEAPONS = {
-   g_childWeap,
-}
+GLOBAL_WEAPONS = {}
+GLOBAL_WEAPONS[1] = g_childWeapon
 
 -- pointers to every player's weapons
 PLAYER_WEAPONS = {}
 
 GLOBAL_WEAPONS_AMNT = #GLOBAL_WEAPONS -- only calculate this once
-
-for weapon=1, GLOBAL_WEAPONS_AMNT do
-   if server then
-      --server.weaponTicks = {}
-      --table.insert( server.weaponTicks, GLOBAL_WEAPONS[i]:)
-   else
-      client.weaponTicks = {}
-      table.insert( client.weaponTicks, GLOBAL_WEAPONS[i]:tickPlayer() )
-
-      client.weaponDraws = {}
-      table.insert( client.weaponDraws, GLOBAL_WEAPONS[i]:DrawHUD() )
-   end
-end
 
 ----------------------------------------------------------------------------------------------
 
@@ -108,7 +94,7 @@ end
 -- Server doesn't have an option to be turned off since all weapons need it. Could automate that in the future though!
 function server.init()
    for weapon=1, GLOBAL_WEAPONS_AMNT do
-      GLOBAL_WEAPONS_AMNT[i]:init_sv()
+      baseWeap.init_sv(GLOBAL_WEAPONS[weapon])
    end
 end
 
@@ -117,7 +103,7 @@ function server.tick(dt)
       PLAYER_WEAPONS[p] = {}
       local pushback = table.insert
       for weapon=1, GLOBAL_WEAPONS_AMNT do
-         local wpnPlyr = baseWeap.new(GLOBAL_WEAPONS_AMNT[weapon], wpnPlyr, p) -- make a new weapon for this player
+         local wpnPlyr = baseWeap:new(GLOBAL_WEAPONS[weapon], p) -- make a new weapon for this player
 		   pushback(PLAYER_WEAPONS[p], wpnPlyr)
          SetToolEnabled(wpnPlyr.toolID, true, p)
 		   SetToolAmmo(wpnPlyr.toolID, 9999, p)
@@ -139,7 +125,7 @@ end
 -- Load haptics, amongst other things
 function client.init()
    for weapon=1, GLOBAL_WEAPONS_AMNT do
-      GLOBAL_WEAPONS_AMNT[i]:init_cl()
+      baseWeap.init_cl(GLOBAL_WEAPONS[weapon])
    end
 end
 
@@ -149,7 +135,7 @@ function client.tick(dt)
       PLAYER_WEAPONS[p] = {}
       local pushback = table.insert
       for weapon=1, GLOBAL_WEAPONS_AMNT do
-         local wpnPlyr = baseWeap.new(GLOBAL_WEAPONS_AMNT[weapon], wpnPlyr, p) -- make a new weapon for this player
+         local wpnPlyr = baseWeap:new(GLOBAL_WEAPONS[weapon], p) -- make a new weapon for this player
 		   pushback(PLAYER_WEAPONS[p], wpnPlyr)
       end
 	end
@@ -158,9 +144,8 @@ function client.tick(dt)
       PLAYER_WEAPONS[p] = nil
    end
 
-   for p in Players() do
+   for p, wpns in pairs(PLAYER_WEAPONS) do
       local tool = GetPlayerTool(p)
-      local wpns = PLAYER_WEAPONS[p]
       for i=1, #wpns do
          if tool == wpns[i].toolID then
             wpns[i]:tickPlayer(dt)
@@ -184,6 +169,8 @@ end
 
 -- Draws the magazine hud and scopes
 function client.draw()
+   if not PLAYER_WEAPONS then return end
+
    local tool = GetPlayerTool(GetLocalPlayer())
    local wpns = PLAYER_WEAPONS[GetLocalPlayer()]
    for i=1, #wpns do

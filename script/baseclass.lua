@@ -9,11 +9,17 @@ baseWeap.ammoLoadedMax 		= 0							-- max clip 	 	-- -1 for no clip (pulls from 
 baseWeap.ammoAltLoadedMax	= 0 						-- max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
 baseWeap.ammoPickupSize		= baseWeap.ammoLoadedMax	-- defaults to full mag
 baseWeap.flags				= 0							-- weapon flags
-
+baseWeap.snds				= 0
 
 function baseWeap:init_sv()
 	-- must be called like this due to how static vars work
 	baseWeap.init_tool(self)
+	baseWeap.init_sfx(self)
+end
+
+function baseWeap:init_cl()
+	-- must be called like this due to how static vars work
+	baseWeap.init_sfx(self)
 end
 
 function baseWeap:init_tool()
@@ -21,10 +27,11 @@ function baseWeap:init_tool()
 	SetToolAmmoPickupAmount(self.toolID, self.ammoPickupSize)
 end
 
-function baseWeap:init_cl()
+function baseWeap:init_sfx()
+	self.snds = PrecacheSFXArray(self:WeaponSounds())
 end
 
--- loads sounds, override per weapon
+-- sound data for PrecacheSFXArray, override per weapon
 function baseWeap:WeaponSounds()
 	return {
 --  		   [SOUND]		 [load to]	[dist]
@@ -33,7 +40,7 @@ function baseWeap:WeaponSounds()
 end
 
 -- Values that ALL weapons share/use
-function baseWeap:initVars()
+function baseWeap:initVars(owner)
 	-- CLIENT VARS
 	if client then
 		-- compare against GetTime()
@@ -72,26 +79,27 @@ function baseWeap:initVars()
 	end
 
 	-- which player owns this instance
-	
-	if not self.snds then
-		self.snds				= self:PrecacheSFXArray(self:WeaponSounds())
-	end
-
 	self.owner					= owner
 end
 
 -- to add a new weapon just do CHILD = baseWeap:new(CHILD, owner) where CHILD is {}
 -- to add a weapon to a player do PLCHILD = baseWeap.new(CHILD, PLCHILD, owner)
 function baseWeap:new(obj, owner)
-	owner = owner or -1
-    obj = obj or {}
-    setmetatable(obj, self)
-	self.__index = self
+    owner = owner or -1
 
-    -- Set up variables
-    obj:initVars(owner)
+    -- make new table
+    local instance = {}
+    if obj then
+        for k, v in pairs(obj) do
+            instance[k] = v
+        end
+    end
 
-    return obj
+    setmetatable(instance, self)
+    self.__index = self
+
+    instance:initVars(owner)
+    return instance
 end
 
 WEAPON_NOCLIP = -1
@@ -291,18 +299,17 @@ function baseWeap:DefaultReload(iClipSize, fDelay)
 	return true
 end
 
-function baseWeap:PrecacheSFXArray(arr)
+function PrecacheSFXArray(arr)
 	local precachedSounds = {}
 	for i, sounddata in ipairs(arr) do
 		if server and sounddata[2] == "sv" then
-			DebugPrint("server sound: " .. sounddata[1] .. "attn: " .. sounddata[3])
 			table.insert(precachedSounds, LoadSound(sounddata[1], sounddata[3]))
 		elseif client and sounddata[2] == "cl" then
 			table.insert(precachedSounds, LoadSound(sounddata[1], sounddata[3]))
 		end
 	end
 
-	self.WeaponSounds = nil -- don't need this anymore
+	--self.WeaponSounds = nil -- don't need this anymore
 
 	return precachedSounds
 end

@@ -1,6 +1,6 @@
 -- local for the table, global for the reference
 local childWeap = {}
-g_childWeap = childWeap
+g_childWeapon = childWeap
 
 -- Per weapon constants
 -- TO-DO: remove
@@ -12,6 +12,16 @@ local DAMAGE = 0.4
 local PLAYERDAMAGE = 0.05
 local MAX_RANGE = 100.0
 local CASING_ORG = Vec(0.02, 0.15, -0.15)
+
+--=========================================================================
+-- Define the weapon's SFX
+--=========================================================================
+
+function childWeap:WeaponSounds()
+	return {
+		{"MOD/snd/smg1_fire.ogg", "sv", 10}
+	}
+end
 
 --=========================================================================
 -- Define the weapon and it's variables
@@ -26,23 +36,7 @@ childWeap.ammoLoadedMax 	= 45						-- max clip 	 	-- -1 for no clip (pulls from 
 childWeap.ammoAltLoadedMax	= -1 						-- max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
 childWeap.ammoPickupSize	= childWeap.ammoLoadedMax	-- defaults to full mag
 childWeap.flags				= 0							-- weapon flags
-
-function childWeap:init_sv()
-	-- must be called like this due to how static vars work
-	baseWeap.init_tool(self)
-end
-
-function childWeap:init_cl()
-	baseWeap.init_cl(self) -- does nothing currently
-	
-	self.timeFiring = 0
-end
-
-function childWeap:WeaponSounds()
-	return {
-		{"MOD/snd/smg1_fire.ogg", "sv", 10}
-	}
-end
+childWeap.snds				= 0							-- temp value, will be set to the sound array on init
 
 --=========================================================================
 -- Weapon functions
@@ -54,7 +48,7 @@ function server.PrimaryAttack(p)
 	local pos, dir = getAimVector(GetPlayerEyeTransform(p).pos, MAX_RANGE, GLOBAL_5DEGREES, p)
 	
 	server.ShootHook(pos, dir, "bullet", DAMAGE, PLAYERDAMAGE, MAX_RANGE, p, childWeap.toolID, childWeap.toolName)
-	
+
 	StopSound(childWeap.snds[1])
 	PlaySound(childWeap.snds[1], mt.pos, 300)
 
@@ -68,24 +62,26 @@ function childWeap:PrimaryAttack()
 		return
 	end
 
-	local mt = GetToolLocationWorldTransform("muzzle", p)
+	local mt = GetToolLocationWorldTransform("muzzle", self.owner)
 
-	if true or IsPlayerLocal(self.owner) then
+	if IsPlayerLocal(self.owner) then
 		PointLight(mt.pos, 1, 0.7, 0.5, 3)
 
 		ServerCall("server.PrimaryAttack", self.owner)
 
-		client.DoMachineGunKick(1, self.timeFiring, 2)
+		--client.DoMachineGunKick(1, self.timeFiring, 2)
 
 		-- shell ejection
-		ejectBrass(p, CASING_ORG, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
+		ejectBrass(self.owner, CASING_ORG, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
 	end
 
+	--[[
 	if GetTime() - self.lastFireTime < 0.1 then
 		self.timeFiring = self.timeFiring + 0.1
 	else
 		self.timeFiring = 0
 	end
+	]]
 
 	muzzleFlash(mt.pos, 2)
 
