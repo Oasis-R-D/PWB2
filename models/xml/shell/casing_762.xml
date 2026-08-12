@@ -1,0 +1,6 @@
+<group name="instance=MOD/models/xml/shell/casing_762.xml" pos="0.0 0.0 0.0" rot="0.0 0.0 0.0">
+	<body dynamic="false">
+		<vox pos="0.0 0.0 0.0" rot="0.0 0.0 0.0" texture="17 0.7" blendtexture="4 0.2" collide="false" file="MOD/models/shell/casing_556.vox" scale="0.0825"/>
+	</body>
+</group>
+

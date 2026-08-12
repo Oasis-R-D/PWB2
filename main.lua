@@ -101,7 +101,10 @@ function server.init()
 end
 
 function server.tick(dt)
-
+   for p in PlayersAdded() do
+		SetToolEnabled(childWeap.toolID, true, p)
+		SetToolAmmo(childWeap.toolID, 250, p)
+	end
 end
 
 function server.update(dt)
@@ -137,5 +140,7 @@ end
 
 -- Draws the magazine hud and scopes
 function client.draw()
-	childWeap:DrawHUD()
+   if GetPlayerTool(GetLocalPlayer()) == childWeap.toolID then
+	   childWeap:DrawHUD()
+   end
 end

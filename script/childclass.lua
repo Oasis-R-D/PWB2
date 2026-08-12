@@ -6,16 +6,12 @@ local RELOAD_TIME = 1.5 -- seconds
 local RELOAD_SOUND = "MOD/snd/smg1_reload.ogg"
 local ALT_FIRESOUND = "MOD/snd/smg1_altfire.ogg"
 local PRIM_FIRESOUND = "MOD/snd/smg1_fire.ogg"
-local CLIP_SIZE = 45
-local PICKUP_SIZE = 45
 local RECOIL_AMNT = 0.1
 local FIRERATE = 0.075
 local ALTFIRERATE = 1
 local DAMAGE = 0.4
 local PLAYERDAMAGE = 0.05
 local MAX_RANGE = 100.0
-local WPNID = "hl2smg1"
-local WPNNAME = "Combine SMG"
 local CASING_ORG = Vec(0.02, 0.15, -0.15)
 
 --=========================================================================
@@ -23,65 +19,87 @@ local CASING_ORG = Vec(0.02, 0.15, -0.15)
 --=========================================================================
 
 -- Values for this specific weapon
-function childWeap:toolInfo()
-	self.model				= "MOD/models/xml/smg1.xml"
-	self.toolID 			= "childweap"
-	self.toolName 			= "PWB2 Weapon"
-	self.ammoLoadedMax 		= 50 -- max clip 	-- -1 for no clip (pulls from reserve)
-	self.ammoAltLoadedMax	= -1 -- max alt clip -- -1 for no clip (pulls from reserve) 0 for no alt fire
-	self.flags				= 0
-end
-
-function childWeap:initVars(owner)
-    baseWeap:initVars(owner)
-end
+childWeap.model				= "MOD/models/xml/smg1.xml" -- path to the XML model file
+childWeap.toolID 			= "childweap"				-- used by the engine. lowercase and no spaces
+childWeap.toolName 			= "PWB2 Weapon"				-- shown in killfeed
+childWeap.toolSlot			= 3
+childWeap.ammoLoadedMax 	= 45						-- max clip 	 	-- -1 for no clip (pulls from reserve)
+childWeap.ammoAltLoadedMax	= -1 						-- max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
+childWeap.ammoPickupSize	= childWeap.ammoLoadedMax	-- defaults to full mag
+childWeap.flags				= 0							-- weapon flags
 
 function childWeap:init_sv()
 	childWeap = baseWeap:new(childWeap, GetLocalPlayer())
-	RegisterTool(self.toolID, self.toolName, self.model, 3)
-	SetToolAmmoPickupAmount(self.toolID, PICKUP_SIZE)
+	baseWeap.init_sv(self) -- defines the tool
 end
 
 function childWeap:init_cl()
 	childWeap = baseWeap:new(childWeap, GetLocalPlayer())
+	baseWeap.init_cl(self) -- does nothing currently
+	
+	self.timeFiring = 0
+end
+
+function childWeap:WeaponSounds()
+	return {
+		{"MOD/snd/smg1_fire.ogg", "sv", 10}
+	}
 end
 
 --=========================================================================
 -- Weapon functions
 --=========================================================================
 
-function server.primaryFireSMG1(p)
+function server.PrimaryAttack(p)
 	local mt = GetToolLocationWorldTransform("muzzle", p)
 
 	local pos, dir = getAimVector(GetPlayerEyeTransform(p).pos, MAX_RANGE, GLOBAL_5DEGREES, p)
 	
 	server.ShootHook(pos, dir, "bullet", DAMAGE, PLAYERDAMAGE, MAX_RANGE, p, childWeap.toolID, childWeap.toolName)
-
-	--PlaySound(LoadSound(PRIM_FIRESOUND), mt.pos, 300)
+	
+	StopSound(childWeap.snds[1])
+	PlaySound(childWeap.snds[1], mt.pos, 300)
 
 	server.depleteAmmo(p, childWeap.toolID)
 end
 
 function childWeap:PrimaryAttack()
-	local mt = GetToolLocationWorldTransform("muzzle", p)
-	if mt == nil then
+	if self.ammoLoaded <= 0 then
+		self:PlayEmptySound()
+		self.nextFire = GetTime() + 0.15
 		return
 	end
 
-	PointLight(mt.pos, 1, 0.7, 0.5, 3)
+	local mt = GetToolLocationWorldTransform("muzzle", p)
 
-	if IsPlayerLocal(self.owner) then
-		ServerCall("server.primaryFireSMG1", self.owner)
+	if true or IsPlayerLocal(self.owner) then
+		PointLight(mt.pos, 1, 0.7, 0.5, 3)
 
-		client.DoMachineGunKick(1, data.timeFiring, 2)
+		ServerCall("server.PrimaryAttack", self.owner)
 
-		--PlayHaptic(shootHaptic, 1)
+		client.DoMachineGunKick(1, self.timeFiring, 2)
 
 		-- shell ejection
-		--ejectBrass(p, CASING_ORG, Vec(1, -0.2, 0), "MOD/prefab/casing_9mm.xml", FSFX_BRASS)
+		ejectBrass(p, CASING_ORG, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
 	end
-	
+
+	if GetTime() - self.lastFireTime < 0.1 then
+		self.timeFiring = self.timeFiring + 0.1
+	else
+		self.timeFiring = 0
+	end
+
 	muzzleFlash(mt.pos, 2)
 
-	data.ammoLoaded = data.ammoLoaded - 1
+	self.ammoLoaded = self.ammoLoaded - 1
+
+	self.nextFire = self:GetNextAttackDelay(0.075)
+end
+
+function childWeap:Reload()
+	self:DefaultReload(self.ammoLoadedMax50, 1.5)
+end
+
+function childWeap:WeaponIdle()
+	self.playEmptySound = true
 end

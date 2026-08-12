@@ -7,15 +7,11 @@ function CL_TempEntAlloc(org, model)
 	local tempent = newTempEnt()
 
 	tempent.flags = FTENT_NONE
-	tempent.die = GetTime() + 0.75
+	tempent.die = 0
 	tempent.entity.model = Spawn(model, Transform(org))[1]
 	tempent.fadeSpeed = 0.5
 	tempent.hitSound = 0
-	tempent.clientIndex = -1
 	tempent.bounceFactor = 1.0
-	tempent.hitcallback = 0
-	tempent.callback = 0
-	tempent.priority = 0
 	tempent.entity.origin = org
 
 	local index = findArrayOpening(gpTempEnts)
@@ -29,11 +25,12 @@ function R_TempModel(pos, velocity, angles, life, model, soundtype)
 	local tempent = CL_TempEntAlloc(pos, model)
 
 	tempent.entity.angles = angles
-	tempent.flags = addFlags(FTENT_NONE, FTENT_COLLIDEWORLD, FTENT_GRAVITY, FTENT_BUOYANT)
+	tempent.flags = 1048614 --addFlags(FTENT_NONE, FTENT_COLLIDEWORLD, FTENT_GRAVITY, FTENT_BUOYANT, FTENT_ROTATE)
 	tempent.hitSound = soundtype
 	tempent.frameMax = 0 -- tempent.frameMax = framecount
 	
 	tempent.entity.velocity = velocity
+	tempent.entity.angleVel = GetRandomDirection(256) --Vec(GetRandomFloat(-512, 511), GetRandomFloat(-256, 255), GetRandomFloat(-256, 255))
 	tempent.die = life + GetTime()
 end
 
@@ -195,38 +192,6 @@ function client.DoMachineGunKick(maxVerticleKickAngle, fireDurationTime, slideLi
 end
 
 ----------------------------------------------------------------------------------------------
--- Hud drawing
-----------------------------------------------------------------------------------------------
-
-function client.drawAmmo(curclip, maxclip)
-	UiPush()
-		UiFont("bold.ttf", 32)
-		UiAlign("center middle")
-		UiTranslate(UiCenter(), UiMiddle() + (UiMiddle() * 0.833))
-		if curclip == -8 then
-			UiText("RELOADING...")
-		else
-			UiText(curclip .. "/" .. maxclip)
-		end
-	UiPop()
-end
-
-function client.drawSecAmmo(curclip)
-	if curclip == 0 then -- gun is empty
-		return
-	end
-	
-	UiPush()
-		UiFont("bold.ttf", 32)
-		UiAlign("center middle")
-		UiTranslate(UiCenter(), UiMiddle() + (UiMiddle() * 0.766))
-		if curclip ~= -8 then
-			UiText(curclip)
-		end
-	UiPop()
-end
-
-----------------------------------------------------------------------------------------------
 -- Blood Effects
 ----------------------------------------------------------------------------------------------
 
@@ -362,6 +327,11 @@ function server.SpawnFireHook(pos, chance)
 	if math.random(0, 100) <= chance then
 		SpawnFire(pos)
 	end
+end
+
+function PlaySoundOverrider(snd, pos, vol)
+	StopSound(snd)
+	PlaySound(snd, mt.pos, 300)
 end
 
 ----------------------------------------------------------------------------------------------

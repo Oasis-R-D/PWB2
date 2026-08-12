@@ -1,52 +1,76 @@
 baseWeap = {}
 
 -- Values for this specific weapon
-function baseWeap:toolInfo()
-	self.model				= "MOD/models/xml/MODEL.xml"
-	self.toolID 			= "pwb2weap"
-	self.toolName 			= "PWB2 Baseweapon"
-	self.ammoLoadedMax 		= 0 -- max clip 	-- -1 for no clip (pulls from reserve)
-	self.ammoAltLoadedMax	= 0 -- max alt clip -- -1 for no clip (pulls from reserve) 0 for no alt fire
-	self.flags				= 0
+baseWeap.model				= "MOD/models/xml/model.xml"-- path to the XML model file
+baseWeap.toolID 			= "baseweap"				-- used by the engine. lowercase and no spaces
+baseWeap.toolName 			= "PWB2 Base Weapon"		-- shown in killfeed
+baseWeap.toolSlot			= 0
+baseWeap.ammoLoadedMax 		= 0							-- max clip 	 	-- -1 for no clip (pulls from reserve)
+baseWeap.ammoAltLoadedMax	= 0 						-- max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
+baseWeap.ammoPickupSize		= baseWeap.ammoLoadedMax	-- defaults to full mag
+baseWeap.flags				= 0							-- weapon flags
+
+function baseWeap:init_sv()
+	RegisterTool(self.toolID, self.toolName, self.model, self.toolSlot)
+	SetToolAmmoPickupAmount(self.toolID, self.ammoPickupSize)
+end
+
+function baseWeap:init_cl()
+end
+
+-- loads sounds, override per weapon
+function baseWeap:WeaponSounds()
+	return {
+--  		   [SOUND]		 [load to]	[dist]
+		{"MOD/snd/SOUND.ogg", "sv/cl", 	  10}
+	} 
 end
 
 -- Values that ALL weapons share/use
 function baseWeap:initVars()
-	self:toolInfo()
+	-- CLIENT VARS
+	if client then
+		-- compare against GetTime()
+		self.nextFire           = 0
+		self.nextAltFire        = 0
 
-    -- compare against GetTime()
-    self.nextFire           = 0
-    self.nextAltFire        = 0
+		-- can be used for shotgun pumpping, bolt cycling
+		-- or any post firing stuff really
+		self.pumptime           = 0
 
-    -- can be used for shotgun pumpping, bolt cycling
-    -- or any post firing stuff really
-    self.pumptime           = 0
+		self.inReload           = false
 
-    self.inReload           = false
+		-- used for shotgun reload interrupting
+		self.specialReload      = 0
 
-    -- used for shotgun reload interrupting
-    self.specialReload      = 0
+		-- time until resetting idle anim (there aren't idle anims)
+		self.timeWeaponIdle		= 0
 
-    -- True when gun is empty
-	-- Use to check if it
-	-- should fire in the
-	-- firing functions.
-    self.firedOnEmpty       = false
+		-- True when gun is empty
+		-- Use to check if it
+		-- should fire in the
+		-- firing functions.
+		self.firedOnEmpty       = false
+		self.playEmptySound		= true
+		-- time creep vars
+		self.prevPrimFireTime   = 0
+		self.lastFireTime       = 0
 
-    -- time creep vars
-    self.prevPrimFireTime   = 0
-    self.lastFireTime       = 0
-
-    -- ammo loaded into weapon. Set by child
-	self.ammo				= 0 -- reserve + clip
-    self.ammoLoaded         = 0 -- clip
-	
-    self.ammoAlt      		= 0 -- clip
-    
-    self.WpnAnimator        = ToolAnimator()
+		-- ammo loaded into weapon. Set by child
+		self.ammo				= 0 			-- reserve + clip
+		self.ammoLoaded         = self.ammoLoadedMax -- clip
+		
+		self.ammoAlt      		= 0 			-- clip
+		
+		self.WpnAnimator        = ToolAnimator()
+	end
 
 	-- which player owns this instance
-	self.owner = owner
+	
+	if not self.snds then
+		self.snds				= self:PrecacheSFXArray(self:WeaponSounds())
+	end
+	self.owner					= owner
 end
 
 -- to add a new weapon just do CHILD = baseWeap:new(CHILD, owner) where CHILD is {}
@@ -67,16 +91,13 @@ WEAPON_NOCLIP = -1
 function baseWeap:PrimaryAttack()   end
 function baseWeap:SecondaryAttack() end
 function baseWeap:Reload()          end
-
-function baseWeap:PlayEmptySound()
-	PlaySound("MOD/snd/357_cock1.ogg", GetPlayerTransform(self.owner).pos, 0.5)
-end
+function baseWeap:WeaponIdle()		end -- called when no buttons are pressed
 
 --=========================================================================
 -- tickPlayer - Handles player inputs
 --=========================================================================
 function baseWeap:tickPlayer(dt)
-	tickToolAnimator(self.toolAnimator, dt, nil, self.owner)
+	tickToolAnimator(self.WpnAnimator, dt, nil, self.owner)
 	self.ammo = GetToolAmmo(self.toolID, self.owner)
 
     local curTime = GetTime()
@@ -125,7 +146,7 @@ function baseWeap:tickPlayer(dt)
 		return
 	end
 
-	-- catch all
+	-- used for when you need extra stuff in WeaponIdle
 	if self:ShouldWeaponIdle() then
 		self:WeaponIdle()
 	end
@@ -162,6 +183,17 @@ end
 --=========================================================================
 -- 								UTIL FUNCS
 --=========================================================================
+
+function baseWeap:PlayEmptySound()
+	if self.playEmptySound then
+		PlaySound(LoadSound("MOD/snd/empty.ogg"), GetPlayerTransform(self.owner).pos, 0.5)
+		self.playEmptySound = false
+	end
+end
+
+function baseWeap:ShouldWeaponIdle()
+	return false
+end
 
 function baseWeap:CanAttack(attack_time, curtime)
 	return (attack_time <= curtime)
@@ -228,4 +260,40 @@ function baseWeap:IsUseable()
 
 	-- clip is empty (or nonexistant) and the player has no more ammo of this type.
 	return false --CanDeploy()
+end
+
+function baseWeap:DefaultReload(iClipSize, fDelay)
+	if self.ammo <= 0 then return false end
+
+	local j = math.min(self.ammoLoadedMax - self.ammoLoaded, self.ammo)
+	if j <= 0 then return false end
+
+	local curTime = GetTime()
+
+	--[[m_pPlayer->m_flNextAttack]] self.nextFire = curTime + fDelay
+	self.nextAltFire = self.nextFire
+
+	--!!UNDONE -- reload sound goes here !!!
+
+	self.inReload = true
+
+	self.timeWeaponIdle = curTime + 3
+
+	return true
+end
+
+function baseWeap:PrecacheSFXArray(arr)
+	local precachedSounds = {}
+	for i, sounddata in ipairs(arr) do
+		if server and sounddata[2] == "sv" then
+			DebugPrint("server sound: " .. sounddata[1] .. "attn: " .. sounddata[3])
+			table.insert(precachedSounds, LoadSound(sounddata[1], sounddata[3]))
+		elseif client and sounddata[2] == "cl" then
+			table.insert(precachedSounds, LoadSound(sounddata[1], sounddata[3]))
+		end
+	end
+
+	self.WeaponSounds = nil -- don't need this anymore
+
+	return precachedSounds
 end
