@@ -1,4 +1,5 @@
-childWeap = {}
+local childWeap = {}
+g_childWeap = childWeap
 
 -- Per weapon constants
 -- TO-DO: remove
@@ -26,14 +27,11 @@ childWeap.ammoPickupSize	= childWeap.ammoLoadedMax	-- defaults to full mag
 childWeap.flags				= 0							-- weapon flags
 
 function childWeap:init_sv()
-	childWeap = baseWeap:new(childWeap, GetLocalPlayer())
-
 	-- must be called like this due to how static vars work
 	baseWeap.init_tool(self)
 end
 
 function childWeap:init_cl()
-	childWeap = baseWeap:new(childWeap, GetLocalPlayer())
 	baseWeap.init_cl(self) -- does nothing currently
 	
 	self.timeFiring = 0
