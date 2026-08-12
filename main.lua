@@ -1,19 +1,94 @@
+--[[------------------------------------------------------------------------------------------
+-- INFO
+----------------------------------------------------------------------------------------------
+
+this file calls all weapon functions. To add your weapon just add a pointer to it's class
+in GLOBAL_WEAPONS (make sure to '#include' it's lua file).
+
+weapon systems are built to function like the weapon systems from
+Half-Life: 1 / Counter Strike and can fully support weapons from both with minimal adaptation.
+
+Weapon HUD order is set by the order they are listed in the GLOBAL_WEAPONS table
+
+----------------------------------------------------------------------------------------------
+-- USAGE
+----------------------------------------------------------------------------------------------
+
+weapons in PWB2 use LUA's "class" system in order to abstract away the complicated portions.
+to make a mod using this base, you can either copy an existing weapon or start from scratch.
+
+to make a simple new weapon, define the class, static variables, SFX and then override
+common functions if/when needed (PrimaryAttack(), SecondaryAttack(), Reload(), initVars() etc)
+
+if you need help with PWB2 or it's utilization of object oriented programming, message
+'Packman.09' on Discord or check the LUA documentation for object oriented programming below
+
+   https://www.lua.org/pil/16.html 
+
+==============================================================================================
+-- WEAPON DEFINITION EXAMPLE
+==============================================================================================
+
+-- local for the table, global for the reference
+local demoWeap = {}   -- demoWeap is turned into a class on init
+g_demoWeap = demoWeap -- g_demoWeap goes in GLOBAL_WEAPONS
+
+--=========================================================================
+-- Define the weapon's SFX
+--=========================================================================
+
+function demoWeap:WeaponSounds()
+	return {
+		{"MOD/snd/sfx.ogg", "sv", 10}
+	}
+end
+
+--=========================================================================
+-- Define the weapon and it's variables
+--=========================================================================
+
+-- Values for this specific weapon
+demoWeap.model				   = "MOD/models/xml/smg1.xml"-- path to the XML model file
+demoWeap.toolID 			   = "demoWeap"				   -- used by the engine. lowercase and no spaces
+demoWeap.toolName 			= "PWB2 Weapon"			   -- shown in killfeed
+demoWeap.toolSlot			   = 3
+demoWeap.ammoLoadedMax 	   = 45						      -- max clip 	 	-- -1 for no clip (pulls from reserve)
+demoWeap.ammoAltLoadedMax	= -1 						      -- max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
+demoWeap.ammoPickupSize	   = demoWeap.ammoLoadedMax	-- defaults to full mag
+demoWeap.flags				   = 0							   -- weapon flags
+demoWeap.snds				   = 0							   -- temp value, will be set to the sound array on init
+
+-- override initVars to add new variables
+function demoWeap:initVars(owner)
+	if client then
+		self.timeFiring = 0
+	end
+
+	baseWeap.initVars(self, owner)
+end
+
+==============================================================================================
+-- TO-DO
+==============================================================================================
+   -  Test having multiple weapons
+   -  Test altfire
+   -  Loop based sound system, will make it so sounds follow the player proper
+      (only on firing client?)
+============================================================================================]]
+
 #version 2
 
 -- EXTERNAL CREDITS:
--- - VALVe (Half-Life: 2)
+-- - VALVe + TWHL (Half-Life: Updated SDK)
 -- - Novena (radial spread code)
--- - Verbatim Man (AR2 ball and crossbow bolt use code loosely based on his pellet launcher's code)
 
+----------------------------------------------------------------------------------------------
+-- WEAPON INCLUDES AND GLOBALS
 ----------------------------------------------------------------------------------------------
 
 -- LIBRARYS
 #include "script/lib/bit_ops.lua"
 #include "script/lib/pwbtoolanimation.lua"
-
-----------------------------------------------------------------------------------------------
--- WEAPON GLOBALS
-----------------------------------------------------------------------------------------------
 
 GLOBAL_HEADSHOTMULT = 3.0 -- use actual value since guns do less damage in HL2DM
 
@@ -31,8 +106,6 @@ GLOBAL_9DEGREES = 0.07846
 GLOBAL_10DEGREES = 0.08716
 GLOBAL_15DEGREES = 0.13053
 GLOBAL_20DEGREES = 0.17365
-
-----------------------------------------------------------------------------------------------
 
 -- GLOBALS
 #include "script/baseclass.lua"
@@ -54,41 +127,20 @@ GLOBAL_20DEGREES = 0.17365
 ----------------------------------------------------------------------------------------------
 
 -- pointers to each weapon's class
-------------------------------------------------------------------
--- add players via 'PLCHILD = baseWeap.new(CHILD, PLCHILD, owner)' 
--- and then add PLCHILD's functions to the tick arrays
-------------------------------------------------------------------
-GLOBAL_WEAPONS = {}
-GLOBAL_WEAPONS[1] = g_childWeapon
-
--- pointers to every player's weapons
-PLAYER_WEAPONS = {}
+GLOBAL_WEAPONS = {
+   g_childWeapon,
+}
 
 GLOBAL_WEAPONS_AMNT = #GLOBAL_WEAPONS -- only calculate this once
 
-----------------------------------------------------------------------------------------------
+-- pointers to each player's weapons
+PLAYER_WEAPONS = {}
 
--- this file calls all weapon functions. To add your weapon just add it's functions here (make sure to #include it's lua file).
-
--- to make a mod using this base, choose a weapon to base your weapon off of, then copy it's xml, vox and lua file (or you can make new ones completely)
--- in the .LUA file, replace all instances of the weapons name (suffix on the functions, some variables) and then add it's suffix here in the weapons list above
--- To remove unused/unwanted weapons, remove it's lua file, xml file(s), vox, sounds and then it's name in the weapons list and also its #include from this file
-
--- Weapon order in the HUD is set by the order they are written in the weapons list
-
-----------------------------------------------------------------------------------------------
-
--- TO-DO: 
--- -  figure out classes. Each weapon has it's own class to override certain things in order to do it's unique functions but
---    they all have the same baseclass which contains most of the shared code. Main.lua then calls the objects functions (tick, init etc.)
---    (basically maximizing abstraction)
-
--- -  Loop based sound system, will make it so sounds follow the player proper (only on firing client?)
-
--- -  Use death event to reset dead player's data
-
--- -  Make every player have their own table with all their weapons in it
-----------------------------------------------------------------------------------------------
+--============================================================================================
+--============================================================================================
+-- MAIN CODE (DO NOT TOUCH UNLESS YOU KNOW WHAT YOU'RE DOING)
+--============================================================================================
+--============================================================================================
 
 -- Declares weapons, pickup amounts
 -- Server doesn't have an option to be turned off since all weapons need it. Could automate that in the future though!
@@ -103,7 +155,7 @@ function server.tick(dt)
       PLAYER_WEAPONS[p] = {}
       local pushback = table.insert
       for weapon=1, GLOBAL_WEAPONS_AMNT do
-         local wpnPlyr = baseWeap:new(GLOBAL_WEAPONS[weapon], p) -- make a new weapon for this player
+         local wpnPlyr = baseWeap:new(GLOBAL_WEAPONS[weapon], p)
 		   pushback(PLAYER_WEAPONS[p], wpnPlyr)
          SetToolEnabled(wpnPlyr.toolID, true, p)
 		   SetToolAmmo(wpnPlyr.toolID, 9999, p)
@@ -132,7 +184,7 @@ function client.tick(dt)
       PLAYER_WEAPONS[p] = {}
       local pushback = table.insert
       for weapon=1, GLOBAL_WEAPONS_AMNT do
-         local wpnPlyr = baseWeap:new(GLOBAL_WEAPONS[weapon], p) -- make a new weapon for this player
+         local wpnPlyr = baseWeap:new(GLOBAL_WEAPONS[weapon], p)
 		   pushback(PLAYER_WEAPONS[p], wpnPlyr)
       end
 	end
@@ -143,7 +195,7 @@ function client.tick(dt)
 
    for p, wpns in pairs(PLAYER_WEAPONS) do
       local tool = GetPlayerTool(p)
-      for i=1, #wpns do
+      for i=1, GLOBAL_WEAPONS_AMNT do
          if tool == wpns[i].toolID then
             wpns[i]:tickPlayer(dt)
             break
@@ -169,12 +221,12 @@ end
 -- Draws the magazine hud and scopes
 function client.draw()
    if not PLAYER_WEAPONS then return end
-   
+
    if GetPlayerHealth() <= 0 or GetPlayerVehicle() ~= 0 then return end
 
    local tool = GetPlayerTool(GetLocalPlayer())
    local wpns = PLAYER_WEAPONS[GetLocalPlayer()]
-   for i=1, #wpns do
+   for i=1, GLOBAL_WEAPONS_AMNT do
       if tool == wpns[i].toolID then
          wpns[i]:DrawHUD()
          break
