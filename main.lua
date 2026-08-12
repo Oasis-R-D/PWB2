@@ -62,6 +62,9 @@ GLOBAL_WEAPONS = {
    g_childWeap,
 }
 
+-- pointers to every player's weapons
+PLAYER_WEAPONS = {}
+
 GLOBAL_WEAPONS_AMNT = #GLOBAL_WEAPONS -- only calculate this once
 
 for weapon=1, GLOBAL_WEAPONS_AMNT do
@@ -98,6 +101,7 @@ end
 
 -- -  Use death event to reset dead player's data
 
+-- -  Make every player have their own table with all their weapons in it
 ----------------------------------------------------------------------------------------------
 
 -- Declares weapons, pickup amounts
@@ -110,15 +114,18 @@ end
 
 function server.tick(dt)
    for p in PlayersAdded() do
+      PLAYER_WEAPONS[p] = {}
+      local pushback = table.insert
       for weapon=1, GLOBAL_WEAPONS_AMNT do
-         local wpnPlyr = baseWeap.new(GLOBAL_WEAPONS_AMNT[i], wpnPlyr, p) -- make a new weapon for this player
-		   SetToolEnabled(wpnPlyr.toolID, true, p)
+         local wpnPlyr = baseWeap.new(GLOBAL_WEAPONS_AMNT[weapon], wpnPlyr, p) -- make a new weapon for this player
+		   pushback(PLAYER_WEAPONS[p], wpnPlyr)
+         SetToolEnabled(wpnPlyr.toolID, true, p)
 		   SetToolAmmo(wpnPlyr.toolID, 9999, p)
       end
 	end
 
    for p in PlayersRemoved() do
-      -- remove that player's weapon pointers from the tick
+      PLAYER_WEAPONS[p] = nil
    end
 end
 
@@ -138,8 +145,28 @@ end
 
 -- Runs most weapon code
 function client.tick(dt)
-   if GetPlayerTool(GetLocalPlayer()) == childWeap.toolID then
-      childWeap:tickPlayer(dt)
+   for p in PlayersAdded() do
+      PLAYER_WEAPONS[p] = {}
+      local pushback = table.insert
+      for weapon=1, GLOBAL_WEAPONS_AMNT do
+         local wpnPlyr = baseWeap.new(GLOBAL_WEAPONS_AMNT[weapon], wpnPlyr, p) -- make a new weapon for this player
+		   pushback(PLAYER_WEAPONS[p], wpnPlyr)
+      end
+	end
+
+   for p in PlayersRemoved() do
+      PLAYER_WEAPONS[p] = nil
+   end
+
+   for p in Players() do
+      local tool = GetPlayerTool(p)
+      local wpns = PLAYER_WEAPONS[p]
+      for i=1, #wpns do
+         if tool == wpns[i].toolID then
+            wpns[i]:tickPlayer(dt)
+            break
+         end
+      end
    end
 
    client.SRC_ApplyPlayerPunch(dt)
@@ -157,7 +184,12 @@ end
 
 -- Draws the magazine hud and scopes
 function client.draw()
-   if GetPlayerTool(GetLocalPlayer()) == childWeap.toolID then
-	   childWeap:DrawHUD()
+   local tool = GetPlayerTool(GetLocalPlayer())
+   local wpns = PLAYER_WEAPONS[GetLocalPlayer()]
+   for i=1, #wpns do
+      if tool == wpns[i].toolID then
+         wpns[i]:DrawHUD()
+         break
+      end
    end
 end
