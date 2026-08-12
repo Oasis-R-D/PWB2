@@ -27,7 +27,9 @@ childWeap.flags				= 0							-- weapon flags
 
 function childWeap:init_sv()
 	childWeap = baseWeap:new(childWeap, GetLocalPlayer())
-	baseWeap.init_sv(self) -- defines the tool
+
+	-- must be called like this due to how static vars work
+	baseWeap.init_tool(self)
 end
 
 function childWeap:init_cl()

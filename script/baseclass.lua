@@ -10,7 +10,13 @@ baseWeap.ammoAltLoadedMax	= 0 						-- max alt clip 	-- -1 for no clip (pulls fr
 baseWeap.ammoPickupSize		= baseWeap.ammoLoadedMax	-- defaults to full mag
 baseWeap.flags				= 0							-- weapon flags
 
+
 function baseWeap:init_sv()
+	-- must be called like this due to how static vars work
+	baseWeap.init_tool(self)
+end
+
+function baseWeap:init_tool()
 	RegisterTool(self.toolID, self.toolName, self.model, self.toolSlot)
 	SetToolAmmoPickupAmount(self.toolID, self.ammoPickupSize)
 end
