@@ -12,6 +12,8 @@
 #include "script/lib/pwbtoolanimation.lua"
 
 ----------------------------------------------------------------------------------------------
+-- WEAPON GLOBALS
+----------------------------------------------------------------------------------------------
 
 GLOBAL_HEADSHOTMULT = 3.0 -- use actual value since guns do less damage in HL2DM
 
@@ -47,18 +49,34 @@ GLOBAL_20DEGREES = 0.17365
 
 -- ITEMS
 
-server.weaponTicks = {}
-client.weaponTicks = {}
-client.weaponDraws = {}
+----------------------------------------------------------------------------------------------
+-- MAIN GLOBALS
+----------------------------------------------------------------------------------------------
 
+-- pointers to each weapon's class
+------------------------------------------------------------------
+-- add players via 'PLCHILD = baseWeap.new(CHILD, PLCHILD, owner)' 
+-- and then add PLCHILD's functions to the tick arrays
+------------------------------------------------------------------
 GLOBAL_WEAPONS = {
    g_childWeap,
 }
 
 GLOBAL_WEAPONS_AMNT = #GLOBAL_WEAPONS -- only calculate this once
 
-for weapon=0, GLOBAL_WEAPONS_AMNT in do
+for weapon=1, GLOBAL_WEAPONS_AMNT do
+   if server then
+      --server.weaponTicks = {}
+      --table.insert( server.weaponTicks, GLOBAL_WEAPONS[i]:)
+   else
+      client.weaponTicks = {}
+      table.insert( client.weaponTicks, GLOBAL_WEAPONS[i]:tickPlayer() )
+
+      client.weaponDraws = {}
+      table.insert( client.weaponDraws, GLOBAL_WEAPONS[i]:DrawHUD() )
+   end
 end
+
 ----------------------------------------------------------------------------------------------
 
 -- this file calls all weapon functions. To add your weapon just add it's functions here (make sure to #include it's lua file).
@@ -85,14 +103,23 @@ end
 -- Declares weapons, pickup amounts
 -- Server doesn't have an option to be turned off since all weapons need it. Could automate that in the future though!
 function server.init()
-   childWeap:init_sv()
+   for weapon=1, GLOBAL_WEAPONS_AMNT do
+      GLOBAL_WEAPONS_AMNT[i]:init_sv()
+   end
 end
 
 function server.tick(dt)
    for p in PlayersAdded() do
-		SetToolEnabled(childWeap.toolID, true, p)
-		SetToolAmmo(childWeap.toolID, 250, p)
+      for weapon=1, GLOBAL_WEAPONS_AMNT do
+         local wpnPlyr = baseWeap.new(GLOBAL_WEAPONS_AMNT[i], wpnPlyr, p) -- make a new weapon for this player
+		   SetToolEnabled(wpnPlyr.toolID, true, p)
+		   SetToolAmmo(wpnPlyr.toolID, 9999, p)
+      end
 	end
+
+   for p in PlayersRemoved() do
+      -- remove that player's weapon pointers from the tick
+   end
 end
 
 function server.update(dt)
@@ -104,7 +131,9 @@ end
 
 -- Load haptics, amongst other things
 function client.init()
-   childWeap:init_cl()
+   for weapon=1, GLOBAL_WEAPONS_AMNT do
+      GLOBAL_WEAPONS_AMNT[i]:init_cl()
+   end
 end
 
 -- Runs most weapon code

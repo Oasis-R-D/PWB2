@@ -76,11 +76,14 @@ function baseWeap:initVars()
 	if not self.snds then
 		self.snds				= self:PrecacheSFXArray(self:WeaponSounds())
 	end
+
 	self.owner					= owner
 end
 
 -- to add a new weapon just do CHILD = baseWeap:new(CHILD, owner) where CHILD is {}
+-- to add a weapon to a player do PLCHILD = baseWeap.new(CHILD, PLCHILD, owner)
 function baseWeap:new(obj, owner)
+	owner = owner or -1
     obj = obj or {}
     setmetatable(obj, self)
 	self.__index = self
