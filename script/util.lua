@@ -39,10 +39,11 @@ function ejectBrass(p, org, dir, model, casingtype)
 
 	local eject_origin = TransformToParentPoint(transform, org)
 
-	-- add some randomization (values multiplied 0.75x)
-	dir[1] = dir[1] + GetRandomFloat(0.9525, 1.3335)
-	dir[2] = dir[2] + GetRandomFloat(1.905, 2.8575)
-	
+	-- add some randomization
+	dir[1] = dir[1] + GetRandomFloat(0.75, 1)
+	dir[2] = dir[2] + GetRandomFloat(1.5, 2.125)
+	dir[3] = dir[3] + GetRandomFloat(0.5, 0.75)
+
 	local eject_vel = TransformToParentVec(transform, dir)
 	eject_vel = VecAdd(eject_vel, GetPlayerVelocity(p))
 

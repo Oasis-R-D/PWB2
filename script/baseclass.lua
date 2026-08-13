@@ -152,7 +152,7 @@ function baseWeap:tickPlayer(dt)
 		self.lastFireTime = 0.0
     end
 
-	if altfireKeyDown and self:CanAttack(self.nextAltFire, curTime) then
+	if altfireKeyDown and self:CanAttack(self.nextAltFire, curTime) and GetPlayerGrabBody(self.owner) == 0 then
 		if self.ammoAltLoadedMax ~= WEAPON_NOCLIP and self.ammoAlt == 0 then
 			self.firedOnEmpty = true
         end
