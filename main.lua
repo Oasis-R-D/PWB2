@@ -21,9 +21,9 @@ to make a simple new weapon, define the class, static variables, SFX and then ov
 common functions if/when needed (PrimaryAttack(), SecondaryAttack(), Reload(), initVars() etc)
 
 if you need help with PWB2 or it's utilization of object oriented programming, message
-'Packman.09' on Discord or check the LUA documentation for object oriented programming below
+'Packman.09' on Discord, create a discussion post about it or check the LUA documentation for object oriented programming below
 
-   https://www.lua.org/pil/16.html 
+   https://www.lua.org/pil/16.html
 
 ==============================================================================================
 -- WEAPON DEFINITION EXAMPLE

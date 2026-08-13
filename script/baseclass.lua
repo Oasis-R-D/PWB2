@@ -39,6 +39,11 @@ function baseWeap:WeaponSounds()
 	} 
 end
 
+-- this is needed due to flags being a static var
+function baseWeap:GetFlags()
+	return self.flags
+end
+
 -- Values that ALL weapons share/use
 -- override initVars to add new variables
 -- add 'baseWeap.initVars(self, owner)'
@@ -47,6 +52,7 @@ end
 function baseWeap:initVars(owner)
 	-- CLIENT VARS
 	if client then
+		-- true when the weapon isn't equipped
 		self.holstered			= true
 
 		-- compare against GetTime()
@@ -71,15 +77,16 @@ function baseWeap:initVars(owner)
 		-- firing functions.
 		self.firedOnEmpty       = false
 		self.playEmptySound		= true
+
 		-- time creep vars
 		self.prevPrimFireTime   = 0
 		self.lastFireTime       = 0
 
 		-- ammo loaded into weapon. Set by child
-		self.ammo				= 0 			-- reserve + clip
-		self.ammoLoaded         = self.ammoLoadedMax -- clip
+		self.ammo				= 0 -- total ammo
+		self.ammoLoaded         = self.ammoLoadedMax -- current magazine amount
 		
-		self.ammoAlt      		= 0 			-- clip
+		self.ammoAlt      		= 0 -- total alt ammo
 		
 		self.animator        	= ToolAnimator()
 	end
@@ -114,13 +121,18 @@ WEAPON_NOCLIP = -1
 function baseWeap:Deploy()   		  end -- called when weapon is equipped
 function baseWeap:PrimaryAttack(dt)   end
 function baseWeap:SecondaryAttack(dt) end
-function baseWeap:Reload()            end	-- called when reload is started
+function baseWeap:Reload()            end -- called when reload is started
 function baseWeap:WeaponIdle()		  end -- called when no buttons are pressed
 
+function baseWeap:Animate()			  end -- called every frame, use for adding custom
+										  -- weapon movement, see PWB1  slide/pump anims
+		
 --=========================================================================
 -- tickPlayer - Handles player inputs
 --=========================================================================
 function baseWeap:tickPlayer(dt)
+	self:Animate(dt, self.owner)
+
 	tickToolAnimator(self.animator, dt, nil, self.owner)
 
 	local curTime = GetTime()
@@ -179,11 +191,10 @@ function baseWeap:tickPlayer(dt)
 		self.firedOnEmpty = false
 
 		if self.nextFire <= curTime and self.ammoLoaded == 0 and self:IsUseable() then
-			--if not hasFlag(self.flags, ITEM_FLAG_NOAUTORELOAD) then
-			-- TO-DO: self.flag can't be used 
+			if not hasFlag(baseWeap.GetFlags(self), ITEM_FLAG_NOAUTORELOAD) then 
 				self:Reload()
 				return
-			--end
+			end
 		end
 
 		self:WeaponIdle()
