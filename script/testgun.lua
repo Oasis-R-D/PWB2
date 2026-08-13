@@ -1,9 +1,8 @@
 -- local for the table, global for the reference
 local childWeap = {}
-g_childWeapon = childWeap
+g_testWeapon = childWeap
 
 -- Per weapon constants
-local ALTFIRERATE = 1
 local DAMAGE = 0.4
 local PLAYERDAMAGE = 0.05
 local MAX_RANGE = 100.0
@@ -25,10 +24,10 @@ end
 
 -- Values for this specific weapon
 childWeap.model				= "MOD/models/xml/smg1.xml" -- path to the XML model file
-childWeap.toolID 			= "childweap"				-- used by the engine. lowercase and no spaces
-childWeap.toolName 			= "PWB2 Weapon"				-- shown in killfeed
+childWeap.toolID 			= "testgun"					-- used by the engine. lowercase and no spaces
+childWeap.toolName 			= "PWB2 Test Gun"			-- shown in killfeed
 childWeap.toolSlot			= 3
-childWeap.ammoLoadedMax 	= 45						-- max clip 	 	-- -1 for no clip (pulls from reserve)
+childWeap.ammoLoadedMax 	= 30						-- max clip 	 	-- -1 for no clip (pulls from reserve)
 childWeap.ammoAltLoadedMax	= 0 						-- max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
 childWeap.ammoPickupSize	= childWeap.ammoLoadedMax	-- defaults to full mag
 childWeap.flags				= 0							-- weapon flags
@@ -48,14 +47,12 @@ end
 --=========================================================================
 
 function server.PrimaryAttack(p)
-	local mt = GetToolLocationWorldTransform("muzzle", p)
-
 	local pos, dir = getAimVector(GetPlayerEyeTransform(p).pos, MAX_RANGE, GLOBAL_5DEGREES, p)
 	
 	server.ShootHook(pos, dir, "bullet", DAMAGE, PLAYERDAMAGE, MAX_RANGE, p, childWeap.toolID, childWeap.toolName)
 
 	StopSound(childWeap.snds[1])
-	PlaySound(childWeap.snds[1], mt.pos, 300)
+	PlaySound(childWeap.snds[1], GetToolLocationWorldTransform("muzzle", p).pos, 300)
 
 	server.depleteAmmo(p, childWeap.toolID)
 end
@@ -64,7 +61,6 @@ function childWeap:PrimaryAttack()
 	if self.ammoLoaded <= 0 then
 		self:PlayEmptySound()
 		self.nextFire = GetTime() + 0.15
-		self.nextAltFire = self.nextFire
 		return
 	end
 
@@ -75,66 +71,23 @@ function childWeap:PrimaryAttack()
 
 		ServerCall("server.PrimaryAttack", self.owner)
 
-		client.DoMachineGunKick(1, self.timeFiring, 2)
+		client.DoMachineGunKick(1.66, self.timeFiring, 1)
 
 		-- shell ejection
-		ejectBrass(self.owner, CASING_ORG, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
+		ejectBrass(self.owner, CASING_ORG, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_556.xml", FSFX_BRASS)
 	end
 
-	if GetTime() - self.lastFireTime < 0.1 then
-		self.timeFiring = self.timeFiring + 0.1
+	if GetTime() - self.lastFireTime < 0.125 then
+		self.timeFiring = self.timeFiring + 0.125
 	else
 		self.timeFiring = 0
 	end
 
-	muzzleFlash(mt.pos, 2)
+	muzzleFlash(mt.pos, 3)
 
 	self.ammoLoaded = self.ammoLoaded - 1
 
-	self.nextFire = self:GetNextAttackDelay(0.075)
-end
-
-function server.SecondaryAttack(p)
-	local mt = GetToolLocationWorldTransform("muzzle", p)
-	
-	for i=1, 4 do
-		local pos, dir = getAimVector(GetPlayerEyeTransform(p).pos, MAX_RANGE, GLOBAL_5DEGREES, p)
-		server.ShootHook(pos, dir, "bullet", DAMAGE, PLAYERDAMAGE, MAX_RANGE, p, childWeap.toolID, childWeap.toolName)
-	end
-	
-	StopSound(childWeap.snds[1])
-	PlaySound(childWeap.snds[1], mt.pos, 300)
-
-	server.depleteAmmo(p, childWeap.toolID, 4)
-end
-
-function childWeap:SecondaryAttack()
-	if self.ammoLoaded <= 3 then
-		self:PlayEmptySound()
-		self.nextFire = GetTime() + 0.15
-		self.nextAltFire = self.nextFire
-		return
-	end
-
-	local mt = GetToolLocationWorldTransform("muzzle", self.owner)
-
-	if IsPlayerLocal(self.owner) then
-		PointLight(mt.pos, 1, 0.7, 0.5, 4)
-
-		ServerCall("server.SecondaryAttack", self.owner)
-
-		client.SRC_PunchAxis(1, 0.5)
-
-		-- shell ejection
-		ejectBrass(self.owner, CASING_ORG, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
-	end
-
-	muzzleFlash(mt.pos, 3)
-
-	self.ammoLoaded = self.ammoLoaded - 4
-
-	self.nextFire = self:GetNextAttackDelay(0.5)
-	self.nextAltFire = self.nextFire
+	self.nextFire = self:GetNextAttackDelay(0.1)
 end
 
 function childWeap:Reload()

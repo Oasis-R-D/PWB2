@@ -6,12 +6,8 @@ gpTempEnts = {}
 
 function newCLent()
 	return {
-		--entity_state_t curstate,  -- The state information from the last message received from server
-
 		-- float
-		spark_lifetime = 0.0,
 		nextThink = 0.0,
-		fadeStartIntensity = 0.0,
 
 		-- Actual render position and angles
 		origin = Vec(),
@@ -32,14 +28,7 @@ function newTempEnt()
 
 		-- floats
 		die = 0,
-		frameMax = 0,
-		fadeSpeed = 0,
 		bounceFactor = 0,
-
-		-- short
-		clientIndex = -1, -- if attached, this is the index of the client to stick to
-						-- if COLLIDEALL, this is the index of the client to ignore
-						-- TENTS with FTENT_PLYRATTACHMENT MUST set the clientindex
 
 		entity = newCLent(),
 	}

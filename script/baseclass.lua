@@ -47,6 +47,8 @@ end
 function baseWeap:initVars(owner)
 	-- CLIENT VARS
 	if client then
+		self.holstered			= true
+
 		-- compare against GetTime()
 		self.nextFire           = 0
 		self.nextAltFire        = 0
@@ -79,7 +81,7 @@ function baseWeap:initVars(owner)
 		
 		self.ammoAlt      		= 0 			-- clip
 		
-		self.WpnAnimator        = ToolAnimator()
+		self.animator        = ToolAnimator()
 	end
 
 	-- which player owns this instance
@@ -118,10 +120,26 @@ function baseWeap:WeaponIdle()		end -- called when no buttons are pressed
 -- tickPlayer - Handles player inputs
 --=========================================================================
 function baseWeap:tickPlayer(dt)
-	tickToolAnimator(self.WpnAnimator, dt, nil, self.owner)
+	tickToolAnimator(self.animator, dt, nil, self.owner)
+
+	
+
+	local curTime = GetTime()
+	
+	-- declare var for this since it's used a lot 
+    local fireKeyDown 	 = InputDown("usetool", self.owner)
+	local altfireKeyDown = InputDown("grab", self.owner)
+
 	self.ammo = GetToolAmmo(self.toolID, self.owner)
 
-    local curTime = GetTime()
+	if self.holstered == true then
+		-- no rapid firing
+		self.nextFire 		= math.max(self.nextFire, curTime + 0.25)
+		self.nextAltFire 	= math.max(self.nextAltFire, self.nextFire)
+		self.lastFireTime 	= 0
+
+		self.holstered 	= false
+	end
 
 	if self.inReload and --[[m_pPlayer->m_flNextAttack]] self.nextFire <= curTime then
 		-- complete the reload.
@@ -130,16 +148,17 @@ function baseWeap:tickPlayer(dt)
 		self.inReload = false
     end
 
-    -- declare var for this since it's used a lot 
-    local fireKeyDown = InputDown("usetool", self.owner)
 	if not fireKeyDown then
 		self.lastFireTime = 0.0
     end
 
-	if InputPressed("grab", self.owner) and self:CanAttack(self.nextAltFire, curTime) then
+	if altfireKeyDown and self:CanAttack(self.nextAltFire, curTime) then
 		if self.ammoAltLoadedMax ~= WEAPON_NOCLIP and self.ammoAlt == 0 then
 			self.firedOnEmpty = true
         end
+
+		-- hold gun straight
+		self.animator.timeSinceFire = 0.0
 
 		self:SecondaryAttack()
 	elseif fireKeyDown and self:CanAttack(self.nextFire, curTime) then
@@ -151,7 +170,7 @@ function baseWeap:tickPlayer(dt)
 	elseif InputPressed("r", self.owner) and self.ammoLoadedMax ~= WEAPON_NOCLIP and not self.inReload then
 		-- reload when reload is pressed, or if no buttons are down and weapon is empty.
 		self:Reload()
-	elseif not fireKeyDown and not InputDown("grab", self.owner) then
+	elseif not fireKeyDown and not altfireKeyDown then
 		-- no fire buttons down
 		self.firedOnEmpty = false
 
@@ -213,7 +232,7 @@ function baseWeap:PlayEmptySound()
 end
 
 function baseWeap:ShouldWeaponIdle()
-	return false
+	return false -- override me!
 end
 
 function baseWeap:CanAttack(attack_time, curtime)

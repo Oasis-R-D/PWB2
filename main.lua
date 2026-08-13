@@ -70,8 +70,6 @@ end
 ==============================================================================================
 -- TO-DO
 ==============================================================================================
-   -  Test having multiple weapons
-   -  Test altfire
    -  Loop based sound system, will make it so sounds follow the player proper
       (only on firing client?)
 ============================================================================================]]
@@ -115,6 +113,7 @@ GLOBAL_20DEGREES = 0.17365
 
 -- WEAPONS
 #include "script/childclass.lua"
+#include "script/testgun.lua"
 
 -- MELEE
 
@@ -129,6 +128,7 @@ GLOBAL_20DEGREES = 0.17365
 -- pointers to each weapon's class
 GLOBAL_WEAPONS = {
    g_childWeapon,
+   g_testWeapon,
 }
 
 GLOBAL_WEAPONS_AMNT = #GLOBAL_WEAPONS -- only calculate this once
@@ -198,7 +198,8 @@ function client.tick(dt)
       for i=1, GLOBAL_WEAPONS_AMNT do
          if tool == wpns[i].toolID then
             wpns[i]:tickPlayer(dt)
-            break
+         else
+            wpns[i].holstered = true
          end
       end
    end
@@ -224,7 +225,7 @@ function client.draw()
 
    if GetPlayerHealth() <= 0 or GetPlayerVehicle() ~= 0 then return end
 
-   local tool = GetPlayerTool(GetLocalPlayer())
+   local tool = GetPlayerTool()
    local wpns = PLAYER_WEAPONS[GetLocalPlayer()]
    for i=1, GLOBAL_WEAPONS_AMNT do
       if tool == wpns[i].toolID then
