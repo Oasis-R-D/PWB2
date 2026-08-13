@@ -127,8 +127,8 @@ GLOBAL_20DEGREES = 0.17365
 
 -- pointers to each weapon's class
 GLOBAL_WEAPONS = {
-   g_childWeapon,
-   g_testWeapon,
+   CChildGun,
+   CTestGun,
 }
 
 GLOBAL_WEAPONS_AMNT = #GLOBAL_WEAPONS -- only calculate this once

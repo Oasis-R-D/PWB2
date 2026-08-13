@@ -1,6 +1,4 @@
--- local for the table, global for the reference
-local childWeap = {}
-g_childWeapon = childWeap
+CChildGun = {}
 
 -- Per weapon constants
 local ALTFIRERATE = 1
@@ -13,7 +11,7 @@ local CASING_ORG = Vec(0.02, 0.15, -0.15)
 -- Define the weapon's SFX
 --=========================================================================
 
-function childWeap:WeaponSounds()
+function CChildGun:WeaponSounds()
 	return {
 		{"MOD/snd/smg1_fire.ogg", "sv", 10}
 	}
@@ -24,18 +22,18 @@ end
 --=========================================================================
 
 -- Values for this specific weapon
-childWeap.model				= "MOD/models/xml/smg1.xml" -- path to the XML model file
-childWeap.toolID 			= "childweap"				-- used by the engine. lowercase and no spaces
-childWeap.toolName 			= "PWB2 Weapon"				-- shown in killfeed
-childWeap.toolSlot			= 3
-childWeap.ammoLoadedMax 	= 45						-- max clip 	 	-- -1 for no clip (pulls from reserve)
-childWeap.ammoAltLoadedMax	= 0 						-- max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
-childWeap.ammoPickupSize	= childWeap.ammoLoadedMax	-- defaults to full mag
-childWeap.flags				= 0							-- weapon flags
-childWeap.snds				= 0							-- temp value, will be set to the sound array on init
+CChildGun.model				= "MOD/models/xml/smg1.xml" -- path to the XML model file
+CChildGun.toolID 			= "CChildGun"				-- used by the engine. lowercase and no spaces
+CChildGun.toolName 			= "PWB2 Weapon"				-- shown in killfeed
+CChildGun.toolSlot			= 3
+CChildGun.ammoLoadedMax 	= 45						-- max clip 	 	-- -1 for no clip (pulls from reserve)
+CChildGun.ammoAltLoadedMax	= 0 						-- max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
+CChildGun.ammoPickupSize	= CChildGun.ammoLoadedMax	-- defaults to full mag
+CChildGun.flags				= 0							-- weapon flags
+CChildGun.snds				= 0							-- temp value, will be set to the sound array on init
 
 -- override initVars to add new variables
-function childWeap:initVars(owner)
+function CChildGun:initVars(owner)
 	if client then
 		self.timeFiring = 0
 	end
@@ -52,15 +50,15 @@ function server.PrimaryAttack(p)
 
 	local pos, dir = getAimVector(GetPlayerEyeTransform(p).pos, MAX_RANGE, GLOBAL_5DEGREES, p)
 	
-	server.ShootHook(pos, dir, "bullet", DAMAGE, PLAYERDAMAGE, MAX_RANGE, p, childWeap.toolID, childWeap.toolName)
+	server.ShootHook(pos, dir, "bullet", DAMAGE, PLAYERDAMAGE, MAX_RANGE, p, CChildGun.toolID, CChildGun.toolName)
 
-	StopSound(childWeap.snds[1])
-	PlaySound(childWeap.snds[1], mt.pos, 300)
+	StopSound(CChildGun.snds[1])
+	PlaySound(CChildGun.snds[1], mt.pos, 300)
 
-	server.depleteAmmo(p, childWeap.toolID)
+	server.depleteAmmo(p, CChildGun.toolID)
 end
 
-function childWeap:PrimaryAttack(dt)
+function CChildGun:PrimaryAttack(dt)
 	if self.ammoLoaded <= 0 then
 		self:PlayEmptySound()
 		self.nextFire = GetTime() + 0.15
@@ -101,16 +99,16 @@ function server.SecondaryAttack(p)
 	
 	for i=1, 4 do
 		local pos, dir = getAimVector(GetPlayerEyeTransform(p).pos, MAX_RANGE, GLOBAL_5DEGREES, p)
-		server.ShootHook(pos, dir, "bullet", DAMAGE, PLAYERDAMAGE, MAX_RANGE, p, childWeap.toolID, childWeap.toolName)
+		server.ShootHook(pos, dir, "bullet", DAMAGE, PLAYERDAMAGE, MAX_RANGE, p, CChildGun.toolID, CChildGun.toolName)
 	end
 	
-	StopSound(childWeap.snds[1])
-	PlaySound(childWeap.snds[1], mt.pos, 300)
+	StopSound(CChildGun.snds[1])
+	PlaySound(CChildGun.snds[1], mt.pos, 300)
 
-	server.depleteAmmo(p, childWeap.toolID, 4)
+	server.depleteAmmo(p, CChildGun.toolID, 4)
 end
 
-function childWeap:SecondaryAttack(dt)
+function CChildGun:SecondaryAttack(dt)
 	if self.ammoLoaded <= 3 then
 		self:PlayEmptySound()
 		self.nextFire = GetTime() + 0.15
@@ -141,10 +139,10 @@ function childWeap:SecondaryAttack(dt)
 	self.nextAltFire = self.nextFire
 end
 
-function childWeap:Reload()
+function CChildGun:Reload()
 	self:DefaultReload(self.ammoLoadedMax50, 1.5)
 end
 
-function childWeap:WeaponIdle()
+function CChildGun:WeaponIdle()
 	self.playEmptySound = true
 end

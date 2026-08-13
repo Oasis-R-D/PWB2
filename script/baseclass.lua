@@ -191,7 +191,8 @@ function baseWeap:tickPlayer(dt)
 		self.firedOnEmpty = false
 
 		if self.nextFire <= curTime and self.ammoLoaded == 0 and self:IsUseable() then
-			if not hasFlag(baseWeap.GetFlags(self), ITEM_FLAG_NOAUTORELOAD) then 
+			local flags = baseWeap.GetFlags(self)
+			if not hasFlag(flags, FWPN_NOAUTORELOAD) then 
 				self:Reload()
 				return
 			end
