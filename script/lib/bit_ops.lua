@@ -15,9 +15,12 @@ end
 ----------------------------------------------------------------------------------------------
 
 -- MAIN FLAGS
-MF_CL_NODRAW = leftShift(0)
-MF_CL_NOINIT = leftShift(1)
-MF_CL_NOTICK = leftShift(2)
+FM_CL_NODRAW = leftShift(0)
+FM_CL_NOINIT = leftShift(1)
+FM_CL_NOTICK = leftShift(2)
+
+-- WEAPON FLAGS
+FWPN_NOAUTORELOAD = leftShift(3)
 
 -- TEMP ENTS
 FTENT_NONE = 0

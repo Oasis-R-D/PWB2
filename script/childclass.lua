@@ -60,7 +60,7 @@ function server.PrimaryAttack(p)
 	server.depleteAmmo(p, childWeap.toolID)
 end
 
-function childWeap:PrimaryAttack()
+function childWeap:PrimaryAttack(dt)
 	if self.ammoLoaded <= 0 then
 		self:PlayEmptySound()
 		self.nextFire = GetTime() + 0.15
@@ -71,6 +71,8 @@ function childWeap:PrimaryAttack()
 	local mt = GetToolLocationWorldTransform("muzzle", self.owner)
 
 	if IsPlayerLocal(self.owner) then
+		mt.pos = VecAdd(mt.pos, VecScale(GetPlayerVelocity(), dt))
+
 		PointLight(mt.pos, 1, 0.7, 0.5, 3)
 
 		ServerCall("server.PrimaryAttack", self.owner)
@@ -108,7 +110,7 @@ function server.SecondaryAttack(p)
 	server.depleteAmmo(p, childWeap.toolID, 4)
 end
 
-function childWeap:SecondaryAttack()
+function childWeap:SecondaryAttack(dt)
 	if self.ammoLoaded <= 3 then
 		self:PlayEmptySound()
 		self.nextFire = GetTime() + 0.15
@@ -119,6 +121,8 @@ function childWeap:SecondaryAttack()
 	local mt = GetToolLocationWorldTransform("muzzle", self.owner)
 
 	if IsPlayerLocal(self.owner) then
+		mt.pos = VecAdd(mt.pos, VecScale(GetPlayerVelocity(), dt))
+		
 		PointLight(mt.pos, 1, 0.7, 0.5, 4)
 
 		ServerCall("server.SecondaryAttack", self.owner)

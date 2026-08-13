@@ -81,7 +81,7 @@ function baseWeap:initVars(owner)
 		
 		self.ammoAlt      		= 0 			-- clip
 		
-		self.animator        = ToolAnimator()
+		self.animator        	= ToolAnimator()
 	end
 
 	-- which player owns this instance
@@ -111,18 +111,17 @@ end
 WEAPON_NOCLIP = -1
 
 -- These are overriden per weapon
-function baseWeap:PrimaryAttack()   end
-function baseWeap:SecondaryAttack() end
-function baseWeap:Reload()          end
-function baseWeap:WeaponIdle()		end -- called when no buttons are pressed
+function baseWeap:Deploy()   		  end -- called when weapon is equipped
+function baseWeap:PrimaryAttack(dt)   end
+function baseWeap:SecondaryAttack(dt) end
+function baseWeap:Reload()            end	-- called when reload is started
+function baseWeap:WeaponIdle()		  end -- called when no buttons are pressed
 
 --=========================================================================
 -- tickPlayer - Handles player inputs
 --=========================================================================
 function baseWeap:tickPlayer(dt)
 	tickToolAnimator(self.animator, dt, nil, self.owner)
-
-	
 
 	local curTime = GetTime()
 	
@@ -134,14 +133,19 @@ function baseWeap:tickPlayer(dt)
 
 	if self.holstered == true then
 		-- no rapid firing
-		self.nextFire 		= math.max(self.nextFire, curTime + 0.25)
-		self.nextAltFire 	= math.max(self.nextAltFire, self.nextFire)
-		self.lastFireTime 	= 0
+		self.nextFire 	  = math.max(self.nextFire, curTime + 0.25)
+		self.nextAltFire  = math.max(self.nextAltFire, self.nextFire)
+		self.lastFireTime = 0
 
-		self.holstered 	= false
+		-- cancel reloads
+		self.inReload	  = false
+
+		self.holstered 	  = false
+
+		self:Deploy()
 	end
 
-	if self.inReload and --[[m_pPlayer->m_flNextAttack]] self.nextFire <= curTime then
+	if self.inReload and self.nextFire <= curTime then
 		-- complete the reload.
 		self.ammoLoaded = math.min(self.ammoLoadedMax, self.ammo)
 
@@ -160,13 +164,13 @@ function baseWeap:tickPlayer(dt)
 		-- hold gun straight
 		self.animator.timeSinceFire = 0.0
 
-		self:SecondaryAttack()
+		self:SecondaryAttack(dt)
 	elseif fireKeyDown and self:CanAttack(self.nextFire, curTime) then
 		if (self.ammoLoaded == 0 and self.ammo == 0) or (self.ammoLoadedMax == WEAPON_NOCLIP and 0 == self.ammo) then
 			self.firedOnEmpty = true
         end
 
-		self:PrimaryAttack()
+		self:PrimaryAttack(dt)
 	elseif InputPressed("r", self.owner) and self.ammoLoadedMax ~= WEAPON_NOCLIP and not self.inReload then
 		-- reload when reload is pressed, or if no buttons are down and weapon is empty.
 		self:Reload()
@@ -174,12 +178,12 @@ function baseWeap:tickPlayer(dt)
 		-- no fire buttons down
 		self.firedOnEmpty = false
 
-		if self.nextFire <= curTime and self:IsUseable() then
-			-- weapon is useable. Reload if empty and weapon has waited as long as it has to after firing
-			if self.ammoLoaded == 0 --[[and not hasFlag(self.flags, ITEM_FLAG_NOAUTORELOAD)]] then
+		if self.nextFire <= curTime and self.ammoLoaded == 0 and self:IsUseable() then
+			--if not hasFlag(self.flags, ITEM_FLAG_NOAUTORELOAD) then
+			-- TO-DO: self.flag can't be used 
 				self:Reload()
 				return
-			end
+			--end
 		end
 
 		self:WeaponIdle()
@@ -199,9 +203,9 @@ function baseWeap:DrawHUD()
 			UiAlign("center middle")
 			UiTranslate(UiCenter(), UiMiddle() + (UiMiddle() * 0.833))
 			if self.inReload == true then
-				UiText("RELOADING...")
+				UiText("RELOADING | " .. math.modf((self.nextFire - GetTime()) * 10) / 10)
 			else
-				UiText(self.ammoLoaded .. "/" .. self.ammoLoadedMax)
+				UiText(self.ammoLoaded .. " | " .. self.ammoLoadedMax)
 			end
 		UiPop()
 	end
@@ -212,7 +216,7 @@ function baseWeap:DrawHUD()
 			UiAlign("center middle")
 			UiTranslate(UiCenter(), UiMiddle() + (UiMiddle() * 0.766))
 			if self.ammoAltLoadedMax ~= WEAPON_NOCLIP then
-				UiText(self.ammoAlt .. "/" .. self.ammoAltLoadedMax)
+				UiText(self.ammoAlt .. " | " .. self.ammoAltLoadedMax)
 			else
 				UiText(self.ammoAlt)
 			end

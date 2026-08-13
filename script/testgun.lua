@@ -57,7 +57,7 @@ function server.PrimaryAttack(p)
 	server.depleteAmmo(p, childWeap.toolID)
 end
 
-function childWeap:PrimaryAttack()
+function childWeap:PrimaryAttack(dt)
 	if self.ammoLoaded <= 0 then
 		self:PlayEmptySound()
 		self.nextFire = GetTime() + 0.15
@@ -67,6 +67,8 @@ function childWeap:PrimaryAttack()
 	local mt = GetToolLocationWorldTransform("muzzle", self.owner)
 
 	if IsPlayerLocal(self.owner) then
+		mt.pos = VecAdd(mt.pos, VecScale(GetPlayerVelocity(), dt))
+
 		PointLight(mt.pos, 1, 0.7, 0.5, 3)
 
 		ServerCall("server.PrimaryAttack", self.owner)
