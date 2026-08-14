@@ -1,58 +1,4 @@
 ----------------------------------------------------------------------------------------------
--- Temp-Ents
-----------------------------------------------------------------------------------------------
-
-function CL_TempEntAlloc(org, model)
-
-	local tempent = newTempEnt()
-
-	tempent.flags = FTENT_NONE
-	tempent.die = 0
-	tempent.entity.model = Spawn(model, Transform(org))[1]
-	tempent.fadeSpeed = 0.5
-	tempent.hitSound = 0
-	tempent.bounceFactor = 1.0
-	tempent.entity.origin = org
-
-	local index = findArrayOpening(gpTempEnts)
-	gpTempEnts[index] = tempent
-
-	return gpTempEnts[index]
-end
-
-function R_TempModel(pos, velocity, angles, life, model, soundtype)
-
-	local tempent = CL_TempEntAlloc(pos, model)
-
-	tempent.entity.angles = angles
-	tempent.flags = 1048614 --addFlags(FTENT_NONE, FTENT_COLLIDEWORLD, FTENT_GRAVITY, FTENT_BUOYANT, FTENT_ROTATE)
-	tempent.hitSound = soundtype
-	tempent.frameMax = 0 -- tempent.frameMax = framecount
-	
-	tempent.entity.velocity = velocity
-	tempent.entity.angleVel = GetRandomDirection(256) --Vec(GetRandomFloat(-512, 511), GetRandomFloat(-256, 255), GetRandomFloat(-256, 255))
-	tempent.die = life + GetTime()
-end
-
-function ejectBrass(p, org, dir, model, casingtype)
-	local transform = GetBodyTransform(GetToolBody(p))
-
-	local eject_origin = TransformToParentPoint(transform, org)
-
-	-- add some randomization
-	dir[1] = dir[1] + GetRandomFloat(0.75, 1)
-	dir[2] = dir[2] + GetRandomFloat(1.5, 2.125)
-	dir[3] = dir[3] + GetRandomFloat(0.5, 0.75)
-
-	local eject_vel = TransformToParentVec(transform, dir)
-	eject_vel = VecAdd(eject_vel, GetPlayerVelocity(p))
-
-	local x, y, z = GetQuatEuler(transform.rot)
-
-	R_TempModel(eject_origin, eject_vel, Vec(x, y, z), 2.5, model, casingtype)
-end
-
-----------------------------------------------------------------------------------------------
 -- GoldSource Viewpunch
 ----------------------------------------------------------------------------------------------
 
@@ -324,9 +270,9 @@ function server.SpawnFireHook(pos, chance)
 	end
 end
 
-function PlaySoundOverrider(snd, pos, vol)
+function PlayFireSound(snd, pos, vol)
 	StopSound(snd)
-	PlaySound(snd, mt.pos, 300)
+	PlaySound(snd, pos, 300)
 end
 
 ----------------------------------------------------------------------------------------------

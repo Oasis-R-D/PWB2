@@ -66,7 +66,7 @@ baseWeap.recoilPosDecay 	= 0.25	-- multiplier for recoil pos decay. Lower is slo
 baseWeap.recoilAngSpring	= 65	-- bigger number increases the speed at which the angle corrects
 baseWeap.recoilAngDamp		= 9		-- bigger number makes the response more damped, smaller is less damped
 									-- currently the system will overshoot, with larger damping values it won't
-                           
+
 -- override initVars to add new variables
 function demoWeap:initVars(owner)
 	if client then
@@ -100,6 +100,7 @@ end
 -- LIBRARYS
 #include "script/lib/bit_ops.lua"
 #include "script/lib/pwbtoolanimation.lua"
+#include "script/lib/util.lua"
 
 GLOBAL_HEADSHOTMULT = 2.0 -- use actual value since guns do less damage in HL2DM
 
@@ -122,7 +123,7 @@ GLOBAL_20DEGREES  = 0.17365
 #include "script/baseclass.lua"
 #include "script/include/player.lua"
 #include "script/temp_ent.lua"
-#include "script/util.lua"
+
 
 -- WEAPONS
 #include "script/childclass.lua"

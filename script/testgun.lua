@@ -53,8 +53,7 @@ function CTestGunFire(p)
 	
 	server.ShootHook(pos, dir, "bullet", CTestGun.dmg_world, CTestGun.dmg_plyr, 100, p, CTestGun.toolID, CTestGun.toolName)
 
-	StopSound(CTestGun.snds[1])
-	PlaySound(CTestGun.snds[1], GetToolLocationWorldTransform("muzzle", p).pos, 300)
+	PlayFireSound(CTestGun.snds[1], GetToolLocationWorldTransform("muzzle", p).pos, 300)
 
 	baseWeap.DepleteAmmo(CTestGun)
 end
@@ -75,7 +74,7 @@ function CTestGun:PrimaryAttack(dt)
 
 		ServerCall("CTestGunFire", self.owner)
 
-		self.recoilPos = Vec(GetRandomFloat(0, 0.05), GetRandomFloat(0.0, 0.1), GetRandomFloat(0.05, 0.125))
+		self:RecoilPosPunch(Vec(GetRandomFloat(0, 0.05), GetRandomFloat(0.0, 0.1), GetRandomFloat(0.05, 0.125)))
 		self:RecoilAngReset(1)
 		local punchVec = Vec(GetRandomFloat(0.5, 1), GetRandomFloat(-0.5, 0.5), GetRandomFloat(-1, 1))
 		

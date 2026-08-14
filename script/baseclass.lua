@@ -30,13 +30,13 @@ baseWeap.recoilAngSpring	= 65	-- bigger number increases the speed at which the 
 baseWeap.recoilAngDamp		= 9		-- bigger number makes the response more damped, smaller is less damped
 									-- currently the system will overshoot, with larger damping values it won't
 
---=========================================================================									
+-----------------------------------------------------------								
 -- Values that ALL weapons share/use
 -- override initVars() to add variables
 -- add 'baseWeap.initVars(self, owner)'
 -- at the beginning if overriding vars
 -- at the end otherwise if preferred
---=========================================================================
+-----------------------------------------------------------
 function baseWeap:initVars(owner)
 	-- CLIENT VARS
 	if client then
@@ -279,6 +279,10 @@ function baseWeap:Animate(dt)
 	self:CustomAnimate(dt)
 end
 
+function baseWeap:RecoilPosPunch(punchPos)
+	self.recoilPos = VecAdd(self.recoilPos, punchPos)
+end
+
 function baseWeap:RecoilAngPunch(punchAngles, mult)
 	mult = mult and mult or 20
 	self.recoilAngVel = VecAdd(self.recoilAngVel, VecScale(punchAngles, mult))
@@ -335,9 +339,8 @@ function baseWeap:RecoilAngReset(tolerance)
 end
 
 --=========================================================================
---	UTIL FUNCS
+-- Weapon SFX / VFX
 --=========================================================================
-
 -- TO-DO: add firer's velocity?
 function baseWeap:muzzleFlash(pos, size, color)
 	color = color or Vec(1, 1, 1)
@@ -353,10 +356,15 @@ end
 
 function baseWeap:PlayEmptySound()
 	if self.playEmptySound then
-		PlaySound(LoadSound("MOD/snd/empty.ogg"), GetPlayerTransform(self.owner).pos, 0.5)
+		if not baseWeap.emptySND then baseWeap.emptySND = LoadSound("MOD/snd/empty.ogg") end
+		PlaySound(baseWeap.emptySND, GetPlayerTransform(self.owner).pos, 0.5)
 		self.playEmptySound = false
 	end
 end
+
+--=========================================================================
+--	UTIL FUNCS
+--=========================================================================
 
 function baseWeap:ShouldWeaponIdle()
 	return false -- override me!
@@ -394,10 +402,10 @@ function baseWeap:GetNextAttackDelay(delay)
 	return flNextAttack
 end
 
---=========================================================
+-----------------------------------------------------------
 -- IsUseable - this function determines whether or not a
 -- weapon is useable by the player in its current state.
---=========================================================
+-----------------------------------------------------------
 function baseWeap:IsUseable()
 	if self.ammoLoaded > 0 then
 		return true
