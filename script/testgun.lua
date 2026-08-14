@@ -39,8 +39,8 @@ CTestGun.ammoLoadedMax 		= 30						-- max clip 	 	-- -1 for no clip (pulls from 
 CTestGun.ammoAltLoadedMax	= 0 						-- max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
 CTestGun.ammoAltItemID		= 0 						-- wpnID of item to drain ammo for when altfiring
 CTestGun.ammoPickupSize		= CTestGun.ammoLoadedMax	-- defaults to full mag
-CTestGun.dmg_world			= 0.4
-CTestGun.dmg_plyr			= 0.05						-- 0.0-1.0
+CTestGun.dmg_world			= 0.6
+CTestGun.dmg_plyr			= 0.1						-- 0.0-1.0
 
 CTestGun.flags				= 0							-- weapon flags
 CTestGun.snds				= 0							-- temp value, will be set to the sound array on init
