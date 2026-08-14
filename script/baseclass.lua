@@ -8,7 +8,8 @@
 baseWeap = {}
 
 -- Static values for this specific weapon
-baseWeap.model				= "MOD/models/xml/model.xml"-- path to the XML model file
+-- These don't need redefined in a weapon if a var is just the default value
+baseWeap.model				= "MOD/models/xml/mdl.xml"	-- path to the XML model file
 baseWeap.casingOrg			= Vec(0,0,0)				-- where casings are ejected
 
 baseWeap.toolID 			= "baseweap"				-- used by the engine. lowercase and no spaces
@@ -24,39 +25,18 @@ baseWeap.dmg_plyr			= 0							-- 0.0-1.0
 baseWeap.flags				= 0							-- weapon flags
 baseWeap.snds				= 0
 
-function baseWeap:init_sv()
-	-- must be called like this
-	baseWeap.init_tool(self)
-	baseWeap.init_sfx(self)
-end
+baseWeap.recoilPosDecay 	= 0.25	-- multiplier for recoil pos decay. Lower is slower, higher is faster
+baseWeap.recoilAngSpring	= 65	-- bigger number increases the speed at which the angle corrects
+baseWeap.recoilAngDamp		= 9		-- bigger number makes the response more damped, smaller is less damped
+									-- currently the system will overshoot, with larger damping values it won't
 
-function baseWeap:init_cl()
-	-- must be called like this
-	baseWeap.init_sfx(self)
-end
-
-function baseWeap:init_tool()
-	RegisterTool(self.toolID, self.toolName, self.model, self.toolSlot)
-	SetToolAmmoPickupAmount(self.toolID, self.ammoPickupSize)
-end
-
-function baseWeap:init_sfx()
-	self.snds = PrecacheSFXArray(self:WeaponSounds())
-end
-
--- sound data for PrecacheSFXArray, override per weapon
-function baseWeap:WeaponSounds()
-	return {
---  		   [SOUND]		 [load to]	[dist]
-		{"MOD/snd/SOUND.ogg", "sv/cl", 	  10}
-	} 
-end
-
+--=========================================================================									
 -- Values that ALL weapons share/use
--- override initVars to add new variables
+-- override initVars() to add variables
 -- add 'baseWeap.initVars(self, owner)'
--- at the beginning to override vars
--- or end to add more vars
+-- at the beginning if overriding vars
+-- at the end otherwise if preferred
+--=========================================================================
 function baseWeap:initVars(owner)
 	-- CLIENT VARS
 	if client then
@@ -108,6 +88,37 @@ function baseWeap:initVars(owner)
 	self.owner					= owner
 end
 
+-- sound data for PrecacheSFXArray, override per weapon
+function baseWeap:WeaponSounds()
+	return {
+--  		   [SOUND]		 [load to]	[dist]
+		{"MOD/snd/SOUND.ogg", "sv/cl", 	  10}
+	} 
+end
+--=========================================================================
+-- Init funcs
+--=========================================================================
+
+function baseWeap:init_sv()
+	-- must be called like this
+	baseWeap.init_tool(self)
+	baseWeap.init_sfx(self)
+end
+
+function baseWeap:init_cl()
+	-- must be called like this
+	baseWeap.init_sfx(self)
+end
+
+function baseWeap:init_tool()
+	RegisterTool(self.toolID, self.toolName, self.model, self.toolSlot)
+	SetToolAmmoPickupAmount(self.toolID, self.ammoPickupSize)
+end
+
+function baseWeap:init_sfx()
+	self.snds = PrecacheSFXArray(self:WeaponSounds())
+end
+
 -- to add a new weapon just do CHILD = baseWeap:new(CHILD, owner) where CHILD is {}
 -- to add a weapon to a player do PLCHILD = baseWeap.new(CHILD, PLCHILD, owner)
 function baseWeap:new(obj, owner)
@@ -130,7 +141,10 @@ end
 
 WEAPON_NOCLIP = -1
 
--- These are overriden per weapon
+--=========================================================================
+-- Weapon interactions
+-- These should be overriden per weapon
+--=========================================================================
 function baseWeap:Deploy()   		  end -- called when weapon is equipped
 function baseWeap:PrimaryAttack(dt)   end
 function baseWeap:SecondaryAttack(dt) end
@@ -141,7 +155,7 @@ function baseWeap:CustomAnimate(dt)	  end -- called every frame, use for adding 
 										  -- weapon movement, see PWB1  slide/pump anims
 		
 --=========================================================================
--- tickPlayer - Handles player inputs
+-- 	Input handling and HUD
 --=========================================================================
 function baseWeap:tickPlayer(dt)
 	self:Animate(dt)
@@ -153,10 +167,6 @@ function baseWeap:tickPlayer(dt)
 	-- declare var for this since it's used a lot 
     local fireKeyDown 	 = InputDown("usetool", self.owner)
 	local altfireKeyDown = InputDown("grab", self.owner)
-
-	
-
-	self.ammoTotal = GetToolAmmo(self.toolID, self.owner)
 
 	if GetPlayerGrabBody(self.owner) ~= 0 then
 		self.inReload  = false
@@ -175,6 +185,8 @@ function baseWeap:tickPlayer(dt)
 
 		self:Deploy()
 	end
+
+	self.ammoTotal = GetToolAmmo(self.toolID, self.owner)
 
 	if self.inReload and self.nextFire <= curTime then
 		-- complete the reload.
@@ -255,9 +267,8 @@ function baseWeap:DrawHUD()
 end
 
 --=========================================================================
--- 								ANIMATION
+-- 	Weapon recoil handling
 --=========================================================================
-
 function baseWeap:Animate(dt)
 	-- ang recoil could prob be made local for performance
 
@@ -275,7 +286,7 @@ end
 
 function baseWeap:decayPosRecoil(dt)
 	local len = VecLength(self.recoilPos)
-	len = len - ((10.0 + len * 0.25) * dt)
+	len = len - ((10.0 + len * self.recoilPosDecay) * dt)
 	len = math.max(len, 0.0)
 	self.recoilPos = VecScale(VecNormalize(self.recoilPos), len)
 end
@@ -283,7 +294,7 @@ end
 function baseWeap:decayAngRecoil(dt)
 	if VecLength(self.recoilAng) > 0.03 or VecLength(self.recoilAngVel) > 0.03 then
 		self.recoilAng = VecAdd(self.recoilAng, VecScale(self.recoilAngVel, dt))
-		local damping = 1 - (9 * dt)
+		local damping = 1 - (self.recoilAngDamp * dt)
 		
 		if damping < 0 then 
 			damping = 0
@@ -293,7 +304,7 @@ function baseWeap:decayAngRecoil(dt)
 		
 		-- torsional spring
 		-- UNDONE: Per-axis spring constant?
-		local springForceMagnitude = 65 * dt
+		local springForceMagnitude = self.recoilAngSpring * dt
 		springForceMagnitude = math.clamp( springForceMagnitude, 0.0, 2.0 )
 		self.recoilAngVel = VecSub(self.recoilAngVel, VecScale(self.recoilAng, springForceMagnitude))
 
@@ -324,7 +335,7 @@ function baseWeap:RecoilAngReset(tolerance)
 end
 
 --=========================================================================
--- 								UTIL FUNCS
+--	UTIL FUNCS
 --=========================================================================
 
 -- TO-DO: add firer's velocity?
@@ -386,8 +397,6 @@ end
 --=========================================================
 -- IsUseable - this function determines whether or not a
 -- weapon is useable by the player in its current state.
--- (does it have ammo loaded? do I have any ammo for the
--- weapon?, etc)
 --=========================================================
 function baseWeap:IsUseable()
 	if self.ammoLoaded > 0 then
@@ -441,7 +450,7 @@ end
 function baseWeap:DepleteAmmo(amount)
 	amount = amount or 1
 	local ammo = GetToolAmmo(self.toolID, self.owner)
-	DebugPrint(self.toolID)
+
 	if ammo < 9999 then
 		SetToolAmmo(self.toolID, ammo-amount, self.owner)
 	end
@@ -456,8 +465,6 @@ function PrecacheSFXArray(arr)
 			table.insert(precachedSounds, LoadSound(sounddata[1], sounddata[3]))
 		end
 	end
-
-	--self.WeaponSounds = nil -- don't need this anymore
 
 	return precachedSounds
 end

@@ -27,6 +27,7 @@ end
 --=========================================================================
 
 -- Static values for this specific weapon
+-- These don't need redefined in a weapon if a var is just the default value
 CTestGun.model				= "MOD/models/xml/smg1.xml" -- path to the XML model file
 CTestGun.casingOrg			= Vec(0.02, 0.15, -0.15)	-- where casings are ejected
 
@@ -79,8 +80,10 @@ function CTestGun:PrimaryAttack(dt)
 		local punchVec = Vec(GetRandomFloat(0.5, 1), GetRandomFloat(-0.5, 0.5), GetRandomFloat(-1, 1))
 		
 		self:RecoilAngPunch(punchVec)
+		
+		client.SRC_PunchReset()
 		for i=1, 3 do
-			SRC_PunchAxis(i, punchVec[i])
+			client.SRC_PunchAxis(i, punchVec[i])
 		end
 
 		-- shell ejection

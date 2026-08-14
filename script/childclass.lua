@@ -15,6 +15,7 @@ end
 --=========================================================================
 
 -- Static values for this specific weapon
+-- These don't need redefined in a weapon if a var is just the default value
 CChildGun.model				= "MOD/models/xml/smg1.xml" -- path to the XML model file
 CChildGun.casingOrg			= Vec(0.02, 0.15, -0.15)	-- where casings are ejected
 

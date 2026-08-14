@@ -46,7 +46,8 @@ end
 --=========================================================================
 
 -- Static values for this specific weapon
-demoWeap.model				   = "MOD/models/xml/smg1.xml"-- path to the XML model file
+-- These don't need redefined in a weapon if a var is just the default value
+demoWeap.model				   = "MOD/models/xml/mdl.xml" -- path to the XML model file
 demoWeap.casingOrg         = Vec(0,0,0)               -- where casings are ejected
 demoWeap.toolID 			   = "demoWeap"				   -- used by the engine. lowercase and no spaces
 demoWeap.toolName 			= "PWB2 Weapon"			   -- shown in killfeed
@@ -61,6 +62,11 @@ demoWeap.dmg_plyr			   = 0.05						   -- 0.0-1.0
 demoWeap.flags				   = 0							   -- weapon flags
 demoWeap.snds				   = 0							   -- temp value, will be set to the sound array on init
 
+baseWeap.recoilPosDecay 	= 0.25	-- multiplier for recoil pos decay. Lower is slower, higher is faster
+baseWeap.recoilAngSpring	= 65	-- bigger number increases the speed at which the angle corrects
+baseWeap.recoilAngDamp		= 9		-- bigger number makes the response more damped, smaller is less damped
+									-- currently the system will overshoot, with larger damping values it won't
+                           
 -- override initVars to add new variables
 function demoWeap:initVars(owner)
 	if client then
