@@ -1,8 +1,5 @@
 CChildGun = {} -- goes in GLOBAL_WEAPONS
 
--- Per weapon constants
-local CASING_ORG = Vec(0.02, 0.15, -0.15)
-
 --=========================================================================
 -- Define the weapon's SFX / VFX
 --=========================================================================
@@ -19,6 +16,8 @@ end
 
 -- Static values for this specific weapon
 CChildGun.model				= "MOD/models/xml/smg1.xml" -- path to the XML model file
+CChildGun.casingOrg			= Vec(0.02, 0.15, -0.15)
+
 CChildGun.toolID 			= "CChildGun"				-- used by the engine. lowercase and no spaces
 CChildGun.toolName 			= "PWB2 Weapon"				-- shown in killfeed
 CChildGun.toolSlot			= 3
@@ -87,7 +86,7 @@ function CChildGun:PrimaryAttack(dt)
 		self:RecoilAngPunch(Vec(GetRandomFloat(0.5, 1), GetRandomFloat(-0.5, 0.5), GetRandomFloat(-1, 1)))
 
 		-- shell ejection
-		ejectBrass(self.owner, CASING_ORG, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
+		ejectBrass(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
 	end
 
 	self:muzzleFlash(mt.pos, 2)
@@ -131,7 +130,7 @@ function CChildGun:SecondaryAttack(dt)
 		client.SRC_PunchAxis(1, 0.5)
 
 		-- shell ejection
-		ejectBrass(self.owner, CASING_ORG, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
+		ejectBrass(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
 	end
 
 	self:muzzleFlash(mt.pos, 2)

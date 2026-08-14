@@ -1,8 +1,5 @@
 CTestGun = {} -- goes in GLOBAL_WEAPONS
 
--- Per weapon constants
-local CASING_ORG = Vec(0.02, 0.15, -0.15)
-
 --=========================================================================
 -- Define the weapon's SFX / VFX
 --=========================================================================
@@ -31,6 +28,8 @@ end
 
 -- Static values for this specific weapon
 CTestGun.model				= "MOD/models/xml/smg1.xml" -- path to the XML model file
+CTestGun.casingOrg			= Vec(0.02, 0.15, -0.15)
+
 CTestGun.toolID 			= "testgun"					-- used by the engine. lowercase and no spaces
 CTestGun.toolName 			= "PWB2 Test Gun"			-- shown in killfeed
 CTestGun.toolSlot			= 3
@@ -44,16 +43,6 @@ CTestGun.dmg_plyr			= 0.1						-- 0.0-1.0
 
 CTestGun.flags				= 0							-- weapon flags
 CTestGun.snds				= 0							-- temp value, will be set to the sound array on init
-
--- override initVars to add new variables
-function CTestGun:initVars(owner)
-	if client then
-		self.timeFiring = 0
-	end
-
-	baseWeap.initVars(self, owner)
-end
-
 --=========================================================================
 -- Weapon functions
 --=========================================================================
@@ -78,12 +67,6 @@ function CTestGun:PrimaryAttack(dt)
 
 	local mt = GetToolLocationWorldTransform("muzzle", self.owner)
 
-	if GetTime() - self.lastFireTime < 0.125 then
-		self.timeFiring = self.timeFiring + 0.125
-	else
-		self.timeFiring = 0
-	end
-
 	if IsPlayerLocal(self.owner) then
 		mt.pos = VecAdd(mt.pos, VecScale(GetPlayerVelocity(), dt))
 
@@ -91,14 +74,17 @@ function CTestGun:PrimaryAttack(dt)
 
 		ServerCall("CTestGunFire", self.owner)
 
-		client.DoMachineGunKick(1.66, self.timeFiring, 1)
-		
 		self.recoilPos = Vec(GetRandomFloat(0, 0.05), GetRandomFloat(0.0, 0.1), GetRandomFloat(0.05, 0.125))
 		self:RecoilAngReset(1)
-		self:RecoilAngPunch(Vec(GetRandomFloat(0.5, 1), GetRandomFloat(-0.5, 0.5), GetRandomFloat(-1, 1)))
+		local punchVec = Vec(GetRandomFloat(0.5, 1), GetRandomFloat(-0.5, 0.5), GetRandomFloat(-1, 1))
+		
+		self:RecoilAngPunch(punchVec)
+		for i=1, 3 do
+			SRC_PunchAxis(i, punchVec[i])
+		end
 
 		-- shell ejection
-		ejectBrass(self.owner, CASING_ORG, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_556.xml", FSFX_BRASS)
+		ejectBrass(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_556.xml", FSFX_BRASS)
 	end
 
 	self:muzzleFlash(mt.pos, 1)
