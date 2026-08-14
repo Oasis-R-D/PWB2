@@ -28,7 +28,7 @@ end
 
 -- Static values for this specific weapon
 CTestGun.model				= "MOD/models/xml/smg1.xml" -- path to the XML model file
-CTestGun.casingOrg			= Vec(0.02, 0.15, -0.15)
+CTestGun.casingOrg			= Vec(0.02, 0.15, -0.15)	-- where casings are ejected
 
 CTestGun.toolID 			= "testgun"					-- used by the engine. lowercase and no spaces
 CTestGun.toolName 			= "PWB2 Test Gun"			-- shown in killfeed

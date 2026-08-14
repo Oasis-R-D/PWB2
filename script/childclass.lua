@@ -16,7 +16,7 @@ end
 
 -- Static values for this specific weapon
 CChildGun.model				= "MOD/models/xml/smg1.xml" -- path to the XML model file
-CChildGun.casingOrg			= Vec(0.02, 0.15, -0.15)
+CChildGun.casingOrg			= Vec(0.02, 0.15, -0.15)	-- where casings are ejected
 
 CChildGun.toolID 			= "CChildGun"				-- used by the engine. lowercase and no spaces
 CChildGun.toolName 			= "PWB2 Weapon"				-- shown in killfeed

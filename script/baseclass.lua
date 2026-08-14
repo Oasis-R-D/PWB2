@@ -9,7 +9,7 @@ baseWeap = {}
 
 -- Static values for this specific weapon
 baseWeap.model				= "MOD/models/xml/model.xml"-- path to the XML model file
-baseWeap.casingOrg			= Vec()
+baseWeap.casingOrg			= Vec(0,0,0)				-- where casings are ejected
 
 baseWeap.toolID 			= "baseweap"				-- used by the engine. lowercase and no spaces
 baseWeap.toolName 			= "PWB2 Base Weapon"		-- shown in killfeed

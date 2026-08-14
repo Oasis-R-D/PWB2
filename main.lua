@@ -47,6 +47,7 @@ end
 
 -- Static values for this specific weapon
 demoWeap.model				   = "MOD/models/xml/smg1.xml"-- path to the XML model file
+demoWeap.casingOrg         = Vec(0,0,0)               -- where casings are ejected
 demoWeap.toolID 			   = "demoWeap"				   -- used by the engine. lowercase and no spaces
 demoWeap.toolName 			= "PWB2 Weapon"			   -- shown in killfeed
 demoWeap.toolSlot			   = 3
