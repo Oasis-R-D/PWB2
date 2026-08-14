@@ -12,13 +12,13 @@ baseWeap.flags				= 0							-- weapon flags
 baseWeap.snds				= 0
 
 function baseWeap:init_sv()
-	-- must be called like this due to how static vars work
+	-- must be called like this
 	baseWeap.init_tool(self)
 	baseWeap.init_sfx(self)
 end
 
 function baseWeap:init_cl()
-	-- must be called like this due to how static vars work
+	-- must be called like this
 	baseWeap.init_sfx(self)
 end
 
@@ -37,11 +37,6 @@ function baseWeap:WeaponSounds()
 --  		   [SOUND]		 [load to]	[dist]
 		{"MOD/snd/SOUND.ogg", "sv/cl", 	  10}
 	} 
-end
-
--- this is needed due to flags being a static var
-function baseWeap:GetFlags()
-	return self.flags
 end
 
 -- Values that ALL weapons share/use
@@ -83,12 +78,17 @@ function baseWeap:initVars(owner)
 		self.lastFireTime       = 0
 
 		-- ammo loaded into weapon. Set by child
-		self.ammo				= 0 -- total ammo
+		self.ammoTotal			= 0 -- total ammo
 		self.ammoLoaded         = self.ammoLoadedMax -- current magazine amount
 		
-		self.ammoAlt      		= 0 -- total alt ammo
+		
+		self.ammoAltTotal      	= 0 -- total alt ammo
 		
 		self.animator        	= ToolAnimator()
+
+		self.recoilPos 			= Vec(0,0,0)
+		self.recoilAng 			= Vec(0,0,0)
+		self.recoilAngVel 		= Vec(0,0,0)
 	end
 
 	-- which player owns this instance
@@ -124,14 +124,14 @@ function baseWeap:SecondaryAttack(dt) end
 function baseWeap:Reload()            end -- called when reload is started
 function baseWeap:WeaponIdle()		  end -- called when no buttons are pressed
 
-function baseWeap:Animate()			  end -- called every frame, use for adding custom
+function baseWeap:CustomAnimate(dt)	  end -- called every frame, use for adding custom
 										  -- weapon movement, see PWB1  slide/pump anims
 		
 --=========================================================================
 -- tickPlayer - Handles player inputs
 --=========================================================================
 function baseWeap:tickPlayer(dt)
-	self:Animate(dt, self.owner)
+	self:Animate(dt)
 
 	tickToolAnimator(self.animator, dt, nil, self.owner)
 
@@ -141,7 +141,7 @@ function baseWeap:tickPlayer(dt)
     local fireKeyDown 	 = InputDown("usetool", self.owner)
 	local altfireKeyDown = InputDown("grab", self.owner)
 
-	self.ammo = GetToolAmmo(self.toolID, self.owner)
+	self.ammoTotal = GetToolAmmo(self.toolID, self.owner)
 
 	if self.holstered == true then
 		-- no rapid firing
@@ -159,7 +159,7 @@ function baseWeap:tickPlayer(dt)
 
 	if self.inReload and self.nextFire <= curTime then
 		-- complete the reload.
-		self.ammoLoaded = math.min(self.ammoLoadedMax, self.ammo)
+		self.ammoLoaded = math.min(self.ammoLoadedMax, self.ammoTotal)
 
 		self.inReload = false
     end
@@ -169,7 +169,7 @@ function baseWeap:tickPlayer(dt)
     end
 
 	if altfireKeyDown and self:CanAttack(self.nextAltFire, curTime) and GetPlayerGrabBody(self.owner) == 0 then
-		if self.ammoAltLoadedMax ~= WEAPON_NOCLIP and self.ammoAlt == 0 then
+		if self.ammoAltLoadedMax ~= WEAPON_NOCLIP and self.ammoAltTotal == 0 then
 			self.firedOnEmpty = true
         end
 
@@ -178,7 +178,7 @@ function baseWeap:tickPlayer(dt)
 
 		self:SecondaryAttack(dt)
 	elseif fireKeyDown and self:CanAttack(self.nextFire, curTime) then
-		if (self.ammoLoaded == 0 and self.ammo == 0) or (self.ammoLoadedMax == WEAPON_NOCLIP and 0 == self.ammo) then
+		if (self.ammoLoaded == 0 and self.ammoTotal == 0) or (self.ammoLoadedMax == WEAPON_NOCLIP and 0 == self.ammoTotal) then
 			self.firedOnEmpty = true
         end
 
@@ -191,8 +191,7 @@ function baseWeap:tickPlayer(dt)
 		self.firedOnEmpty = false
 
 		if self.nextFire <= curTime and self.ammoLoaded == 0 and self:IsUseable() then
-			local flags = baseWeap.GetFlags(self)
-			if not hasFlag(flags, FWPN_NOAUTORELOAD) then 
+			if not hasFlag(self.flags, FWPN_NOAUTORELOAD) then 
 				self:Reload()
 				return
 			end
@@ -228,12 +227,81 @@ function baseWeap:DrawHUD()
 			UiAlign("center middle")
 			UiTranslate(UiCenter(), UiMiddle() + (UiMiddle() * 0.766))
 			if self.ammoAltLoadedMax ~= WEAPON_NOCLIP then
-				UiText(self.ammoAlt .. " | " .. self.ammoAltLoadedMax)
+				UiText(self.ammoAltTotal .. " | " .. self.ammoAltLoadedMax)
 			else
-				UiText(self.ammoAlt)
+				UiText(self.ammoAltTotal)
 			end
 		UiPop()
 	end
+end
+
+--=========================================================================
+-- 								ANIMATION
+--=========================================================================
+
+function baseWeap:Animate(dt)
+	-- ang recoil could prob be made local for performance
+
+	self.animator.offsetTransform = Transform(self.recoilPos, QuatEuler(self.recoilAng[1], self.recoilAng[2], self.recoilAng[3]))
+	self:decayPosRecoil(dt)
+	self:decayAngRecoil(dt)
+
+	self:CustomAnimate(dt)
+end
+
+function baseWeap:RecoilAngPunch(punchAngles, mult)
+	mult = mult and mult or 20
+	self.recoilAngVel = VecAdd(self.recoilAngVel, VecScale(punchAngles, mult))
+end
+
+function baseWeap:decayPosRecoil(dt)
+	local len = VecLength(self.recoilPos)
+	len = len - ((10.0 + len * 0.25) * dt)
+	len = math.max(len, 0.0)
+	self.recoilPos = VecScale(VecNormalize(self.recoilPos), len)
+end
+
+function baseWeap:decayAngRecoil(dt)
+	if VecLength(self.recoilAng) > 0.03 or VecLength(self.recoilAngVel) > 0.03 then
+		self.recoilAng = VecAdd(self.recoilAng, VecScale(self.recoilAngVel, dt))
+		local damping = 1 - (9 * dt)
+		
+		if damping < 0 then 
+			damping = 0
+		end
+
+		self.recoilAngVel = VecScale(self.recoilAngVel, damping)
+		
+		-- torsional spring
+		-- UNDONE: Per-axis spring constant?
+		local springForceMagnitude = 65 * dt
+		springForceMagnitude = math.clamp( springForceMagnitude, 0.0, 2.0 )
+		self.recoilAngVel = VecSub(self.recoilAngVel, VecScale(self.recoilAng, springForceMagnitude))
+
+		-- don't wrap around
+		self.recoilAng[1] = math.clamp(self.recoilAng[1], -89,  89 )
+		self.recoilAng[2] = math.clamp(self.recoilAng[2], -179, 179)
+		self.recoilAng[3] = math.clamp(self.recoilAng[3], -89,  89 )
+	else
+		self.recoilAng 	  = Vec(0,0,0)
+		self.recoilAngVel = Vec(0,0,0)
+	end
+end
+
+function baseWeap:RecoilAngReset(tolerance)
+	tolerance = tolerance or 0
+	if tolerance ~= 0 then
+		tolerance = tolerance
+
+		local check = VecLength(self.recoilAngVel) + VecLength(self.recoilAng)
+
+		if check > tolerance then
+			return
+		end
+	end
+
+	self.recoilAng 	 = Vec(0,0,0)
+	self.recoilAngVel = Vec(0,0,0)
 end
 
 --=========================================================================
@@ -299,7 +367,7 @@ function baseWeap:IsUseable()
 		return true
 	end
 
-	if self.ammo > 0 then
+	if self.ammoTotal > 0 then
 		return true
 	end
 
@@ -309,7 +377,7 @@ function baseWeap:IsUseable()
 			return true
 		end
 
-		if self.ammoAlt > 0 then
+		if self.ammoAltTotal > 0 then
 			return true
 		end
 	end
@@ -319,9 +387,9 @@ function baseWeap:IsUseable()
 end
 
 function baseWeap:DefaultReload(iClipSize, fDelay)
-	if self.ammo <= 0 then return false end
+	if self.ammoTotal <= 0 then return false end
 
-	local j = math.min(self.ammoLoadedMax - self.ammoLoaded, self.ammo)
+	local j = math.min(self.ammoLoadedMax - self.ammoLoaded, self.ammoTotal)
 	if j <= 0 then return false end
 
 	local curTime = GetTime()

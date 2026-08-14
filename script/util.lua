@@ -80,12 +80,6 @@ end
 -- Source Viewpunch
 ----------------------------------------------------------------------------------------------
 
-function math.clamp(val, min, max)
-    if val < min then return min end
-    if val > max then return max end
-    return val
-end
-
 local vecPunchAngle    = Vec(0,0,0)
 local vecPunchAngleVel = Vec(0,0,0)
 
@@ -132,7 +126,7 @@ function client.SRC_PunchReset(tolerance)
 	if tolerance ~= 0 then
 		tolerance = tolerance
 
-		local check = VecLength(PunchAngleVel) + VecLength(PunchAngle)
+		local check = VecLength(vecPunchAngleVel) + VecLength(vecPunchAngle)
 
 		if check > tolerance then
 			return
@@ -357,7 +351,7 @@ local MUZZLEFLASH_SPRITE = false
 function muzzleFlash(pos, size, color)
 	color = color or Vec(1, 1, 1)
 	local t = Transform(pos)
-	t.rot = GetCameraTransform().rot
+	t.rot = QuatRotateQuat(GetCameraTransform().rot, QuatEuler(0,0,GetRandomFloat(-15, 15)))
 
 	if not MUZZLEFLASH_SPRITE then MUZZLEFLASH_SPRITE = LoadSprite("gfx/glare.png") end
 

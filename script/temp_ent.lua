@@ -84,7 +84,12 @@ function HUD_TempEntUpdate_(
 						local proj, damp
 
 						-- Place at contact point
-						pTemp.entity.origin = VecAdd(pTemp.entity.prevOrigin, VecScale(betweenDir, traceNormal[2] > 0.9 and dist or dist-0.01))
+						local useDist = dist
+						if useDist > 0.011 and traceNormal[2] > 0.9 then
+							useDist = useDist - 0.01
+						end
+						
+						pTemp.entity.origin = VecAdd(pTemp.entity.prevOrigin, VecScale(betweenDir, useDist))
 
 						-- Damp velocity
 						damp = pTemp.bounceFactor

@@ -77,6 +77,10 @@ function CChildGun:PrimaryAttack(dt)
 
 		client.DoMachineGunKick(1, self.timeFiring, 2)
 
+		self.recoilPos = Vec(0, 0, GetRandomFloat(0.05, 0.2))
+		self:RecoilAngReset(1)
+		self:RecoilAngPunch(Vec(GetRandomFloat(0.5, 1), GetRandomFloat(-0.5, 0.5), GetRandomFloat(-1, 1)))
+
 		-- shell ejection
 		ejectBrass(self.owner, CASING_ORG, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
 	end

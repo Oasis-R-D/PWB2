@@ -27,6 +27,7 @@ CTestGun.toolName 			= "PWB2 Test Gun"			-- shown in killfeed
 CTestGun.toolSlot			= 3
 CTestGun.ammoLoadedMax 		= 30						-- max clip 	 	-- -1 for no clip (pulls from reserve)
 CTestGun.ammoAltLoadedMax	= 0 						-- max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
+CTestGun.ammoAltItemID		= 0 						-- wpnID of item to drain ammo for when altfiring
 CTestGun.ammoPickupSize		= CTestGun.ammoLoadedMax	-- defaults to full mag
 CTestGun.flags				= 0							-- weapon flags
 CTestGun.snds				= 0							-- temp value, will be set to the sound array on init
@@ -72,6 +73,10 @@ function CTestGun:PrimaryAttack(dt)
 		ServerCall("server.PrimaryAttack", self.owner)
 
 		client.DoMachineGunKick(1.66, self.timeFiring, 1)
+		
+		self.recoilPos = Vec(GetRandomFloat(0, 0.05), GetRandomFloat(0.0, 0.1), GetRandomFloat(0.05, 0.125))
+		self:RecoilAngReset(1)
+		self:RecoilAngPunch(Vec(GetRandomFloat(0.5, 1), GetRandomFloat(-0.5, 0.5), GetRandomFloat(-1, 1)))
 
 		-- shell ejection
 		ejectBrass(self.owner, CASING_ORG, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_556.xml", FSFX_BRASS)
