@@ -346,23 +346,6 @@ function checkDeathReset()
    	end
 end
 
--- TO-DO: add firer's velocity?
-local MUZZLEFLASH_SPRITE = false
-function muzzleFlash(pos, size, color)
-	color = color or Vec(1, 1, 1)
-	local t = Transform(pos)
-	t.rot = QuatRotateQuat(GetCameraTransform().rot, QuatEuler(0,0,GetRandomFloat(-15, 15)))
-
-	if not MUZZLEFLASH_SPRITE then MUZZLEFLASH_SPRITE = LoadSprite("gfx/glare.png") end
-
-	local spriteSize = size * 0.4
-	DrawSprite(MUZZLEFLASH_SPRITE, t, spriteSize, spriteSize, color[1], color[2], color[3], 1.0, true, true, true)
-end
-
-function canFire(p, ammo, clip, cooldown)
-	return cooldown < 0 and ammo > 0.5 and clip > 0.5 and GetPlayerCanUseTool(p) == true
-end
-
 function getAimVector(pos, range, spreadRad, p, spreadRadVert)
 	spreadRadVert = spreadRadVert or spreadRad
 
@@ -498,14 +481,3 @@ function server.ShootHook(pos, dir, shoottype, damage, playerdamage, range, play
 
 	return bHit, pdist, playerhit
 end
-
-function server.depleteAmmo(p, id, amount)
-	amount = amount or 1
-	local ammo = GetToolAmmo(id, p)
-	if ammo < 9999 then
-		SetToolAmmo(id, ammo-amount, p)
-	end
-end
-
-----------------------------------------------------------------------------------------------
-----------------------------------------------------------------------------------------------

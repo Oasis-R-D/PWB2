@@ -1,14 +1,10 @@
-CChildGun = {}
+CChildGun = {} -- goes in GLOBAL_WEAPONS
 
 -- Per weapon constants
-local ALTFIRERATE = 1
-local DAMAGE = 0.4
-local PLAYERDAMAGE = 0.05
-local MAX_RANGE = 100.0
 local CASING_ORG = Vec(0.02, 0.15, -0.15)
 
 --=========================================================================
--- Define the weapon's SFX
+-- Define the weapon's SFX / VFX
 --=========================================================================
 
 function CChildGun:WeaponSounds()
@@ -21,14 +17,18 @@ end
 -- Define the weapon and it's variables
 --=========================================================================
 
--- Values for this specific weapon
+-- Static values for this specific weapon
 CChildGun.model				= "MOD/models/xml/smg1.xml" -- path to the XML model file
 CChildGun.toolID 			= "CChildGun"				-- used by the engine. lowercase and no spaces
 CChildGun.toolName 			= "PWB2 Weapon"				-- shown in killfeed
 CChildGun.toolSlot			= 3
+
 CChildGun.ammoLoadedMax 	= 45						-- max clip 	 	-- -1 for no clip (pulls from reserve)
 CChildGun.ammoAltLoadedMax	= 0 						-- max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
 CChildGun.ammoPickupSize	= CChildGun.ammoLoadedMax	-- defaults to full mag
+CChildGun.dmg_world			= 0.4
+CChildGun.dmg_plyr			= 0.05						-- 0.0-1.0
+
 CChildGun.flags				= 0							-- weapon flags
 CChildGun.snds				= 0							-- temp value, will be set to the sound array on init
 
@@ -45,17 +45,16 @@ end
 -- Weapon functions
 --=========================================================================
 
-function server.PrimaryAttack(p)
+function CChildGunFire(p)
 	local mt = GetToolLocationWorldTransform("muzzle", p)
 
-	local pos, dir = getAimVector(GetPlayerEyeTransform(p).pos, MAX_RANGE, GLOBAL_5DEGREES, p)
+	local pos, dir = getAimVector(GetPlayerEyeTransform(p).pos, 100, GLOBAL_5DEGREES, p)
+	server.ShootHook(pos, dir, "bullet", CChildGun.dmg_world, CChildGun.dmg_plyr, 100, p, CChildGun.toolID, CChildGun.toolName)
 	
-	server.ShootHook(pos, dir, "bullet", DAMAGE, PLAYERDAMAGE, MAX_RANGE, p, CChildGun.toolID, CChildGun.toolName)
-
 	StopSound(CChildGun.snds[1])
 	PlaySound(CChildGun.snds[1], mt.pos, 300)
 
-	server.depleteAmmo(p, CChildGun.toolID)
+	baseWeap.DepleteAmmo(CChildGun)
 end
 
 function CChildGun:PrimaryAttack(dt)
@@ -68,12 +67,18 @@ function CChildGun:PrimaryAttack(dt)
 
 	local mt = GetToolLocationWorldTransform("muzzle", self.owner)
 
+	if GetTime() - self.lastFireTime < 0.1 then
+		self.timeFiring = self.timeFiring + 0.1
+	else
+		self.timeFiring = 0
+	end
+
 	if IsPlayerLocal(self.owner) then
 		mt.pos = VecAdd(mt.pos, VecScale(GetPlayerVelocity(), dt))
 
 		PointLight(mt.pos, 1, 0.7, 0.5, 3)
 
-		ServerCall("server.PrimaryAttack", self.owner)
+		ServerCall("CChildGunFire", self.owner)
 
 		client.DoMachineGunKick(1, self.timeFiring, 2)
 
@@ -85,31 +90,25 @@ function CChildGun:PrimaryAttack(dt)
 		ejectBrass(self.owner, CASING_ORG, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
 	end
 
-	if GetTime() - self.lastFireTime < 0.1 then
-		self.timeFiring = self.timeFiring + 0.1
-	else
-		self.timeFiring = 0
-	end
-
-	muzzleFlash(mt.pos, 2)
+	self:muzzleFlash(mt.pos, 2)
 
 	self.ammoLoaded = self.ammoLoaded - 1
 
 	self.nextFire = self:GetNextAttackDelay(0.075)
 end
 
-function server.SecondaryAttack(p)
+function CChildGunAltFire(p)
 	local mt = GetToolLocationWorldTransform("muzzle", p)
 	
 	for i=1, 4 do
-		local pos, dir = getAimVector(GetPlayerEyeTransform(p).pos, MAX_RANGE, GLOBAL_5DEGREES, p)
-		server.ShootHook(pos, dir, "bullet", DAMAGE, PLAYERDAMAGE, MAX_RANGE, p, CChildGun.toolID, CChildGun.toolName)
+		local pos, dir = getAimVector(GetPlayerEyeTransform(p).pos, 100, GLOBAL_5DEGREES, p)
+		server.ShootHook(pos, dir, "bullet", CChildGun.dmg_world, CChildGun.dmg_plyr, 100, p, CChildGun.toolID, CChildGun.toolName)
 	end
 	
 	StopSound(CChildGun.snds[1])
 	PlaySound(CChildGun.snds[1], mt.pos, 300)
 
-	server.depleteAmmo(p, CChildGun.toolID, 4)
+	baseWeap.DepleteAmmo(CChildGun, 4)
 end
 
 function CChildGun:SecondaryAttack(dt)
@@ -127,7 +126,7 @@ function CChildGun:SecondaryAttack(dt)
 		
 		PointLight(mt.pos, 1, 0.7, 0.5, 4)
 
-		ServerCall("server.SecondaryAttack", self.owner)
+		ServerCall("CChildGunAltFire", self.owner)
 
 		client.SRC_PunchAxis(1, 0.5)
 
@@ -135,7 +134,7 @@ function CChildGun:SecondaryAttack(dt)
 		ejectBrass(self.owner, CASING_ORG, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
 	end
 
-	muzzleFlash(mt.pos, 3)
+	self:muzzleFlash(mt.pos, 2)
 
 	self.ammoLoaded = self.ammoLoaded - 4
 

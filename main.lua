@@ -29,12 +29,10 @@ if you need help with PWB2 or it's utilization of object oriented programming, m
 -- WEAPON DEFINITION EXAMPLE
 ==============================================================================================
 
--- local for the table, global for the reference
-local demoWeap = {}   -- demoWeap is turned into a class on init
-g_demoWeap = demoWeap -- g_demoWeap goes in GLOBAL_WEAPONS
+demoWeap = {} -- goes in GLOBAL_WEAPONS
 
 --=========================================================================
--- Define the weapon's SFX
+-- Define the weapon's SFX / VFX
 --=========================================================================
 
 function demoWeap:WeaponSounds()
@@ -47,22 +45,30 @@ end
 -- Define the weapon and it's variables
 --=========================================================================
 
--- Values for this specific weapon
+-- Static values for this specific weapon
 demoWeap.model				   = "MOD/models/xml/smg1.xml"-- path to the XML model file
 demoWeap.toolID 			   = "demoWeap"				   -- used by the engine. lowercase and no spaces
 demoWeap.toolName 			= "PWB2 Weapon"			   -- shown in killfeed
 demoWeap.toolSlot			   = 3
+
 demoWeap.ammoLoadedMax 	   = 45						      -- max clip 	 	-- -1 for no clip (pulls from reserve)
 demoWeap.ammoAltLoadedMax	= -1 						      -- max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
 demoWeap.ammoPickupSize	   = demoWeap.ammoLoadedMax	-- defaults to full mag
+demoWeap.dmg_world			= 0.4
+demoWeap.dmg_plyr			   = 0.05						   -- 0.0-1.0
+
 demoWeap.flags				   = 0							   -- weapon flags
 demoWeap.snds				   = 0							   -- temp value, will be set to the sound array on init
 
 -- override initVars to add new variables
 function demoWeap:initVars(owner)
 	if client then
-		self.timeFiring = 0
+		self.clientvar = 0
+   else
+      self.servervar = 69
 	end
+
+   self.sharedvar = 1 -- not synced between SV+CL, exists on both
 
 	baseWeap.initVars(self, owner)
 end

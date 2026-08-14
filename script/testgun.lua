@@ -1,13 +1,10 @@
-CTestGun = {}
+CTestGun = {} -- goes in GLOBAL_WEAPONS
 
 -- Per weapon constants
-local DAMAGE = 0.4
-local PLAYERDAMAGE = 0.05
-local MAX_RANGE = 100.0
 local CASING_ORG = Vec(0.02, 0.15, -0.15)
 
 --=========================================================================
--- Define the weapon's SFX
+-- Define the weapon's SFX / VFX
 --=========================================================================
 
 function CTestGun:WeaponSounds()
@@ -16,19 +13,35 @@ function CTestGun:WeaponSounds()
 	}
 end
 
+function CTestGun:muzzleFlash(pos, size, color)
+	color = color or Vec(1, 1, 1)
+	local t = Transform(pos)
+	t.rot = QuatRotateQuat(GetCameraTransform().rot, QuatEuler(0,0,GetRandomFloat(-15, 15)))
+
+	-- Create the flashSPR variable to hold the sprite
+	if not CTestGun.flashSPR then CTestGun.flashSPR = LoadSprite("gfx/flare_0.png") end
+
+	local spriteSize = size * 0.4
+	DrawSprite(CTestGun.flashSPR, t, spriteSize, spriteSize, color[1], color[2], color[3], 1.0, true, true, true)
+end
+
 --=========================================================================
 -- Define the weapon and it's variables
 --=========================================================================
 
--- Values for this specific weapon
+-- Static values for this specific weapon
 CTestGun.model				= "MOD/models/xml/smg1.xml" -- path to the XML model file
 CTestGun.toolID 			= "testgun"					-- used by the engine. lowercase and no spaces
 CTestGun.toolName 			= "PWB2 Test Gun"			-- shown in killfeed
 CTestGun.toolSlot			= 3
+
 CTestGun.ammoLoadedMax 		= 30						-- max clip 	 	-- -1 for no clip (pulls from reserve)
 CTestGun.ammoAltLoadedMax	= 0 						-- max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
 CTestGun.ammoAltItemID		= 0 						-- wpnID of item to drain ammo for when altfiring
 CTestGun.ammoPickupSize		= CTestGun.ammoLoadedMax	-- defaults to full mag
+CTestGun.dmg_world			= 0.4
+CTestGun.dmg_plyr			= 0.05						-- 0.0-1.0
+
 CTestGun.flags				= 0							-- weapon flags
 CTestGun.snds				= 0							-- temp value, will be set to the sound array on init
 
@@ -45,15 +58,15 @@ end
 -- Weapon functions
 --=========================================================================
 
-function server.PrimaryAttack(p)
-	local pos, dir = getAimVector(GetPlayerEyeTransform(p).pos, MAX_RANGE, GLOBAL_5DEGREES, p)
+function CTestGunFire(p)
+	local pos, dir = getAimVector(GetPlayerEyeTransform(p).pos, 100, GLOBAL_5DEGREES, p)
 	
-	server.ShootHook(pos, dir, "bullet", DAMAGE, PLAYERDAMAGE, MAX_RANGE, p, CTestGun.toolID, CTestGun.toolName)
+	server.ShootHook(pos, dir, "bullet", CTestGun.dmg_world, CTestGun.dmg_plyr, 100, p, CTestGun.toolID, CTestGun.toolName)
 
 	StopSound(CTestGun.snds[1])
 	PlaySound(CTestGun.snds[1], GetToolLocationWorldTransform("muzzle", p).pos, 300)
 
-	server.depleteAmmo(p, CTestGun.toolID)
+	baseWeap.DepleteAmmo(CTestGun)
 end
 
 function CTestGun:PrimaryAttack(dt)
@@ -65,12 +78,18 @@ function CTestGun:PrimaryAttack(dt)
 
 	local mt = GetToolLocationWorldTransform("muzzle", self.owner)
 
+	if GetTime() - self.lastFireTime < 0.125 then
+		self.timeFiring = self.timeFiring + 0.125
+	else
+		self.timeFiring = 0
+	end
+
 	if IsPlayerLocal(self.owner) then
 		mt.pos = VecAdd(mt.pos, VecScale(GetPlayerVelocity(), dt))
 
 		PointLight(mt.pos, 1, 0.7, 0.5, 3)
 
-		ServerCall("server.PrimaryAttack", self.owner)
+		ServerCall("CTestGunFire", self.owner)
 
 		client.DoMachineGunKick(1.66, self.timeFiring, 1)
 		
@@ -82,13 +101,7 @@ function CTestGun:PrimaryAttack(dt)
 		ejectBrass(self.owner, CASING_ORG, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_556.xml", FSFX_BRASS)
 	end
 
-	if GetTime() - self.lastFireTime < 0.125 then
-		self.timeFiring = self.timeFiring + 0.125
-	else
-		self.timeFiring = 0
-	end
-
-	muzzleFlash(mt.pos, 3)
+	self:muzzleFlash(mt.pos, 1)
 
 	self.ammoLoaded = self.ammoLoaded - 1
 

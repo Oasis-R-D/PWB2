@@ -1,13 +1,24 @@
+--============================================================================================
+-- 	 weapon function defaults. Override functions here in child classes to make new guns!
+-- 							  (see main.lua for more info)
+--
+--	do NOT modify these functions directly in this file unless you know what you're doing!
+--============================================================================================
+
 baseWeap = {}
 
--- Values for this specific weapon
+-- Static values for this specific weapon
 baseWeap.model				= "MOD/models/xml/model.xml"-- path to the XML model file
 baseWeap.toolID 			= "baseweap"				-- used by the engine. lowercase and no spaces
 baseWeap.toolName 			= "PWB2 Base Weapon"		-- shown in killfeed
 baseWeap.toolSlot			= 0
+
 baseWeap.ammoLoadedMax 		= 0							-- max clip 	 	-- -1 for no clip (pulls from reserve)
 baseWeap.ammoAltLoadedMax	= 0 						-- max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
 baseWeap.ammoPickupSize		= baseWeap.ammoLoadedMax	-- defaults to full mag
+baseWeap.dmg_world			= 0
+baseWeap.dmg_plyr			= 0							-- 0.0-1.0
+
 baseWeap.flags				= 0							-- weapon flags
 baseWeap.snds				= 0
 
@@ -141,9 +152,15 @@ function baseWeap:tickPlayer(dt)
     local fireKeyDown 	 = InputDown("usetool", self.owner)
 	local altfireKeyDown = InputDown("grab", self.owner)
 
+	
+
 	self.ammoTotal = GetToolAmmo(self.toolID, self.owner)
 
-	if self.holstered == true then
+	if GetPlayerGrabBody(self.owner) ~= 0 then
+		self.inReload  = false
+		self.holstered = true
+		fireKeyDown, altfireKeyDown = false, false
+	elseif self.holstered == true then
 		-- no rapid firing
 		self.nextFire 	  = math.max(self.nextFire, curTime + 0.25)
 		self.nextAltFire  = math.max(self.nextAltFire, self.nextFire)
@@ -168,7 +185,7 @@ function baseWeap:tickPlayer(dt)
 		self.lastFireTime = 0.0
     end
 
-	if altfireKeyDown and self:CanAttack(self.nextAltFire, curTime) and GetPlayerGrabBody(self.owner) == 0 then
+	if altfireKeyDown and self:CanAttack(self.nextAltFire, curTime) then
 		if self.ammoAltLoadedMax ~= WEAPON_NOCLIP and self.ammoAltTotal == 0 then
 			self.firedOnEmpty = true
         end
@@ -308,6 +325,19 @@ end
 -- 								UTIL FUNCS
 --=========================================================================
 
+-- TO-DO: add firer's velocity?
+function baseWeap:muzzleFlash(pos, size, color)
+	color = color or Vec(1, 1, 1)
+	local t = Transform(pos)
+	t.rot = QuatRotateQuat(GetCameraTransform().rot, QuatEuler(0,0,GetRandomFloat(-15, 15)))
+
+	-- Create the flashSPR variable to hold the sprite
+	if not baseWeap.flashSPR then baseWeap.flashSPR = LoadSprite("gfx/glare.png") end
+
+	local spriteSize = size * 0.4
+	DrawSprite(baseWeap.flashSPR, t, spriteSize, spriteSize, color[1], color[2], color[3], 1.0, true, true, true)
+end
+
 function baseWeap:PlayEmptySound()
 	if self.playEmptySound then
 		PlaySound(LoadSound("MOD/snd/empty.ogg"), GetPlayerTransform(self.owner).pos, 0.5)
@@ -320,7 +350,7 @@ function baseWeap:ShouldWeaponIdle()
 end
 
 function baseWeap:CanAttack(attack_time, curtime)
-	return (attack_time <= curtime)
+	return (attack_time <= curtime) and GetPlayerCanUseTool(self.owner) == true
 end
 
 -- GetNextAttackDelay - Accurate way of getting the next primary fire time.
@@ -404,6 +434,15 @@ function baseWeap:DefaultReload(iClipSize, fDelay)
 	self.timeWeaponIdle = curTime + 3
 
 	return true
+end
+
+function baseWeap:DepleteAmmo(amount)
+	amount = amount or 1
+	local ammo = GetToolAmmo(self.toolID, self.owner)
+	DebugPrint(self.toolID)
+	if ammo < 9999 then
+		SetToolAmmo(self.toolID, ammo-amount, self.owner)
+	end
 end
 
 function PrecacheSFXArray(arr)
