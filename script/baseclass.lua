@@ -30,6 +30,9 @@ baseWeap.recoilAngSpring	= 65	-- bigger number increases the speed at which the 
 baseWeap.recoilAngDamp		= 9		-- bigger number makes the response more damped, smaller is less damped
 									-- currently the system will overshoot, with larger damping values it won't
 
+
+local WEAPON_NOCLIP = -1
+
 -----------------------------------------------------------								
 -- Values that ALL weapons share/use
 -- override initVars() to add variables
@@ -80,7 +83,6 @@ function baseWeap:initVars(owner)
 		self.animator        	= ToolAnimator()
 
 		self.recoilPos 			= Vec(0,0,0)
-		
 
 		if IsPlayerLocal(owner) then
 			self.recoilAng 			= Vec(0,0,0)
@@ -95,13 +97,6 @@ function baseWeap:initVars(owner)
 	self.owner					= owner
 end
 
--- sound data for PrecacheSFXArray, override per weapon
-function baseWeap:WeaponSounds()
-	return {
---  		   [SOUND]		 [load to]	[dist]
-		{"MOD/snd/SOUND.ogg", "sv/cl", 	  10}
-	} 
-end
 --=========================================================================
 -- Init funcs
 --=========================================================================
@@ -109,21 +104,17 @@ end
 function baseWeap:init_sv()
 	-- must be called like this
 	baseWeap.init_tool(self)
-	baseWeap.init_sfx(self)
+	baseWeap.PrecacheSFX(self)
 end
 
 function baseWeap:init_cl()
 	-- must be called like this
-	baseWeap.init_sfx(self)
+	baseWeap.PrecacheSFX(self)
 end
 
 function baseWeap:init_tool()
 	RegisterTool(self.toolID, self.toolName, self.model, self.toolSlot)
 	SetToolAmmoPickupAmount(self.toolID, self.ammoPickupSize)
-end
-
-function baseWeap:init_sfx()
-	self.snds = PrecacheSFXArray(self:WeaponSounds())
 end
 
 -- to add a new weapon just do CHILD = baseWeap:new(CHILD, owner) where CHILD is {}
@@ -146,13 +137,73 @@ function baseWeap:new(obj, owner)
     return instance
 end
 
-WEAPON_NOCLIP = -1
+--=========================================================================
+-- Weapon SFX / VFX
+--=========================================================================
+-- TO-DO: add firer's velocity?
+function baseWeap:muzzleFlash(pos, size, color)
+	color = color or Vec(1, 1, 1)
+	local t = Transform(pos)
+	t.rot = QuatRotateQuat(GetCameraTransform().rot, QuatEuler(0,0,GetRandomFloat(-15, 15)))
+
+	-- Create the flashSPR variable to hold the sprite
+	if not baseWeap.flashSPR then baseWeap.flashSPR = LoadSprite("gfx/glare.png") end
+
+	local spriteSize = size * 0.4
+	DrawSprite(baseWeap.flashSPR, t, spriteSize, spriteSize, color[1], color[2], color[3], 1.0, true, true, true)
+end
+
+-- sound data for PrecacheSFX(), override per weapon
+-- loop is optional.
+function baseWeap:WeaponSounds()
+	return {
+--  		   SOUND		  load to	 dist	[loop]
+		{"MOD/snd/SOUND.ogg", "sv/cl", 	  10,	false}
+	} 
+end
+
+function baseWeap:PlayEmptySound()
+	if self.playEmptySound then
+		if not baseWeap.emptySND then baseWeap.emptySND = LoadSound("MOD/snd/empty.ogg") end
+		PlaySound(baseWeap.emptySND, GetPlayerTransform(self.owner).pos, 0.5)
+		self.playEmptySound = false
+	end
+end
+
+function baseWeap:PrecacheSFX()
+	local precachedSounds = {}
+	local svSounds, clSounds = 0, 0
+
+	for i, sounddata in ipairs(self:WeaponSounds()) do
+		if server and sounddata[2] == "sv" then
+            svSounds = svSounds + 1
+			if sounddata[4] and sounddata[4] == true then
+                precachedSounds[svSounds] = LoadLoop(sounddata[1], sounddata[3])
+            else
+                precachedSounds[svSounds] = LoadSound(sounddata[1], sounddata[3])
+            end
+		elseif client and sounddata[2] == "cl" then
+            clSounds = clSounds + 1
+            if sounddata[4] and sounddata[4] == true then
+                precachedSounds[clSounds] = LoadLoop(sounddata[1], sounddata[3])
+            else
+                precachedSounds[clSounds] = LoadSound(sounddata[1], sounddata[3])
+            end
+		else
+			error("PrecacheSFX(): Unclear server/client setting!", 2)
+		end
+	end
+
+	self.snds = precachedSounds
+end
 
 --=========================================================================
 -- Weapon interactions
 -- These should be overriden per weapon
 --=========================================================================
-function baseWeap:Deploy()   		  end -- called when weapon is equipped
+function baseWeap:Delpoy()   		  end -- called when weapon is equipped
+function baseWeap:Holster()			  end -- called when weapon is unequipped
+
 function baseWeap:PrimaryAttack(dt)   end
 function baseWeap:SecondaryAttack(dt) end
 function baseWeap:Reload()            end -- called when reload is started
@@ -175,31 +226,13 @@ function baseWeap:tickPlayer(dt)
     local fireKeyDown 	 = InputDown("usetool", self.owner)
 	local altfireKeyDown = InputDown("grab", self.owner)
 
-	if GetPlayerGrabBody(self.owner) ~= 0 then
-		self.inReload  = false
-		self.holstered = true
+	if not self.holstered and GetPlayerGrabBody(self.owner) ~= 0 then
+		-- player is grabbing object
+		self:DefaultHolster()
 		fireKeyDown, altfireKeyDown = false, false
 	elseif self.holstered == true then
-		-- no rapid firing
-		self.nextFire 	  = math.max(self.nextFire, curTime + 0.25)
-		self.nextAltFire  = math.max(self.nextAltFire, self.nextFire)
-		self.lastFireTime = 0
-
-		-- cancel reloads
-		self.inReload	  = false
-
-		self.holstered 	  = false
-
-		-- Reset old recoil and do some movement
-		self.recoilPos = Vec(0,0,0)
-		if IsPlayerLocal(self.owner) then
-			self:RecoilAngReset()
-			self:RecoilAngPunch(Vec(3, 0.75, 0.66))
-			
-			self:RecoilPosPunch(Vec(0.05, 0.1, -0.05))
-		end
-
-		self:Deploy()
+		-- deploying weapon
+		self:DefaultDeploy(curTime)
 	end
 
 	self.ammoTotal = GetToolAmmo(self.toolID, self.owner)
@@ -252,6 +285,36 @@ function baseWeap:tickPlayer(dt)
 	if self:ShouldWeaponIdle() then
 		self:WeaponIdle()
 	end
+end
+
+function baseWeap:DefaultDeploy(curTime)
+	-- no rapid firing
+	self.nextFire 	  = math.max(self.nextFire, curTime + 0.25)
+	self.nextAltFire  = math.max(self.nextAltFire, self.nextFire)
+	self.lastFireTime = 0
+
+	-- cancel reloads
+	self.inReload	  = false
+
+	self.holstered 	  = false
+
+	-- Reset old recoil and do some movement
+	self.recoilPos = Vec(0,0,0)
+	if IsPlayerLocal(self.owner) then
+		self:RecoilAngReset()
+		self:RecoilAngPunch(Vec(3, 0.75, 0.66))
+		
+		self:RecoilPosPunch(Vec(0.05, 0.1, -0.05))
+	end
+
+	self:Deploy()
+end
+
+function baseWeap:DefaultHolster()
+	self.inReload  = false
+	self.holstered = true
+
+	self:Holster()
 end
 
 function baseWeap:DrawHUD()
@@ -378,30 +441,6 @@ function baseWeap:RecoilAngReset(tolerance)
 end
 
 --=========================================================================
--- Weapon SFX / VFX
---=========================================================================
--- TO-DO: add firer's velocity?
-function baseWeap:muzzleFlash(pos, size, color)
-	color = color or Vec(1, 1, 1)
-	local t = Transform(pos)
-	t.rot = QuatRotateQuat(GetCameraTransform().rot, QuatEuler(0,0,GetRandomFloat(-15, 15)))
-
-	-- Create the flashSPR variable to hold the sprite
-	if not baseWeap.flashSPR then baseWeap.flashSPR = LoadSprite("gfx/glare.png") end
-
-	local spriteSize = size * 0.4
-	DrawSprite(baseWeap.flashSPR, t, spriteSize, spriteSize, color[1], color[2], color[3], 1.0, true, true, true)
-end
-
-function baseWeap:PlayEmptySound()
-	if self.playEmptySound then
-		if not baseWeap.emptySND then baseWeap.emptySND = LoadSound("MOD/snd/empty.ogg") end
-		PlaySound(baseWeap.emptySND, GetPlayerTransform(self.owner).pos, 0.5)
-		self.playEmptySound = false
-	end
-end
-
---=========================================================================
 --	UTIL FUNCS
 --=========================================================================
 
@@ -501,17 +540,4 @@ function baseWeap:DepleteAmmo(amount)
 	if ammo < 9999 then
 		SetToolAmmo(self.toolID, ammo-amount, self.owner)
 	end
-end
-
-function PrecacheSFXArray(arr)
-	local precachedSounds = {}
-	for i, sounddata in ipairs(arr) do
-		if server and sounddata[2] == "sv" then
-			table.insert(precachedSounds, LoadSound(sounddata[1], sounddata[3]))
-		elseif client and sounddata[2] == "cl" then
-			table.insert(precachedSounds, LoadSound(sounddata[1], sounddata[3]))
-		end
-	end
-
-	return precachedSounds
 end

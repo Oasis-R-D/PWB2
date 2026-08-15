@@ -72,7 +72,7 @@ function CTestGun2:PrimaryAttack(dt)
 		self.timeFiring = 0
 	end
 
-	self:RecoilPosPunch(Vec(0, 0, GetRandomFloat(0.05, 0.2)))
+	self:RecoilPosPunch(Vec(0, 0, GetRandomFloat(0.133, 0.166)))
 
 	if IsPlayerLocal(self.owner) then
 		mt.pos = VecAdd(mt.pos, VecScale(GetPlayerVelocity(), dt))
@@ -83,7 +83,7 @@ function CTestGun2:PrimaryAttack(dt)
 
 		client.DoMachineGunKick(1, self.timeFiring, 2)
 		
-		self:RecoilAngReset(1)
+		self:RecoilAngReset(-15)
 		self:RecoilAngPunch(Vec(GetRandomFloat(0.5, 1), GetRandomFloat(-0.5, 0.5), GetRandomFloat(-1, 1)))
 
 		-- shell ejection

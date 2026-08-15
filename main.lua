@@ -37,7 +37,8 @@ demoWeap = {} -- goes in GLOBAL_WEAPONS
 
 function demoWeap:WeaponSounds()
 	return {
-		{"MOD/snd/sfx.ogg", "sv", 10}
+--  		   SOUND		     load to	 dist	   [loop]
+		{"MOD/snd/sfx.ogg",  "sv",      10     false}
 	}
 end
 
@@ -83,8 +84,10 @@ end
 ==============================================================================================
 -- TO-DO
 ==============================================================================================
-   -  Loop based sound system, will make it so sounds follow the player proper
+   -  Loop based sound system for reloads, will make it so sounds follow the player proper
       (only on firing client?)
+   
+   - alt fire can use another tools ammo
 ============================================================================================]]
 
 #version 2
@@ -102,6 +105,7 @@ end
 #include "script/lib/pwbtoolanimation.lua"
 #include "script/lib/viewpunch.lua"
 #include "script/lib/util.lua"
+--#include "script/lib/sound_man.lua"
 
 GLOBAL_HEADSHOTMULT = 2.0 -- use actual value since guns do less damage in HL2DM
 
@@ -212,8 +216,8 @@ function client.tick(dt)
       for i=1, GLOBAL_WEAPONS_AMNT do
          if tool == wpns[i].toolID then
             wpns[i]:tickPlayer(dt)
-         else
-            wpns[i].holstered = true
+         elseif wpns[i].holstered == false then
+            wpns[i]:DefaultHolster()
          end
       end
    end
