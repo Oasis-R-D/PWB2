@@ -100,6 +100,7 @@ end
 -- LIBRARYS
 #include "script/lib/bit_ops.lua"
 #include "script/lib/pwbtoolanimation.lua"
+#include "script/lib/viewpunch.lua"
 #include "script/lib/util.lua"
 
 GLOBAL_HEADSHOTMULT = 2.0 -- use actual value since guns do less damage in HL2DM

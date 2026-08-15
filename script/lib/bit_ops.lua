@@ -120,3 +120,7 @@ function math.clamp(val, min, max)
     if val > max then return max end
     return val
 end
+
+function math.lerp(a, b, t)
+    return a + (b - a) * t
+end

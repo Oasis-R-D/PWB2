@@ -56,7 +56,7 @@ function baseWeap:initVars(owner)
 		-- used for shotgun reload interrupting
 		self.specialReload      = 0
 
-		-- time until resetting idle anim (there aren't idle anims)
+		-- time used for running code in Idle()
 		self.timeWeaponIdle		= 0
 
 		-- True when gun is empty
@@ -80,8 +80,15 @@ function baseWeap:initVars(owner)
 		self.animator        	= ToolAnimator()
 
 		self.recoilPos 			= Vec(0,0,0)
-		self.recoilAng 			= Vec(0,0,0)
-		self.recoilAngVel 		= Vec(0,0,0)
+		
+
+		if IsPlayerLocal(owner) then
+			self.recoilAng 			= Vec(0,0,0)
+			self.recoilAngVel 		= Vec(0,0,0)
+
+			self.idleCycleTime = 0
+			self.idleCycleScale = 1
+		end
 	end
 
 	-- which player owns this instance
@@ -279,9 +286,28 @@ end
 -- 	Weapon recoil handling
 --=========================================================================
 function baseWeap:Animate(dt)
-	-- localized angle for performance
 	if IsPlayerLocal(self.owner) then
-		self.animator.offsetTransform = Transform(self.recoilPos, QuatEuler(self.recoilAng[1], self.recoilAng[2], self.recoilAng[3]))
+		local idlePos = Vec(
+			math.sin(self.idleCycleTime*0.5) + math.cos(self.idleCycleTime*0.25),
+			-math.sin(self.idleCycleTime*0.5) + math.cos(self.idleCycleTime*0.25),
+			0
+		)
+
+		self.idleCycleTime = self.idleCycleTime + dt
+
+		if self.timeWeaponIdle > GetTime() then
+			self.idleCycleScale = math.lerp(self.idleCycleScale, 0.0, dt)
+		else
+			self.idleCycleScale = math.lerp(self.idleCycleScale, 1.0, dt)
+		end
+
+		idlePos = VecScale(VecSub(VecScale(idlePos, 0.01), Vec(0.01, 0.01, 0)), self.idleCycleScale)
+
+		self.animator.offsetTransform = Transform(
+			VecAdd(self.recoilPos, idlePos),
+			QuatEuler(self.recoilAng[1], self.recoilAng[2], self.recoilAng[3])
+		)
+
 		self:decayAngRecoil(dt)
 	else
 		self.animator.offsetTransform.pos = self.recoilPos
