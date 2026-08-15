@@ -25,7 +25,7 @@ baseWeap.dmg_plyr			= 0							-- 0.0-1.0
 baseWeap.flags				= 0							-- weapon flags
 baseWeap.snds				= 0
 
-baseWeap.recoilPosDecay 	= 0.25	-- multiplier for recoil pos decay. Lower is slower, higher is faster
+baseWeap.recoilPosDecay 	= 0.5	-- multiplier for recoil pos decay. Lower is slower, higher is faster
 baseWeap.recoilAngSpring	= 65	-- bigger number increases the speed at which the angle corrects
 baseWeap.recoilAngDamp		= 9		-- bigger number makes the response more damped, smaller is less damped
 									-- currently the system will overshoot, with larger damping values it won't
@@ -183,6 +183,15 @@ function baseWeap:tickPlayer(dt)
 
 		self.holstered 	  = false
 
+		-- Reset old recoil and do some movement
+		self.recoilPos = Vec(0,0,0)
+		if IsPlayerLocal(self.owner) then
+			self:RecoilAngReset()
+			self:RecoilAngPunch(Vec(3, 0.75, 0.66))
+			
+			self:RecoilPosPunch(Vec(0.05, 0.1, -0.05))
+		end
+
 		self:Deploy()
 	end
 
@@ -270,11 +279,15 @@ end
 -- 	Weapon recoil handling
 --=========================================================================
 function baseWeap:Animate(dt)
-	-- ang recoil could prob be made local for performance
+	-- localized angle for performance
+	if IsPlayerLocal(self.owner) then
+		self.animator.offsetTransform = Transform(self.recoilPos, QuatEuler(self.recoilAng[1], self.recoilAng[2], self.recoilAng[3]))
+		self:decayAngRecoil(dt)
+	else
+		self.animator.offsetTransform.pos = self.recoilPos
+	end
 
-	self.animator.offsetTransform = Transform(self.recoilPos, QuatEuler(self.recoilAng[1], self.recoilAng[2], self.recoilAng[3]))
 	self:decayPosRecoil(dt)
-	self:decayAngRecoil(dt)
 
 	self:CustomAnimate(dt)
 end
@@ -290,8 +303,9 @@ end
 
 function baseWeap:decayPosRecoil(dt)
 	local len = VecLength(self.recoilPos)
-	len = len - ((10.0 + len * self.recoilPosDecay) * dt)
-	len = math.max(len, 0.0)
+	if len == 0 then return end
+	len = len - ((2 + len * self.recoilPosDecay) * dt)
+	len = math.max(len, 0)
 	self.recoilPos = VecScale(VecNormalize(self.recoilPos), len)
 end
 
@@ -323,13 +337,12 @@ function baseWeap:decayAngRecoil(dt)
 end
 
 function baseWeap:RecoilAngReset(tolerance)
-	tolerance = tolerance or 0
-	if tolerance ~= 0 then
-		tolerance = tolerance
-
+	if tolerance then
 		local check = VecLength(self.recoilAngVel) + VecLength(self.recoilAng)
 
-		if check > tolerance then
+		if tolerance > 0 and check > tolerance then
+			return
+		elseif tolerance < 0 and check < (tolerance*-1) then
 			return
 		end
 	end

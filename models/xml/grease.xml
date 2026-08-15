@@ -1,0 +1,22 @@
+<group name="instance=MOD/models/xml/grease.xml" pos="0.0 0.0 0.0" rot="0.0 0.0 0.0">
+	<group name="eye_space">
+		<location name="fp_action" 	tags="name=fp_action" 	pos="0.1 -0.4 -0.8" 	rot="3.0 3.0 0.0"/>
+		<location name="fp_run" 	tags="name=fp_run" 		pos="0.1 -0.4 -0.8" 	rot="20.0 40.0 0.0"/>
+		<location name="tp_action" 	tags="name=tp_action" 	pos="0.1 -0.4 -0.45"/>
+		<location name="tp_run" 	tags="name=tp_run" 		pos="0.1 -0.4 -0.45" 	rot="20.4 44.1 -22.5"/>
+		<location name="tp_crouch" 	tags="name=tp_crouch" 	pos="0.1 -0.4 -0.45" 	rot="20.4 64.1 -22.5"/>
+	</group>
+	<group name="tool_space">
+		<body dynamic="false">
+			<vox texture="12 0.5" blendtexture="3 0.1" file="MOD/models/grease.vox" scale="0.4"/>
+		</body>
+		<location name="tp_action_rh" tags="name=tp_action_rh ik_hand" pos="0.0 0 0.05" rot="0.0 90.0 0.0"/>
+		<location name="tp_run_rh" tags="name=tp_run_rh ik_hand" pos="0.0 0 0.05" rot="0.0 90.0 0.0"/>
+		<location name="tp_crouch_rh" tags="name=tp_crouch_rh ik_hand" pos="0.0 0 0.05" rot="0.0 90.0 0.0"/>
+		<location name="tp_action_lh" tags="name=tp_action_lh ik_hand" pos="0.05 0 -0.175" rot="0.0 90.0 0.0"/>
+		<location name="tp_run_lh" tags="name=tp_run_lh ik_hand" pos="0.05 0 -0.175" rot="0.0 90.0 0.0"/>
+		<location name="tp_crouch_lh" tags="name=tp_crouch_lh ik_hand" pos="0.05 0 -0.175" rot="0.0 90.0 0.0"/>
+		<location name="muzzle" tags="name=muzzle" pos="0.02 0.11 -0.4" rot="0 0 0"/>
+	</group>
+</group>
+

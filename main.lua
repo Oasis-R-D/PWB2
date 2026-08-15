@@ -126,7 +126,7 @@ GLOBAL_20DEGREES  = 0.17365
 
 
 -- WEAPONS
-#include "script/childclass.lua"
+#include "script/testgun2.lua"
 #include "script/testgun.lua"
 
 -- MELEE
@@ -141,7 +141,7 @@ GLOBAL_20DEGREES  = 0.17365
 
 -- pointers to each weapon's class
 GLOBAL_WEAPONS = {
-   CChildGun,
+   CTestGun2,
    CTestGun,
 }
 
@@ -168,10 +168,9 @@ end
 function server.tick(dt)
    for p in PlayersAdded() do
       PLAYER_WEAPONS[p] = {}
-      local pushback = table.insert
       for weapon=1, GLOBAL_WEAPONS_AMNT do
          local wpnPlyr = baseWeap:new(GLOBAL_WEAPONS[weapon], p)
-		   pushback(PLAYER_WEAPONS[p], wpnPlyr)
+		   PLAYER_WEAPONS[p][weapon] = wpnPlyr
          SetToolEnabled(wpnPlyr.toolID, true, p)
 		   SetToolAmmo(wpnPlyr.toolID, 9999, p)
       end
@@ -197,10 +196,9 @@ end
 function client.tick(dt)
    for p in PlayersAdded() do
       PLAYER_WEAPONS[p] = {}
-      local pushback = table.insert
       for weapon=1, GLOBAL_WEAPONS_AMNT do
          local wpnPlyr = baseWeap:new(GLOBAL_WEAPONS[weapon], p)
-		   pushback(PLAYER_WEAPONS[p], wpnPlyr)
+		   PLAYER_WEAPONS[p][weapon] = wpnPlyr
       end
 	end
 

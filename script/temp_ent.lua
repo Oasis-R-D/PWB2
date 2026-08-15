@@ -1,32 +1,63 @@
-#version 2
-
 -- NOTE: some features have been removed. See entity.CPP in the Half-Life: 1 SDK if you really need them back.
 
-gpTempEnts = {}
+local pTempEnts = {}
+
+--===========================================
+--	Definitions
+--============================================
+
+local function newCLent()
+	return {
+		-- float
+		nextThink = 0.0,
+
+		-- Actual render position and angles
+		origin = Vec(),
+		angles = Vec(),
+		angleVel = Vec(),
+		prevOrigin = Vec(),
+		velocity = Vec(),
+
+		model = 0, -- Temp ent body
+	}
+end
+
+local function newTempEnt()
+	return {
+		-- int
+		flags = 0, 
+		hitSound = 0,
+
+		-- floats
+		die = 0,
+		bounceFactor = 0,
+
+		entity = newCLent(),
+	}
+end
 
 --===========================================
 --	Creation
 --============================================
 
-function CL_TempEntAlloc(org, model)
+local function CL_TempEntAlloc(org, model)
 
 	local tempent = newTempEnt()
 
 	tempent.flags = FTENT_NONE
 	tempent.die = 0
 	tempent.entity.model = Spawn(model, Transform(org))[1]
-	tempent.fadeSpeed = 0.5
 	tempent.hitSound = 0
 	tempent.bounceFactor = 1.0
 	tempent.entity.origin = org
 
-	local index = findArrayOpening(gpTempEnts)
-	gpTempEnts[index] = tempent
+	local index = findArrayOpening(pTempEnts)
+	pTempEnts[index] = tempent
 
-	return gpTempEnts[index]
+	return pTempEnts[index]
 end
 
-function R_TempModel(pos, velocity, angles, life, model, soundtype)
+local function R_TempModel(pos, velocity, angles, life, model, soundtype)
 
 	local tempent = CL_TempEntAlloc(pos, model)
 
@@ -36,7 +67,7 @@ function R_TempModel(pos, velocity, angles, life, model, soundtype)
 	tempent.frameMax = 0 -- tempent.frameMax = framecount
 	
 	tempent.entity.velocity = velocity
-	tempent.entity.angleVel = GetRandomDirection(256) --Vec(GetRandomFloat(-512, 511), GetRandomFloat(-256, 255), GetRandomFloat(-256, 255))
+	tempent.entity.angleVel = GetRandomDirection(256)
 	tempent.die = life + GetTime()
 end
 
@@ -59,40 +90,6 @@ function ejectBrass(p, org, dir, model, casingtype)
 end
 
 --===========================================
---	Definitions
---============================================
-
-function newCLent()
-	return {
-		-- float
-		nextThink = 0.0,
-
-		-- Actual render position and angles
-		origin = Vec(),
-		angles = Vec(),
-		angleVel = Vec(),
-		prevOrigin = Vec(),
-		velocity = Vec(),
-
-		model = 0, -- Temp ent body
-	}
-end
-
-function newTempEnt()
-	return {
-		-- int
-		flags = 0, 
-		hitSound = 0,
-
-		-- floats
-		die = 0,
-		bounceFactor = 0,
-
-		entity = newCLent(),
-	}
-end
-
---===========================================
 --	Simulation
 --============================================
 
@@ -101,24 +98,19 @@ function HUD_TempEntUpdate_(
 	client_time, -- Absolute time on client
 	cl_gravity)	-- True gravity on client
 
-    local gpTempEnts_Length = #gpTempEnts
+    local pTempEnts_Length = #pTempEnts
 
 	-- Nothing to simulate
-	if gpTempEnts_Length == 0 then
+	if pTempEnts_Length == 0 then
 		return end
 
-    for i = 1, gpTempEnts_Length do
-		local pTemp = gpTempEnts[i] -- this errors sometimes, seemingly when one is deleted?
+    for i = 1, pTempEnts_Length do
+		local pTemp = pTempEnts[i]
 		if pTemp ~= nil then
-			local active = true
-
 			local life = pTemp.die - client_time
 			if life < 0 then
-				active = false
-			end
-			if active == false then -- Kill it
 				Delete(pTemp.entity.model)
-				table.remove(gpTempEnts, i)
+				table.remove(pTempEnts, i)
 			else
 				pTemp.entity.prevOrigin = VecCopy(pTemp.entity.origin)
 
@@ -161,7 +153,7 @@ function HUD_TempEntUpdate_(
 							if traceNormal[2] > 0.9 then -- Hit floor?
 								if pTemp.entity.velocity[2] <= 0 and pTemp.entity.velocity[2] >= gravity * 2 then
 									damp = 0 -- Stop
-									pTemp.flags = clearFlags(pTemp.flags, FTENT_ROTATE, FTENT_GRAVITY, FTENT_COLLIDEWORLD, FTENT_SMOKETRAIL)
+									pTemp.flags = clearFlags(pTemp.flags, FTENT_ROTATE, FTENT_GRAVITY, FTENT_COLLIDEWORLD)
 									pTemp.entity.angles[1] = 0
 								end
 							end
