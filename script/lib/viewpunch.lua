@@ -30,10 +30,10 @@ local vecPunchAngle    = Vec(0,0,0)
 local vecPunchAngleVel = Vec(0,0,0)
 
 function client.SRC_ApplyPlayerPunch(dt)
+	client.SRC_DecayPunchAngle(dt)
+	
 	local t = Transform(Vec(), QuatEuler(vecPunchAngle[1], vecPunchAngle[2], vecPunchAngle[3]))
 	SetPlayerCameraOffsetTransform(t, true)
-
-	client.SRC_DecayPunchAngle(dt)
 end
 
 function client.SRC_DecayPunchAngle(dt)

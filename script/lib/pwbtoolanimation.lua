@@ -502,10 +502,10 @@ end
 function solveIntersection(center, radius, playerId)
     local centerCurr = VecCopy(center)
 
-    for i = 1, 2, 1 do
+    for i = 1, 2 do
 
         QueryRequire("physical")
-        local a = VecAdd(GetPlayerTransform(playerId).pos,VecScale(Vec(0.0,1.0,0.0), getChestHeight(playerId)))
+        local a = VecAdd(GetPlayerTransform(playerId).pos,VecScale(Vec(0.0,1.0,0.0), 1.2 - (0.6 * getCrouching(playerId))))
         local d = VecSub(centerCurr, a)
         local l = VecLength(d)
         d = VecNormalize(d)

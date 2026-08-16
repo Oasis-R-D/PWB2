@@ -88,6 +88,10 @@ end
       (only on firing client?)
    
    - alt fire can use another tools ammo
+
+   - making the gun fire in the muzzle dir could be intersting (would need to make the model
+     dynamically face the target spot though)
+
 ============================================================================================]]
 
 #version 2
@@ -166,7 +170,7 @@ PLAYER_WEAPONS = {}
 -- Server doesn't have an option to be turned off since all weapons need it. Could automate that in the future though!
 function server.init()
    for weapon=1, GLOBAL_WEAPONS_AMNT do
-      baseWeap.init_sv(GLOBAL_WEAPONS[weapon])
+      baseWeap.init_sv(GLOBAL_WEAPONS[weapon], weapon)
    end
 end
 
@@ -184,6 +188,17 @@ function server.tick(dt)
    for p in PlayersRemoved() do
       PLAYER_WEAPONS[p] = nil
    end
+
+   for p, wpns in pairs(PLAYER_WEAPONS) do
+      local tool = GetPlayerTool(p)
+      for i=1, GLOBAL_WEAPONS_AMNT do
+         if tool == wpns[i].toolID then
+            wpns[i]:tickPlayer_sv(dt)
+         elseif wpns[i].holstered == false then
+            wpns[i]:DefaultHolster()
+         end
+      end
+   end
 end
 
 function server.update(dt)
@@ -193,7 +208,7 @@ end
 -- Load haptics, amongst other things
 function client.init()
    for weapon=1, GLOBAL_WEAPONS_AMNT do
-      baseWeap.init_cl(GLOBAL_WEAPONS[weapon])
+      baseWeap.init_cl(GLOBAL_WEAPONS[weapon], weapon)
    end
 end
 
@@ -215,14 +230,12 @@ function client.tick(dt)
       local tool = GetPlayerTool(p)
       for i=1, GLOBAL_WEAPONS_AMNT do
          if tool == wpns[i].toolID then
-            wpns[i]:tickPlayer(dt)
+            wpns[i]:tickPlayer_cl(dt)
          elseif wpns[i].holstered == false then
             wpns[i]:DefaultHolster()
          end
       end
    end
-
-   client.SRC_ApplyPlayerPunch(dt)
 end
 
 -- Global VFX
@@ -230,11 +243,13 @@ function client.update(dt)
    checkDeathReset()
 
    client.GS_ApplyPlayerPunch(dt)
+   client.SRC_ApplyPlayerPunch(dt)
 
    HUD_TempEntUpdate_(
-   dt,	-- Simulation time
-	GetTime(), -- Absolute time on client
-	10)	-- True gravity on client
+      dt,	-- Simulation time
+	   GetTime(), -- Absolute time on client
+	   10 -- True gravity on client
+   )	
 end
 
 -- Draws the magazine hud and scopes

@@ -48,48 +48,45 @@ CTestGun.snds				= 0							 -- temp value, will be set to the sound array on ini
 -- Weapon functions
 --=========================================================================
 
-function CTestGunFire(p)
-	local pos, dir = getAimVector(GetPlayerEyeTransform(p).pos, 100, GLOBAL_3DEGREES, p)
-	
-	server.ShootHook(pos, dir, "bullet", CTestGun.dmg_world, CTestGun.dmg_plyr, 100, p, CTestGun.toolID, CTestGun.toolName)
-
-	PlayFireSound(CTestGun.snds[1], GetToolLocationWorldTransform("muzzle", p).pos, 300)
-
-	baseWeap.DepleteAmmo(CTestGun)
-end
-
-function CTestGun:PrimaryAttack(dt)
-	if self.ammoLoaded <= 0 then
-		self:PlayEmptySound()
-		self.nextFire = GetTime() + 0.15
-		return
-	end
-
+function CTestGun:PrimaryAttack(dt, isLocal)
 	local mt = GetToolLocationWorldTransform("muzzle", self.owner)
-
-	local punchVec = Vec(GetRandomFloat(-0.05, 0.05), GetRandomFloat(0.0, 0.025), GetRandomFloat(0.05, 0.1))
-	self:RecoilPosPunch(punchVec)
-
-	if IsPlayerLocal(self.owner) then
-		mt.pos = VecAdd(mt.pos, VecScale(GetPlayerVelocity(), dt))
-
-		PointLight(mt.pos, 1, 0.7, 0.5, 3)
-
-		ServerCall("CTestGunFire", self.owner)
-
-		self:RecoilAngReset(-4)
-		self:RecoilAngPunch(Vec(GetRandomFloat(1, 3), GetRandomFloat(-2, 2), GetRandomFloat(-1, 1)))
-		
-		client.SRC_PunchReset()
-		for i=1, 3 do
-			client.SRC_PunchAxis(i, punchVec[4-i] * 10)
+	if client then
+		if self.ammoLoaded <= 0 then
+			self:PlayEmptySound()
+			self.nextFire = GetTime() + 0.15
+			return
 		end
 
-		-- shell ejection
-		ejectBrass(self.owner, self.casingOrg, Vec(1, -1, 0), "MOD/models/xml/shell/casing_45acp.xml", FSFX_BRASS)
-	end
+		local punchVec = Vec(GetRandomFloat(-0.05, 0.05), GetRandomFloat(0.0, 0.025), GetRandomFloat(0.05, 0.1))
+		self:RecoilPosPunch(punchVec)
 
-	self:muzzleFlash(mt.pos, 1)
+		if isLocal then
+			mt.pos = VecAdd(mt.pos, VecScale(GetPlayerVelocity(), dt))
+
+			PointLight(mt.pos, 1, 0.7, 0.5, 3)
+
+			self:RecoilAngReset(-4)
+			self:RecoilAngPunch(Vec(GetRandomFloat(1, 3), GetRandomFloat(-2, 2), GetRandomFloat(-1, 1)))
+			
+			client.SRC_PunchReset()
+			for i=1, 3 do
+				client.SRC_PunchAxis(i, punchVec[4-i] * 10)
+			end
+
+			-- shell ejection
+			ejectBrass(self.owner, self.casingOrg, Vec(1, -1, 0), "MOD/models/xml/shell/casing_45acp.xml", FSFX_BRASS)
+		end
+
+		self:muzzleFlash(mt.pos, 1)
+	else
+		local pos, dir = getAimVector(GetPlayerEyeTransform(self.owner).pos, 100, GLOBAL_3DEGREES, self.owner)
+	
+		server.ShootHook(pos, dir, "bullet", self.dmg_world, self.dmg_plyr, 100, self.owner, self.toolID, self.toolName)
+
+		PlayFireSound(self.snds[1], mt.pos, 300)
+
+		baseWeap.DepleteAmmo(self)
+	end
 
 	self.ammoLoaded = self.ammoLoaded - 1
 

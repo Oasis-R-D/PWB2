@@ -45,20 +45,9 @@ end
 -- Weapon functions
 --=========================================================================
 
-function CTestGun2Fire(p)
-	local mt = GetToolLocationWorldTransform("muzzle", p)
-
-	local pos, dir = getAimVector(GetPlayerEyeTransform(p).pos, 100, GLOBAL_5DEGREES, p)
-	server.ShootHook(pos, dir, "bullet", CTestGun2.dmg_world, CTestGun2.dmg_plyr, 100, p, CTestGun2.toolID, CTestGun2.toolName)
-	
-	PlayFireSound(CTestGun2.snds[1], mt.pos, 300)
-
-	baseWeap.DepleteAmmo(CTestGun2)
-end
-
-function CTestGun2:PrimaryAttack(dt)
+function CTestGun2:PrimaryAttack(dt, isLocal)
 	if self.ammoLoaded <= 0 then
-		self:PlayEmptySound()
+		if client then self:PlayEmptySound() end
 		self.nextFire = GetTime() + 0.15
 		self.nextAltFire = self.nextFire
 		return
@@ -66,54 +55,50 @@ function CTestGun2:PrimaryAttack(dt)
 
 	local mt = GetToolLocationWorldTransform("muzzle", self.owner)
 
-	if GetTime() - self.lastFireTime < 0.1 then
-		self.timeFiring = self.timeFiring + 0.1
-	else
-		self.timeFiring = 0
-	end
-
-	self:RecoilPosPunch(Vec(0, 0, GetRandomFloat(0.133, 0.166)))
-
-	if IsPlayerLocal(self.owner) then
-		mt.pos = VecAdd(mt.pos, VecScale(GetPlayerVelocity(), dt))
-
-		PointLight(mt.pos, 1, 0.7, 0.5, 3)
-
-		ServerCall("CTestGun2Fire", self.owner)
-
-		client.DoMachineGunKick(1, self.timeFiring, 2)
+	if client then
 		
-		self:RecoilAngReset(-15)
-		self:RecoilAngPunch(Vec(GetRandomFloat(0.5, 1), GetRandomFloat(-0.5, 0.5), GetRandomFloat(-1, 1)))
 
-		-- shell ejection
-		ejectBrass(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
+		if GetTime() - self.lastFireTime < 0.1 then
+			self.timeFiring = self.timeFiring + 0.1
+		else
+			self.timeFiring = 0
+		end
+
+		self:RecoilPosPunch(Vec(0, 0, GetRandomFloat(0.133, 0.166)))
+
+		if isLocal then
+			mt.pos = VecAdd(mt.pos, VecScale(GetPlayerVelocity(), dt))
+
+			PointLight(mt.pos, 1, 0.7, 0.5, 3)
+
+			client.DoMachineGunKick(1, self.timeFiring, 2)
+			
+			self:RecoilAngReset(-15)
+			self:RecoilAngPunch(Vec(GetRandomFloat(0.5, 1), GetRandomFloat(-0.5, 0.5), GetRandomFloat(-1, 1)))
+
+			-- shell ejection
+			ejectBrass(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
+		end
+
+		self:muzzleFlash(mt.pos, 2)
+	else
+		local pos, dir = getAimVector(GetPlayerEyeTransform(self.owner).pos, 100, GLOBAL_5DEGREES, self.owner)
+		server.ShootHook(pos, dir, "bullet", self.dmg_world, self.dmg_plyr, 100, self.owner, self.toolID, self.toolName)
+		
+		PlayFireSound(self.snds[1], mt.pos, 300)
+
+		baseWeap.DepleteAmmo(self)
 	end
-
-	self:muzzleFlash(mt.pos, 2)
-
+	
 	self.ammoLoaded = self.ammoLoaded - 1
 
 	self.nextFire = self:GetNextAttackDelay(0.075)
+	self.nextAltFire = GetTime() + 0.075
 end
 
-function CTestGun2AltFire(p)
-	local mt = GetToolLocationWorldTransform("muzzle", p)
-	
-	for i=1, 4 do
-		local pos, dir = getAimVector(GetPlayerEyeTransform(p).pos, 100, GLOBAL_5DEGREES, p)
-		server.ShootHook(pos, dir, "bullet", CTestGun2.dmg_world, CTestGun2.dmg_plyr, 100, p, CTestGun2.toolID, CTestGun2.toolName)
-	end
-	
-	StopSound(CTestGun2.snds[1])
-	PlaySound(CTestGun2.snds[1], mt.pos, 300)
-
-	baseWeap.DepleteAmmo(CTestGun2, 4)
-end
-
-function CTestGun2:SecondaryAttack(dt)
+function CTestGun2:SecondaryAttack(dt, isLocal)
 	if self.ammoLoaded <= 3 then
-		self:PlayEmptySound()
+		if client then self:PlayEmptySound() end
 		self.nextFire = GetTime() + 0.15
 		self.nextAltFire = self.nextFire
 		return
@@ -121,31 +106,54 @@ function CTestGun2:SecondaryAttack(dt)
 
 	local mt = GetToolLocationWorldTransform("muzzle", self.owner)
 
-	self:RecoilPosPunch(Vec(0, GetRandomFloat(0.05, 0.15), GetRandomFloat(0.1, 0.2)))
-
-	if IsPlayerLocal(self.owner) then
-		mt.pos = VecAdd(mt.pos, VecScale(GetPlayerVelocity(), dt))
+	if client then
 		
-		PointLight(mt.pos, 1, 0.7, 0.5, 4)
 
-		ServerCall("CTestGun2AltFire", self.owner)
+		if GetTime() - self.lastFireTime < 0.1 then
+			self.timeFiring = self.timeFiring + 0.1
+		else
+			self.timeFiring = 0
+		end
 
-		self:RecoilAngPunch(Vec(GetRandomFloat(2, 4), GetRandomFloat(-0.5, 0.5), GetRandomFloat(0.25, 1)))
+		self:RecoilPosPunch(Vec(0, 0, GetRandomFloat(0.133, 0.166)))
 
-		-- shell ejection
-		ejectBrass(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
+		if isLocal then
+			mt.pos = VecAdd(mt.pos, VecScale(GetPlayerVelocity(), dt))
+
+			PointLight(mt.pos, 1, 0.7, 0.5, 3)
+
+			--self:ServerWpnCall("SecondaryAttack", 0, false)
+
+			client.DoMachineGunKick(1, self.timeFiring, 2)
+			
+			self:RecoilAngReset(-15)
+			self:RecoilAngPunch(Vec(GetRandomFloat(0.5, 1), GetRandomFloat(-0.5, 0.5), GetRandomFloat(-1, 1)))
+
+			-- shell ejection
+			ejectBrass(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
+		end
+
+		self:muzzleFlash(mt.pos, 2)
+	else
+		for i=1, 4 do
+			local pos, dir = getAimVector(GetPlayerEyeTransform(self.owner).pos, 100, GLOBAL_5DEGREES, self.owner)
+			server.ShootHook(pos, dir, "bullet", self.dmg_world, self.dmg_plyr, 100, self.owner, self.toolID, self.toolName)
+		end
+
+		PlayFireSound(self.snds[1], mt.pos, 300)
+
+		baseWeap.DepleteAmmo(self, 4)
 	end
 
-	self:muzzleFlash(mt.pos, 2)
-
 	self.ammoLoaded = self.ammoLoaded - 4
-
-	self.nextFire = self:GetNextAttackDelay(0.5)
+	
+	-- Use get time because GetNextAttackDelay breaks here
+	self.nextFire = GetTime() + 0.5
 	self.nextAltFire = self.nextFire
 end
 
 function CTestGun2:Reload()
-	self:DefaultReload(self.ammoLoadedMax50, 1.5)
+	self:DefaultReload(self.ammoLoadedMax, 1.5)
 end
 
 function CTestGun2:WeaponIdle()

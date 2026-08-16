@@ -14,13 +14,15 @@ end
 -- CONSTANTS
 ----------------------------------------------------------------------------------------------
 
--- MAIN FLAGS
-FM_CL_NODRAW = leftShift(0)
-FM_CL_NOINIT = leftShift(1)
-FM_CL_NOTICK = leftShift(2)
-
 -- WEAPON FLAGS
-FWPN_NOAUTORELOAD = leftShift(3)
+FWPN_NEEDSCLICKED = leftShift(0) -- Weapon needs clicked to fire, no holding
+FWPN_NOHUD        = leftShift(1) -- Don't draw HUD
+
+FWPN_SV_CALLONCE     = leftShift(2) -- Does 1 servercall every fire instead of 1 on start and stop
+FWPN_SV_CALLONCESEC  = leftShift(3) -- Same as above but for secondary fire
+                                    -- Use these if the weapons fire rate is really slow or has flag FWPN_NEEDSCLICKED
+
+FWPN_NOAUTORELOAD = leftShift(4) -- Don't automatically start reloading weapon on empty
 
 -- TEMP ENTS
 FTENT_NONE = 0
