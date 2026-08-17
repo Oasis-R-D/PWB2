@@ -269,29 +269,25 @@ function baseWeap:tickPlayer_cl(dt)
     end
 
 	local empty_prim = ((self.ammoLoaded == 0 and self.ammoTotal == 0) or (self.ammoLoadedMax == WEAPON_NOCLIP and 0 == self.ammoTotal))
-	if self.inPrimary == true then
-		if not fireKeyDown or empty_prim or self.ammoLoaded == 0 then
-			self.lastFireTime = 0.0
+	if not fireKeyDown or empty_prim or self.ammoLoaded == 0 then
+		self.lastFireTime = 0.0
 
-			if self.isLocal then
-				self.inPrimary = false
+		if self.isLocal and self.inPrimary == true then
+			self.inPrimary = false
 
-				if not hasFlag(self.flags, FWPN_SV_CALLONCE) then
-					self:ServerWpnCall("SV_StopFire")
-				end
+			if not hasFlag(self.flags, FWPN_SV_CALLONCE) then
+				self:ServerWpnCall("SV_StopFire")
 			end
 		end
 	end
 
-	-- enforce order
-	if self.inSecondary then
+	-- TO-DO: this is broken
+	local empty_sec = false --(self.ammoAltLoadedMax ~= WEAPON_NOCLIP and self.ammoAltTotal == 0) or (self.ammoAltLoadedMax == WEAPON_NOCLIP and empty_prim)
+	if self.isLocal and self.inSecondary == true then
+		-- enforce order
 		self.inPrimary = false
 		self.lastFireTime = 0.0
-    end
 
-	-- TO-DO: this is broken
-	local empty_sec = false --(self.ammoAltLoadedMax ~= WEAPON_NOCLIP and self.ammoAltTotal == 0)-- or (self.ammoAltLoadedMax == WEAPON_NOCLIP and self.ammoLoaded == 0)
-	if self.isLocal and self.inSecondary == true then
 		if not altfireKeyDown or empty_sec then
 			self.inSecondary = false
 			if not hasFlag(self.flags, FWPN_SV_CALLONCESEC) then
@@ -307,7 +303,7 @@ function baseWeap:tickPlayer_cl(dt)
 	elseif InputDown("r", self.owner) and self.ammoLoadedMax ~= WEAPON_NOCLIP and not self.inReload and self:CanAttack(math.max(self.nextFire, self.nextAltFire), curTime) then
 		-- reload when reload is pressed, or if no buttons are down and weapon is empty.
 		self:Reload()
-		self.inPrimary, self.inSecondary = false, false
+		if self.isLocal then self.inPrimary, self.inSecondary = false, false end
 	elseif not fireKeyDown and not altfireKeyDown then
 		-- no fire buttons down
 		self.firedOnEmpty = false
