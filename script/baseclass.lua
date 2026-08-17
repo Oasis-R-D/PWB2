@@ -12,23 +12,23 @@ baseWeap = {}
 baseWeap.model				= "MOD/models/xml/mdl.xml"	-- path to the XML model file
 baseWeap.casingOrg			= Vec(0,0,0)				-- where casings are ejected
 
-baseWeap.toolID 			= "baseweap"				-- used by the engine. lowercase and no spaces
-baseWeap.toolName 			= "PWB2 Base Weapon"		-- shown in killfeed
+baseWeap.toolID 			= "baseweap"			-- used by the engine. lowercase and no spaces
+baseWeap.toolName 			= "PWB2 Base Weapon"	-- shown in killfeed
 baseWeap.toolSlot			= 0
 
 baseWeap.ammoLoadedMax 		= 0							-- max clip 	 	-- -1 for no clip (pulls from reserve)
 baseWeap.ammoAltLoadedMax	= 0 						-- max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
 baseWeap.ammoPickupSize		= baseWeap.ammoLoadedMax	-- defaults to full mag
-baseWeap.dmg_world			= 0
+baseWeap.dmg_world			= 0							-- world damage, 'gun' does around 0.5
 baseWeap.dmg_plyr			= 0							-- 0.0-1.0
 
-baseWeap.flags				= 0							-- weapon flags
-baseWeap.snds				= 0
+baseWeap.flags				= 0	-- weapon flags
+baseWeap.snds				= 0 -- temp value, will be set to the sound array on init
 
-baseWeap.recoilPosDecay 	= 0.5	-- multiplier for recoil pos decay. Lower is slower, higher is faster
-baseWeap.recoilAngSpring	= 65	-- bigger number increases the speed at which the angle corrects
-baseWeap.recoilAngDamp		= 9		-- bigger number makes the response more damped, smaller is less damped
-									-- currently the system will overshoot, with larger damping values it won't
+baseWeap.recoilPosDecay 	= 0.5 -- multiplier for recoil pos decay. Lower is slower, higher is faster
+baseWeap.recoilAngSpring	= 65  -- bigger number increases the speed at which the angle corrects
+baseWeap.recoilAngDamp		= 9	  -- bigger number makes the response more damped, smaller is less damped
+								  -- currently the system will overshoot, with larger damping values it won't
 
 local WEAPON_NOCLIP = -1
 
@@ -457,10 +457,7 @@ function baseWeap:DefaultHolster()
 		end
 	end
 
-	
-
 	self.holstered = true
-
 	self:Holster()
 end
 

@@ -25,6 +25,18 @@ if you need help with PWB2 or it's utilization of object oriented programming, m
 
    https://www.lua.org/pil/16.html
 
+NEW TOOL ANIMATOR FEATURES:
+- PWB tickToolAnimator():
+  tickToolAnimator(toolAnimator, dt, defaultPoseTransform, playerId, swingamnts, noheldaction)
+
+- swingamnts + fp_actionX name/tag: (only for first person) you can now define a infinite amount of actions that will be randomly chosen.
+  it randomly chooses a number 1 through the number inputted into swingamnts for x. Best for melee weapons (just uses 'fp_action' if undefined)
+
+- noheldaction: only does fp/tp_action when forced using the forceActionPose bool
+  (using this with a weapon that has multiple actions using the above system may lead to undefined behavior)
+
+- fp/tp_secaction: a secondary action position, can only activated with the forceSecondaryActionPose bool
+
 ==============================================================================================
 -- WEAPON DEFINITION EXAMPLE
 ==============================================================================================
@@ -42,6 +54,9 @@ function demoWeap:WeaponSounds()
 	}
 end
 
+-- overrided functions from the Weapon SFX / VFX section go here
+   (muzzle flash, empty sound ect.)
+
 --=========================================================================
 -- Define the weapon and it's variables
 --=========================================================================
@@ -50,23 +65,24 @@ end
 -- These don't need redefined in a weapon if a var is just the default value
 demoWeap.model				   = "MOD/models/xml/mdl.xml" -- path to the XML model file
 demoWeap.casingOrg         = Vec(0,0,0)               -- where casings are ejected
-demoWeap.toolID 			   = "demoWeap"				   -- used by the engine. lowercase and no spaces
-demoWeap.toolName 			= "PWB2 Weapon"			   -- shown in killfeed
+
+demoWeap.toolID 			   = "demoWeap"	 -- used by the engine. lowercase and no spaces
+demoWeap.toolName 			= "PWB2 Weapon" -- shown in killfeed
 demoWeap.toolSlot			   = 3
 
 demoWeap.ammoLoadedMax 	   = 45						      -- max clip 	 	-- -1 for no clip (pulls from reserve)
 demoWeap.ammoAltLoadedMax	= -1 						      -- max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
 demoWeap.ammoPickupSize	   = demoWeap.ammoLoadedMax	-- defaults to full mag
-demoWeap.dmg_world			= 0.4
+demoWeap.dmg_world			= 0.4                      -- world damage, 'gun' does around 0.5
 demoWeap.dmg_plyr			   = 0.05						   -- 0.0-1.0
 
-demoWeap.flags				   = 0							   -- weapon flags
-demoWeap.snds				   = 0							   -- temp value, will be set to the sound array on init
+demoWeap.flags				   = 0 -- weapon flags
+demoWeap.snds				   = 0 -- temp value, will be set to the sound array on init
 
-baseWeap.recoilPosDecay 	= 0.25	-- multiplier for recoil pos decay. Lower is slower, higher is faster
-baseWeap.recoilAngSpring	= 65	-- bigger number increases the speed at which the angle corrects
-baseWeap.recoilAngDamp		= 9		-- bigger number makes the response more damped, smaller is less damped
-									-- currently the system will overshoot, with larger damping values it won't
+baseWeap.recoilPosDecay 	= 0.25 -- multiplier for recoil pos decay. Lower is slower, higher is faster
+baseWeap.recoilAngSpring	= 65	 -- bigger number increases the speed at which the angle corrects
+baseWeap.recoilAngDamp		= 9	 -- bigger number makes the response more damped, smaller is less damped
+									       -- currently the system will overshoot, with larger damping values it won't
 
 -- override initVars to add new variables
 function demoWeap:initVars(owner)
