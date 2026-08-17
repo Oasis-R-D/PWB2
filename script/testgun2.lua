@@ -45,7 +45,7 @@ end
 -- Weapon functions
 --=========================================================================
 
-function CTestGun2:PrimaryAttack(dt, isLocal)
+function CTestGun2:PrimaryAttack(dt)
 	if self.ammoLoaded <= 0 then
 		if client then self:PlayEmptySound() end
 		self.nextFire = GetTime() + 0.15
@@ -56,8 +56,6 @@ function CTestGun2:PrimaryAttack(dt, isLocal)
 	local mt = GetToolLocationWorldTransform("muzzle", self.owner)
 
 	if client then
-		
-
 		if GetTime() - self.lastFireTime < 0.1 then
 			self.timeFiring = self.timeFiring + 0.1
 		else
@@ -66,7 +64,7 @@ function CTestGun2:PrimaryAttack(dt, isLocal)
 
 		self:RecoilPosPunch(Vec(0, 0, GetRandomFloat(0.133, 0.166)))
 
-		if isLocal then
+		if self.isLocal then
 			mt.pos = VecAdd(mt.pos, VecScale(GetPlayerVelocity(), dt))
 
 			PointLight(mt.pos, 1, 0.7, 0.5, 3)
@@ -96,7 +94,7 @@ function CTestGun2:PrimaryAttack(dt, isLocal)
 	self.nextAltFire = GetTime() + 0.075
 end
 
-function CTestGun2:SecondaryAttack(dt, isLocal)
+function CTestGun2:SecondaryAttack(dt)
 	if self.ammoLoaded <= 3 then
 		if client then self:PlayEmptySound() end
 		self.nextFire = GetTime() + 0.15
@@ -107,8 +105,6 @@ function CTestGun2:SecondaryAttack(dt, isLocal)
 	local mt = GetToolLocationWorldTransform("muzzle", self.owner)
 
 	if client then
-		
-
 		if GetTime() - self.lastFireTime < 0.1 then
 			self.timeFiring = self.timeFiring + 0.1
 		else
@@ -117,7 +113,7 @@ function CTestGun2:SecondaryAttack(dt, isLocal)
 
 		self:RecoilPosPunch(Vec(0, 0, GetRandomFloat(0.133, 0.166)))
 
-		if isLocal then
+		if self.isLocal then
 			mt.pos = VecAdd(mt.pos, VecScale(GetPlayerVelocity(), dt))
 
 			PointLight(mt.pos, 1, 0.7, 0.5, 3)

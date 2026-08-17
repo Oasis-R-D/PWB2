@@ -62,7 +62,12 @@ function baseWeap:initVars(owner, wpnSlot)
 
 		self.recoilPos 			= Vec(0,0,0)
 
+		-- Better than calling IsPlayerLocal()
+		self.isLocal = false
+
 		if IsPlayerLocal(owner) then
+			self.isLocal = true
+
 			self.recoilAng 			= Vec(0,0,0)
 			self.recoilAngVel 		= Vec(0,0,0)
 
@@ -146,9 +151,13 @@ end
 --=========================================================================
 -- Weapon SFX / VFX
 --=========================================================================
--- TO-DO: add firer's velocity?
 function baseWeap:muzzleFlash(pos, size, color)
 	color = color or Vec(1, 1, 1)
+
+	if self.isLocal then
+		pos = VecAdd(pos, VecScale(GetPlayerVelocity(), GetTimeStep()))
+	end
+
 	local t = Transform(pos)
 	t.rot = QuatRotateQuat(GetCameraTransform().rot, QuatEuler(0,0,GetRandomFloat(-15, 15)))
 
@@ -164,7 +173,7 @@ end
 function baseWeap:WeaponSounds()
 	return {
 --  		   SOUND		  load to	 dist	[loop]
-		{"MOD/snd/SOUND.ogg", "sv/cl", 	  10,	false}
+		{"MOD/snd/SOUND.ogg", "sv|cl", 	  10,	false}
 	} 
 end
 
@@ -208,8 +217,8 @@ end
 function baseWeap:Deploy()   		 		   end -- called when weapon is equipped
 function baseWeap:Holster()			  		   end -- called when weapon is unequipped
 
-function baseWeap:PrimaryAttack(dt, isLocal)   end
-function baseWeap:SecondaryAttack(dt, isLocal) end
+function baseWeap:PrimaryAttack(dt)   end
+function baseWeap:SecondaryAttack(dt) end
 function baseWeap:Reload()            		   end -- called when reload is started
 function baseWeap:WeaponIdle()		  		   end -- called when no buttons are pressed
 
@@ -264,10 +273,12 @@ function baseWeap:tickPlayer_cl(dt)
 		if not fireKeyDown or empty_prim or self.ammoLoaded == 0 then
 			self.lastFireTime = 0.0
 
-			self.inPrimary = false
+			if self.isLocal then
+				self.inPrimary = false
 
-			if not hasFlag(self.flags, FWPN_SV_CALLONCE) then
-				self:ServerWpnCall("SV_StopFire")
+				if not hasFlag(self.flags, FWPN_SV_CALLONCE) then
+					self:ServerWpnCall("SV_StopFire")
+				end
 			end
 		end
 	end
@@ -280,7 +291,7 @@ function baseWeap:tickPlayer_cl(dt)
 
 	-- TO-DO: this is broken
 	local empty_sec = false --(self.ammoAltLoadedMax ~= WEAPON_NOCLIP and self.ammoAltTotal == 0)-- or (self.ammoAltLoadedMax == WEAPON_NOCLIP and self.ammoLoaded == 0)
-	if self.inSecondary == true then
+	if self.isLocal and self.inSecondary == true then
 		if not altfireKeyDown or empty_sec then
 			self.inSecondary = false
 			if not hasFlag(self.flags, FWPN_SV_CALLONCESEC) then
@@ -378,11 +389,9 @@ function baseWeap:tickPlayer_sv(dt)
 end
 
 function baseWeap:DefaultPrimaryAttack(dt, empty)
-	local isLocal = IsPlayerLocal(self.owner)
-
 	if empty then
 		self.firedOnEmpty = true
-	elseif isLocal then
+	elseif self.isLocal then
 		if self.inPrimary == false and (self.ammoLoaded > 0 or (self.ammoLoadedMax == WEAPON_NOCLIP and self.ammoTotal > 0)) then
 			self.inPrimary = true
 			if not hasFlag(self.flags, FWPN_SV_CALLONCE) then
@@ -391,15 +400,13 @@ function baseWeap:DefaultPrimaryAttack(dt, empty)
 		end
 	end
 
-	self:PrimaryAttack(dt, isLocal)
+	self:PrimaryAttack(dt)
 end
 
 function baseWeap:DefaultSecondaryAttack(dt, empty)
-	local isLocal = IsPlayerLocal(self.owner)
-
 	if empty then
 		self.firedOnEmpty = true
-	elseif isLocal then
+	elseif self.isLocal then
 		if self.inSecondary == false then
 			self.inSecondary = true
 			if not hasFlag(self.flags, FWPN_SV_CALLONCESEC) then
@@ -411,7 +418,7 @@ function baseWeap:DefaultSecondaryAttack(dt, empty)
 	-- hold gun straight
 	self.animator.timeSinceFire = 0.0
 
-	self:SecondaryAttack(dt, isLocal)
+	self:SecondaryAttack(dt)
 end
 
 function baseWeap:DefaultDeploy(curTime)
@@ -428,7 +435,7 @@ function baseWeap:DefaultDeploy(curTime)
 
 		-- Reset old recoil and do some movement
 		self.recoilPos = Vec(0,0,0)
-		if IsPlayerLocal(self.owner) then
+		if self.isLocal then
 			self:RecoilAngReset()
 			self:RecoilAngPunch(Vec(3, 0.75, 0.66))
 			
@@ -486,7 +493,7 @@ end
 -- 	Weapon recoil handling
 --=========================================================================
 function baseWeap:Animate(dt)
-	if IsPlayerLocal(self.owner) then
+	if self.isLocal then
 		local idlePos = Vec(
 			math.sin(self.idleCycleTime*0.5) + math.cos(self.idleCycleTime*0.25),
 			-math.sin(self.idleCycleTime*0.5) + math.cos(self.idleCycleTime*0.25),

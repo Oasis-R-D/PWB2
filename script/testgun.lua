@@ -48,7 +48,7 @@ CTestGun.snds				= 0							 -- temp value, will be set to the sound array on ini
 -- Weapon functions
 --=========================================================================
 
-function CTestGun:PrimaryAttack(dt, isLocal)
+function CTestGun:PrimaryAttack(dt)
 	local mt = GetToolLocationWorldTransform("muzzle", self.owner)
 	if client then
 		if self.ammoLoaded <= 0 then
@@ -60,7 +60,7 @@ function CTestGun:PrimaryAttack(dt, isLocal)
 		local punchVec = Vec(GetRandomFloat(-0.05, 0.05), GetRandomFloat(0.0, 0.025), GetRandomFloat(0.05, 0.1))
 		self:RecoilPosPunch(punchVec)
 
-		if isLocal then
+		if self.isLocal then
 			mt.pos = VecAdd(mt.pos, VecScale(GetPlayerVelocity(), dt))
 
 			PointLight(mt.pos, 1, 0.7, 0.5, 3)
