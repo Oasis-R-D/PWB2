@@ -87,10 +87,10 @@ end
    -  Loop based sound system for reloads, will make it so sounds follow the player proper
       (only on firing client?)
    
-   - alt fire can use another tools ammo
+   -  alt fire can use another tools ammo
 
-   - making the gun fire in the muzzle dir could be intersting (would need to make the model
-     dynamically face the target spot though)
+   -  making the gun fire in the muzzle dir could be intersting (would need to make the model
+      muzzle dynamically face the target spot though)
 
 ============================================================================================]]
 
@@ -111,8 +111,10 @@ end
 #include "script/lib/util.lua"
 --#include "script/lib/sound_man.lua"
 
-GLOBAL_HEADSHOTMULT = 2.0 -- use actual value since guns do less damage in HL2DM
+GLOBAL_HEADSHOTMULT = 2.0
 
+-- max tempents the client can simulate at once
+-- this probably won't be reached normally
 GLOBAL_MAX_TEMPENTS = 1200
 
 GLOBAL_1DEGREE    = 0.00873

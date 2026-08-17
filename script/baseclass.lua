@@ -84,9 +84,11 @@ function baseWeap:initVars(owner, wpnSlot)
 	
 	self.ammoAltTotal      	= 0 -- total alt ammo
 
-	-- used for server networking
-	self.inPrimary 			= false
-	self.inSecondary 		= false
+	if server or (client and self.isLocal == true) then
+		-- used for server networking
+		self.inPrimary 			= false
+		self.inSecondary 		= false
+	end
 
 	-- compare against GetTime()
 	self.nextFire           = 0
@@ -214,17 +216,22 @@ end
 -- Weapon interactions
 -- These should be overriden per weapon
 --=========================================================================
-function baseWeap:Deploy()   		 		   end -- called when weapon is equipped
-function baseWeap:Holster()			  		   end -- called when weapon is unequipped
+function baseWeap:Deploy()   		 		  	end -- called when weapon is equipped
+function baseWeap:Holster()			  		   	end -- called when weapon is unequipped
 
-function baseWeap:PrimaryAttack(dt)   end
-function baseWeap:SecondaryAttack(dt) end
-function baseWeap:Reload()            		   end -- called when reload is started
-function baseWeap:WeaponIdle()		  		   end -- called when no buttons are pressed
+function baseWeap:PrimaryAttack(dt)   		   	end
+function baseWeap:SecondaryAttack(dt) 		   	end
+function baseWeap:Reload()            		   	end -- called when reload is started
+function baseWeap:WeaponIdle()		  		   	end -- called when no buttons are pressed
 
-function baseWeap:CustomAnimate(dt)	  		   end -- called every frame, use for adding custom
-										 	       -- weapon movement, see PWB1  slide/pump anims
-		
+function baseWeap:CustomAnimate(dt)	  		   	end -- called every frame, use for adding custom
+										 	       	-- weapon movement, see PWB1  slide/pump anims
+
+-- Override these if the weapon has extra conditions needed for firing
+-- I.E. Weapon uses multiple rounds in the mag per fire
+-- These are ran on client only but if they're true, server isn't called												
+function baseWeap:SV_FireEmptyCond() 	return false end
+function baseWeap:SV_FireAltEmptyCond() return false end
 --=========================================================================
 -- 	Input handling and HUD
 --=========================================================================
@@ -248,7 +255,6 @@ function baseWeap:tickPlayer_cl(dt)
 
 	if not self.holstered then
 		if GetPlayerGrabBody(self.owner) ~= 0 then
-			DebugPrint("HOLSTER)")
 			-- player is grabbing object
 			self:DefaultHolster()
 			fireKeyDown, altfireKeyDown = false, false
@@ -256,7 +262,6 @@ function baseWeap:tickPlayer_cl(dt)
 	elseif GetPlayerGrabBody(self.owner) == 0 then
 		-- deploying weapon
 		self:DefaultDeploy(curTime)
-		
 	end
 
 	self.ammoTotal = GetToolAmmo(self.toolID, self.owner)
@@ -268,7 +273,7 @@ function baseWeap:tickPlayer_cl(dt)
 		self.inReload = false
     end
 
-	local empty_prim = ((self.ammoLoaded == 0 and self.ammoTotal == 0) or (self.ammoLoadedMax == WEAPON_NOCLIP and 0 == self.ammoTotal))
+	local empty_prim = ((self.ammoLoaded == 0 and self.ammoTotal == 0) or (self.ammoLoadedMax == WEAPON_NOCLIP and 0 == self.ammoTotal)) or self:SV_FireEmptyCond()
 	if not fireKeyDown or empty_prim or self.ammoLoaded == 0 then
 		self.lastFireTime = 0.0
 
@@ -282,7 +287,7 @@ function baseWeap:tickPlayer_cl(dt)
 	end
 
 	-- TO-DO: this is broken
-	local empty_sec = false --(self.ammoAltLoadedMax ~= WEAPON_NOCLIP and self.ammoAltTotal == 0) or (self.ammoAltLoadedMax == WEAPON_NOCLIP and empty_prim)
+	local empty_sec = false or self:SV_FireAltEmptyCond() --(self.ammoAltLoadedMax ~= WEAPON_NOCLIP and self.ammoAltTotal == 0) or (self.ammoAltLoadedMax == WEAPON_NOCLIP and empty_prim)
 	if self.isLocal and self.inSecondary == true then
 		-- enforce order
 		self.inPrimary = false
@@ -360,11 +365,11 @@ function baseWeap:tickPlayer_sv(dt)
 		self:SecondaryAttack(dt, false)
 	elseif self.inPrimary == true and self:CanAttack(self.nextFire, curTime) then
 		self:PrimaryAttack(dt, false)
-	elseif InputDown("r", self.owner) and self.ammoLoadedMax ~= WEAPON_NOCLIP and not self.inReload and self:CanAttack(math.max(self.nextFire, self.nextAltFire), curTime) then
+	elseif false and InputDown("r", self.owner) and self.ammoLoadedMax ~= WEAPON_NOCLIP and not self.inReload and self:CanAttack(math.max(self.nextFire, self.nextAltFire), curTime) then
 		-- reload when reload is pressed, or if no buttons are down and weapon is empty.
 		self:Reload()
 		self.inPrimary, self.inSecondary = false, false
-	elseif not self.inPrimary and not self.inSecondary then
+	elseif false and not self.inPrimary and not self.inSecondary then
 		-- no fire buttons down
 
 		if self.nextFire <= curTime and self.ammoLoaded == 0 and self:IsUseable() then
@@ -427,7 +432,7 @@ function baseWeap:DefaultDeploy(curTime)
 
 	if client then
 		-- cancel reloads
-		self.inReload	  = false
+		self.inReload = false
 
 		-- Reset old recoil and do some movement
 		self.recoilPos = Vec(0,0,0)
@@ -444,11 +449,15 @@ end
 
 function baseWeap:DefaultHolster()
 	if client then
-		self.inReload  = false
+		self.inReload = false
+		
+		if self.isLocal then
+			self.inPrimary 	  = false
+			self.inSecondary  = false
+		end
 	end
 
-	self.inPrimary = false
-	self.inSecondary = false
+	
 
 	self.holstered = true
 
@@ -715,9 +724,11 @@ function baseWeap:DumpGlobals()
 	DebugWatch(prefix .. "ammoLoaded", 			self.ammoLoaded)
 	DebugWatch(prefix .. "ammoAltTotal",		self.ammoAltTotal)
 
-	DebugWatch(prefix .. "inPrimary", 			self.inPrimary)
-	DebugWatch(prefix .. "inSecondary", 		self.inSecondary)
-	
+	if server or self.isLocal then
+		DebugWatch(prefix .. "inPrimary", 			self.inPrimary)
+		DebugWatch(prefix .. "inSecondary", 		self.inSecondary)
+	end
+
 	DebugWatch(prefix .. "nextFire",			string.format("%.2f", math.max(0, self.nextFire - GetTime())))
 	DebugWatch(prefix .. "nextAltFire", 		string.format("%.2f", math.max(0, self.nextAltFire - GetTime())))
 

@@ -46,16 +46,16 @@ end
 --=========================================================================
 
 function CTestGun2:PrimaryAttack(dt)
-	if self.ammoLoaded <= 0 then
-		if client then self:PlayEmptySound() end
-		self.nextFire = GetTime() + 0.15
-		self.nextAltFire = self.nextFire
-		return
-	end
-
 	local mt = GetToolLocationWorldTransform("muzzle", self.owner)
 
 	if client then
+		if self.ammoLoaded <= 0 then
+			self:PlayEmptySound()
+			self.nextFire = GetTime() + 0.15
+			self.nextAltFire = self.nextFire
+			return
+		end
+
 		if GetTime() - self.lastFireTime < 0.1 then
 			self.timeFiring = self.timeFiring + 0.1
 		else
@@ -65,8 +65,6 @@ function CTestGun2:PrimaryAttack(dt)
 		self:RecoilPosPunch(Vec(0, 0, GetRandomFloat(0.133, 0.166)))
 
 		if self.isLocal then
-			mt.pos = VecAdd(mt.pos, VecScale(GetPlayerVelocity(), dt))
-
 			PointLight(mt.pos, 1, 0.7, 0.5, 3)
 
 			client.DoMachineGunKick(1, self.timeFiring, 2)
@@ -94,17 +92,23 @@ function CTestGun2:PrimaryAttack(dt)
 	self.nextAltFire = GetTime() + 0.075
 end
 
-function CTestGun2:SecondaryAttack(dt)
-	if self.ammoLoaded <= 3 then
-		if client then self:PlayEmptySound() end
-		self.nextFire = GetTime() + 0.15
-		self.nextAltFire = self.nextFire
-		return
-	end
+function CTestGun2:SV_FireAltEmptyCond()
+	if self.ammoLoaded <= 3 then return true end
 
+	return false
+end
+
+function CTestGun2:SecondaryAttack(dt)
 	local mt = GetToolLocationWorldTransform("muzzle", self.owner)
 
 	if client then
+		if self.ammoLoaded <= 3 then
+			self:PlayEmptySound()
+			self.nextFire = GetTime() + 0.15
+			self.nextAltFire = self.nextFire
+			return
+		end
+		
 		if GetTime() - self.lastFireTime < 0.1 then
 			self.timeFiring = self.timeFiring + 0.1
 		else
@@ -114,11 +118,7 @@ function CTestGun2:SecondaryAttack(dt)
 		self:RecoilPosPunch(Vec(0, 0, GetRandomFloat(0.133, 0.166)))
 
 		if self.isLocal then
-			mt.pos = VecAdd(mt.pos, VecScale(GetPlayerVelocity(), dt))
-
 			PointLight(mt.pos, 1, 0.7, 0.5, 3)
-
-			--self:ServerWpnCall("SecondaryAttack", 0, false)
 
 			client.DoMachineGunKick(1, self.timeFiring, 2)
 			
