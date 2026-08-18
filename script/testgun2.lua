@@ -49,7 +49,8 @@ end
 
 function CTestGun2:PrimaryAttack(dt)
 	local mt = GetToolLocationWorldTransform("muzzle", self.owner)
-
+	if not mt then return end
+	
 	if client then
 		if self.ammoLoaded <= 0 then
 			self:PlayEmptySound()
@@ -102,6 +103,7 @@ end
 
 function CTestGun2:SecondaryAttack(dt)
 	local mt = GetToolLocationWorldTransform("muzzle", self.owner)
+	if not mt then return end
 
 	if client then
 		if self.ammoLoaded <= 3 then

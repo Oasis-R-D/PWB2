@@ -108,6 +108,7 @@ end
    -  making the gun fire in the muzzle dir could be intersting (would need to make the model
       muzzle dynamically face the target spot though)
 
+   -  Source viewpunch is 'laggy'
 ============================================================================================]]
 
 #version 2
@@ -121,8 +122,8 @@ end
 ----------------------------------------------------------------------------------------------
 
 -- LIBRARYS
-#include "script/lib/bit_ops.lua"
 #include "script/lib/pwbtoolanimation.lua"
+#include "script/lib/bit_ops.lua"
 #include "script/lib/viewpunch.lua"
 #include "script/lib/util.lua"
 

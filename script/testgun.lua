@@ -51,9 +51,9 @@ CTestGun.snds				= 0							 -- temp value, will be set to the sound array on ini
 --=========================================================================
 
 function CTestGun:PrimaryAttack(dt)
-	
-
 	local mt = GetToolLocationWorldTransform("muzzle", self.owner)
+	if not mt then return end
+	
 	if client then
 		if self.ammoLoaded <= 0 then
 			self:PlayEmptySound()

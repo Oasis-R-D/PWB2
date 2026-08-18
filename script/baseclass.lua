@@ -280,12 +280,12 @@ function baseWeap:tickPlayer_cl(dt)
 	end
 
 	if not self.holstered then
-		if GetPlayerGrabBody(self.owner) ~= 0 then
+		if GetPlayerGrabBody(self.owner) ~= 0 or GetPlayerVehicle(self.owner) ~= 0 then
 			-- player is grabbing object
 			self:DefaultHolster()
 			fireKeyDown, altfireKeyDown = false, false
 		end
-	elseif GetPlayerGrabBody(self.owner) == 0 then
+	elseif GetPlayerGrabBody(self.owner) == 0 and GetPlayerVehicle(self.owner) == 0 then
 		-- deploying weapon
 		self:DefaultDeploy(curTime)
 	end
@@ -373,11 +373,11 @@ function baseWeap:tickPlayer_sv(dt)
 	end
 
 	if not self.holstered then
-		if GetPlayerGrabBody(self.owner) ~= 0 then
+		if GetPlayerGrabBody(self.owner) ~= 0 or GetPlayerVehicle(self.owner) ~= 0 then
 			-- player is grabbing object
 			self:DefaultHolster()
 		end
-	elseif GetPlayerGrabBody(self.owner) == 0 then
+	elseif GetPlayerGrabBody(self.owner) == 0 and GetPlayerVehicle(self.owner) == 0 then
 		-- deploying weapon
 		self:DefaultDeploy(curTime)
 	end
@@ -465,11 +465,6 @@ end
 function baseWeap:DefaultHolster()
 	if client then
 		self.inReload = false
-		
-		if self.isLocal then
-			self.inPrimary 	  = false
-			self.inSecondary  = false
-		end
 	end
 
 	if server or self.isLocal then
@@ -478,8 +473,13 @@ function baseWeap:DefaultHolster()
 		end
 
 		self.followingSNDS = {}
+		
+		self.inPrimary 	  = false
+		self.inSecondary  = false
 	end
-	
+
+	self.lastFireTime = 0.0
+
 	self.holstered = true
 	self:Holster()
 end
