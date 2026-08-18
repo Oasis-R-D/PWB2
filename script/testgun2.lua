@@ -6,7 +6,9 @@ CTestGun2 = {} -- goes in GLOBAL_WEAPONS
 
 function CTestGun2:WeaponSounds()
 	return {
-		{"MOD/snd/smg1_fire.ogg", "sv", 10}
+		{"MOD/snd/smg1_fire.ogg", 	"sv", 10},
+		{"MOD/snd/smg1_reload.ogg", "cl", 10},
+		{"MOD/snd/smg1_reload.ogg", "cl", 10, true}
 	}
 end
 
@@ -77,6 +79,8 @@ function CTestGun2:PrimaryAttack(dt)
 		end
 
 		self:muzzleFlash(mt.pos, 2)
+		
+		self.ammoLoaded = self.ammoLoaded - 1
 	else
 		local pos, dir = getAimVector(GetPlayerEyeTransform(self.owner).pos, 100, GLOBAL_5DEGREES, self.owner)
 		server.ShootHook(pos, dir, "bullet", self.dmg_world, self.dmg_plyr, 100, self.owner, self.toolID, self.toolName)
@@ -86,8 +90,6 @@ function CTestGun2:PrimaryAttack(dt)
 		baseWeap.DepleteAmmo(self)
 	end
 	
-	self.ammoLoaded = self.ammoLoaded - 1
-
 	self.nextFire = self:GetNextAttackDelay(0.075)
 	self.nextAltFire = GetTime() + 0.075
 end
@@ -108,7 +110,7 @@ function CTestGun2:SecondaryAttack(dt)
 			self.nextAltFire = self.nextFire
 			return
 		end
-		
+
 		if GetTime() - self.lastFireTime < 0.1 then
 			self.timeFiring = self.timeFiring + 0.1
 		else
@@ -130,6 +132,8 @@ function CTestGun2:SecondaryAttack(dt)
 		end
 
 		self:muzzleFlash(mt.pos, 2)
+		
+		self.ammoLoaded = self.ammoLoaded - 4
 	else
 		for i=1, 4 do
 			local pos, dir = getAimVector(GetPlayerEyeTransform(self.owner).pos, 100, GLOBAL_5DEGREES, self.owner)
@@ -141,15 +145,19 @@ function CTestGun2:SecondaryAttack(dt)
 		baseWeap.DepleteAmmo(self, 4)
 	end
 
-	self.ammoLoaded = self.ammoLoaded - 4
-	
 	-- Use get time because GetNextAttackDelay breaks here
 	self.nextFire = GetTime() + 0.5
 	self.nextAltFire = self.nextFire
 end
 
 function CTestGun2:Reload()
-	self:DefaultReload(self.ammoLoadedMax, 1.5)
+	if not self:DefaultReload(self.ammoLoadedMax, 1.5) then return end
+
+	if self.isLocal then
+		self:PlayFollowingSound(self.snds[2], 1.258)
+	else
+		PlaySound(self.snds[1], GetPlayerPos(self.owner), 1)
+	end
 end
 
 function CTestGun2:WeaponIdle()

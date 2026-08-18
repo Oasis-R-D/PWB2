@@ -6,7 +6,9 @@ CTestGun = {} -- goes in GLOBAL_WEAPONS
 
 function CTestGun:WeaponSounds()
 	return {
-		{"MOD/snd/smg1_fire.ogg", "sv", 10}
+		{"MOD/snd/smg1_fire.ogg", "sv", 10},
+		{"MOD/snd/smg1_reload.ogg", "cl", 10},
+		{"MOD/snd/smg1_reload.ogg", "cl", 10, true}
 	}
 end
 
@@ -78,6 +80,8 @@ function CTestGun:PrimaryAttack(dt)
 		end
 
 		self:muzzleFlash(mt.pos, 1)
+		
+		self.ammoLoaded = self.ammoLoaded - 1
 	else
 		local pos, dir = getAimVector(GetPlayerEyeTransform(self.owner).pos, 100, GLOBAL_3DEGREES, self.owner)
 	
@@ -88,13 +92,17 @@ function CTestGun:PrimaryAttack(dt)
 		baseWeap.DepleteAmmo(self)
 	end
 
-	self.ammoLoaded = self.ammoLoaded - 1
-
 	self.nextFire = self:GetNextAttackDelay(0.133)
 end
 
 function CTestGun:Reload()
-	self:DefaultReload(self.ammoLoadedMax50, 1.5)
+	if not self:DefaultReload(self.ammoLoadedMax50, 1.5) then return end
+	
+	if self.isLocal then
+		self:PlayFollowingSound(self.snds[2], 1.258)
+	else
+		PlaySound(self.snds[1], GetPlayerPos(self.owner), 1)
+	end
 end
 
 function CTestGun:WeaponIdle()

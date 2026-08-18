@@ -53,9 +53,13 @@ function baseWeap:initVars(owner, wpnSlot)
 		-- Use to check if gun should fire
 		-- Use alongside ammoLoaded.
 		self.firedOnEmpty       = false
+		
+		-- current magazine amount
+		self.ammoLoaded         = self.ammoLoadedMax 
 
-		self.ammoLoaded         = self.ammoLoadedMax -- current magazine amount
-		self.ammoAltTotal      	= 0 -- total alt ammo
+		-- total alt ammo
+		self.ammoAltTotal      	= 0 
+
 		self.inReload           = false
 
 		-- True when the gun is allowed to
@@ -81,8 +85,8 @@ function baseWeap:initVars(owner, wpnSlot)
 		end
 	end
 
-	-- ammo loaded into weapon. Set by child
-	self.ammoTotal			= 0 -- total ammo
+	-- total ammo
+	self.ammoTotal			= 0 
 
 	if server or (client and self.isLocal == true) then
 		-- used for server networking
@@ -108,7 +112,7 @@ function baseWeap:initVars(owner, wpnSlot)
 	self.owner				= owner
 
 	-- list of currently playing following sounds
-	self.followingSNDS = {}
+	self.followingSNDS 		= {}
 end
 
 --=========================================================================
@@ -174,7 +178,7 @@ function baseWeap:muzzleFlash(pos, size, color)
 end
 
 -- sound data for PrecacheSFX(), override per weapon
--- loop is optional.
+-- loop is optional and doesn't need included.
 function baseWeap:WeaponSounds()
 	return {
 --  		   SOUND		  load to	 dist	[loop]
@@ -190,10 +194,11 @@ function baseWeap:PlayEmptySound()
 	end
 end
 
-function baseWeap:PlayFollowingSound(loop)
-	-- TO-DO: get duration of SFX
-	local dur = 0 -- placeholder
-	self.followingSNDS[#self.followingSNDS + 1] = {loop, dur}
+-- Uses sound loops to have a sound that follows the player
+-- length should be the duration of the sound
+-- (feel free to clip off some decimals so it won't overshoot)
+function baseWeap:PlayFollowingSound(loop, length)
+	self.followingSNDS[#self.followingSNDS + 1] = {loop, (GetTime() + length)}
 end
 
 function baseWeap:PrecacheSFX()
@@ -247,18 +252,24 @@ function baseWeap:SV_FireAltEmptyCond() return false end
 function baseWeap:tickPlayer_cl(dt)
 	self:DumpGlobals()
 	
-	if self.isLocal then
-		for index, sound in pairs(self.followingSNDS) do
-			PlayLoop(sound[1], self.owner, 1.0)
-		end
-	end
-
+	
 	self:Animate(dt)
 
 	tickToolAnimator(self.animator, dt, nil, self.owner)
 
 	local curTime = GetTime()
-	
+
+	if self.isLocal then
+		for index, sound in pairs(self.followingSNDS) do
+			if (sound[2] - curTime) > dt then
+				PlayLoop(sound[1], GetPlayerPos(), 1.0)
+			else
+				SetSoundLoopProgress(sound[1])
+				self.followingSNDS[index] = nil
+			end
+		end
+	end
+
 	local fireKeyDown, altfireKeyDown = false, false
 	if hasFlag(self.flags, FWPN_NEEDSCLICKED) then
 		fireKeyDown    = InputPressed("usetool", self.owner)
@@ -351,7 +362,16 @@ function baseWeap:tickPlayer_sv(dt)
 	self:DumpGlobals()
 
 	local curTime = GetTime()
-	
+
+	for index, sound in pairs(self.followingSNDS) do
+		if (sound[2] - curTime) > dt then
+			PlayLoop(sound[1], GetPlayerPos(self.owner), 1.0)
+		else
+			SetSoundLoopProgress(sound[1])
+			self.followingSNDS[index] = nil
+		end
+	end
+
 	if not self.holstered then
 		if GetPlayerGrabBody(self.owner) ~= 0 then
 			-- player is grabbing object
@@ -452,6 +472,14 @@ function baseWeap:DefaultHolster()
 		end
 	end
 
+	if server or self.isLocal then
+		for index, sound in pairs(self.followingSNDS) do
+			SetSoundLoopProgress(sound[1])
+		end
+
+		self.followingSNDS = {}
+	end
+	
 	self.holstered = true
 	self:Holster()
 end
