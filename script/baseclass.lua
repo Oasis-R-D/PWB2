@@ -54,6 +54,10 @@ function baseWeap:initVars(owner, wpnSlot)
 		-- Use alongside ammoLoaded.
 		self.firedOnEmpty       = false
 
+		self.ammoLoaded         = self.ammoLoadedMax -- current magazine amount
+		self.ammoAltTotal      	= 0 -- total alt ammo
+		self.inReload           = false
+
 		-- True when the gun is allowed to
 		-- play empty sounds. Reset it in Idle()
 		self.playEmptySound		= true
@@ -63,31 +67,27 @@ function baseWeap:initVars(owner, wpnSlot)
 		self.recoilPos 			= Vec(0,0,0)
 
 		-- Better than calling IsPlayerLocal()
-		self.isLocal = false
+		-- every time needed
+		self.isLocal 			= false
 
 		if IsPlayerLocal(owner) then
-			self.isLocal = true
+			self.isLocal 		= true
 
-			self.recoilAng 			= Vec(0,0,0)
-			self.recoilAngVel 		= Vec(0,0,0)
+			self.recoilAng 		= Vec(0,0,0)
+			self.recoilAngVel 	= Vec(0,0,0)
 
-			self.idleCycleTime  	= 0
-			self.idleCycleScale 	= 1
+			self.idleCycleTime  = 0
+			self.idleCycleScale = 1
 		end
 	end
 
-	self.inReload           = false
-
 	-- ammo loaded into weapon. Set by child
 	self.ammoTotal			= 0 -- total ammo
-	self.ammoLoaded         = self.ammoLoadedMax -- current magazine amount
-	
-	self.ammoAltTotal      	= 0 -- total alt ammo
 
 	if server or (client and self.isLocal == true) then
 		-- used for server networking
-		self.inPrimary 			= false
-		self.inSecondary 		= false
+		self.inPrimary 		= false
+		self.inSecondary 	= false
 	end
 
 	-- compare against GetTime()
@@ -106,6 +106,9 @@ function baseWeap:initVars(owner, wpnSlot)
 
 	-- which player owns this instance
 	self.owner				= owner
+
+	-- list of currently playing following sounds
+	self.followingSNDS = {}
 end
 
 --=========================================================================
@@ -187,6 +190,12 @@ function baseWeap:PlayEmptySound()
 	end
 end
 
+function baseWeap:PlayFollowingSound(loop)
+	-- TO-DO: get duration of SFX
+	local dur = 0 -- placeholder
+	self.followingSNDS[#self.followingSNDS + 1] = {loop, dur}
+end
+
 function baseWeap:PrecacheSFX()
 	local precachedSounds = {}
 	local svSounds, clSounds = 0, 0
@@ -237,6 +246,12 @@ function baseWeap:SV_FireAltEmptyCond() return false end
 --=========================================================================
 function baseWeap:tickPlayer_cl(dt)
 	self:DumpGlobals()
+	
+	if self.isLocal then
+		for index, sound in pairs(self.followingSNDS) do
+			PlayLoop(sound[1], self.owner, 1.0)
+		end
+	end
 
 	self:Animate(dt)
 
@@ -328,8 +343,10 @@ function baseWeap:tickPlayer_cl(dt)
 	if self:ShouldWeaponIdle() then
 		self:WeaponIdle()
 	end
-end 
+end
 
+-- Server only cares about firing
+-- Don't simulate reloading or clip amount
 function baseWeap:tickPlayer_sv(dt)
 	self:DumpGlobals()
 
@@ -346,12 +363,6 @@ function baseWeap:tickPlayer_sv(dt)
 	end
 
 	self.ammoTotal = GetToolAmmo(self.toolID, self.owner)
-	if self.inReload and self.nextFire <= curTime then
-		-- complete the reload.
-		self.ammoLoaded = math.min(self.ammoLoadedMax, self.ammoTotal)
-
-		self.inReload = false
-    end
 
 	-- enforce order
 	if self.inSecondary then
@@ -365,22 +376,6 @@ function baseWeap:tickPlayer_sv(dt)
 		self:SecondaryAttack(dt, false)
 	elseif self.inPrimary == true and self:CanAttack(self.nextFire, curTime) then
 		self:PrimaryAttack(dt, false)
-	elseif false and InputDown("r", self.owner) and self.ammoLoadedMax ~= WEAPON_NOCLIP and not self.inReload and self:CanAttack(math.max(self.nextFire, self.nextAltFire), curTime) then
-		-- reload when reload is pressed, or if no buttons are down and weapon is empty.
-		self:Reload()
-		self.inPrimary, self.inSecondary = false, false
-	elseif false and not self.inPrimary and not self.inSecondary then
-		-- no fire buttons down
-
-		if self.nextFire <= curTime and self.ammoLoaded == 0 and self:IsUseable() then
-			if not hasFlag(self.flags, FWPN_NOAUTORELOAD) then 
-				self:Reload()
-				return
-			end
-		end
-
-		self:WeaponIdle()
-		return
 	end
 
 	-- used for when you need extra stuff in WeaponIdle
@@ -713,13 +708,16 @@ end
 
 function baseWeap:DumpGlobals()
 	local prefix = "SV "
-	if client then prefix = "CL " end
+	if client then prefix = "CL "
+		
+		DebugWatch(prefix .. "inReload", 			self.inReload)
 
-	DebugWatch(prefix .. "inReload", 			self.inReload)
+		
+		DebugWatch(prefix .. "ammoLoaded", 			self.ammoLoaded)
+		DebugWatch(prefix .. "ammoAltTotal",		self.ammoAltTotal)
+	end
 
 	--DebugWatch(prefix .. "ammoTotal", 		self.ammoTotal)
-	DebugWatch(prefix .. "ammoLoaded", 			self.ammoLoaded)
-	DebugWatch(prefix .. "ammoAltTotal",		self.ammoAltTotal)
 
 	if server or self.isLocal then
 		DebugWatch(prefix .. "inPrimary", 			self.inPrimary)
@@ -732,6 +730,7 @@ function baseWeap:DumpGlobals()
 	DebugWatch(prefix .. "prevPrimFireTime", 	self.prevPrimFireTime)
 	DebugWatch(prefix .. "lastFireTime", 		self.lastFireTime)
 
+	-- unused
 	--DebugWatch(prefix .. "timeWeaponIdle", 	self.timeWeaponIdle)
 
 	DebugWatch(prefix .. "holstered", 			self.holstered)
