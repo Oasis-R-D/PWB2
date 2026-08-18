@@ -7,13 +7,13 @@
 
 baseWeap = {}
 
--- Static values for this specific weapon
+-- Static values for this specific weapon. These are shared for all instances of the class
 -- These don't need redefined in a weapon if a var is just the default value
 baseWeap.model				= "MOD/models/xml/mdl.xml"	-- path to the XML model file
 baseWeap.casingOrg			= Vec(0,0,0)				-- where casings are ejected
 
-baseWeap.toolID 			= "baseweap"			-- used by the engine. lowercase and no spaces
-baseWeap.toolName 			= "PWB2 Base Weapon"	-- shown in killfeed
+baseWeap.toolID 			= "basetool"				-- used by the engine. lowercase and no spaces
+baseWeap.toolName 			= "PWB2 Base Tool"			-- shown in killfeed
 baseWeap.toolSlot			= 0
 
 baseWeap.ammoLoadedMax 		= 0							-- max clip 	 	-- -1 for no clip (pulls from reserve)
@@ -40,7 +40,6 @@ local WEAPON_NOCLIP = -1
 -- at the end otherwise if preferred
 -----------------------------------------------------------
 function baseWeap:initVars(owner, wpnSlot)
-	-- CLIENT VARS
 	if client then
 		-- can be used for shotgun pumpping, bolt cycling
 		-- or any post firing stuff really
