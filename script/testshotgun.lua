@@ -196,7 +196,7 @@ function CTestShotgun:Reload()
 		-- hold gun straight
 		self.animator.timeSinceFire = 0.0
 
-		self.specialReload = 1
+		self.specialReload = 2
 		self.timeWeaponIdle = curTime + 0.6
 		self.nextFire = self:GetNextAttackDelay(1.0)
 		self.nextAltFire = curTime + 1.0
