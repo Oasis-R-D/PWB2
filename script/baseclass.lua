@@ -43,7 +43,7 @@ function baseWeap:initVars(owner, wpnSlot)
 	if client then
 		-- can be used for shotgun pumpping, bolt cycling
 		-- or any post firing stuff really
-		self.pumptime           = 0
+		self.pumpTime           = 0
 
 		-- used for shotgun reload interrupting
 		self.specialReload      = 0
@@ -251,7 +251,6 @@ function baseWeap:SV_FireAltEmptyCond() return false end
 function baseWeap:tickPlayer_cl(dt)
 	self:DumpGlobals()
 	
-	
 	self:Animate(dt)
 
 	tickToolAnimator(self.animator, dt, nil, self.owner)
@@ -299,23 +298,25 @@ function baseWeap:tickPlayer_cl(dt)
     end
 
 	local empty_prim = ((self.ammoLoaded == 0 and self.ammoTotal == 0) or (self.ammoLoadedMax == WEAPON_NOCLIP and 0 == self.ammoTotal)) or self:SV_FireEmptyCond()
-	if not fireKeyDown or empty_prim or self.ammoLoaded == 0 then
+	if not fireKeyDown or altfireKeyDown or empty_prim or self.ammoLoaded == 0 then
 		self.lastFireTime = 0.0
 
 		if self.isLocal and self.inPrimary == true then
 			self.inPrimary = false
 
-			if not hasFlag(self.flags, FWPN_SV_CALLONCE) then
+			-- update server ASAP! Otherwise will cause desync if you press both at the same time
+			if not hasFlag(self.flags, FWPN_SV_CALLONCE) or hasFlag(self.flags, FWPN_SV_CALLONCESEC) then
 				self:ServerWpnCall("SV_StopFire")
 			end
 		end
 	end
 
-	-- TO-DO: this is broken
+	-- TO-DO: this probably breaks if FWPN_SV_CALLONCE is true and you press both at once
 	local empty_sec = false or self:SV_FireAltEmptyCond() --(self.ammoAltLoadedMax ~= WEAPON_NOCLIP and self.ammoAltTotal == 0) or (self.ammoAltLoadedMax == WEAPON_NOCLIP and empty_prim)
 	if self.isLocal and self.inSecondary == true then
 		-- enforce order
 		self.inPrimary = false
+
 		self.lastFireTime = 0.0
 
 		if not altfireKeyDown or empty_sec then
