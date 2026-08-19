@@ -193,6 +193,9 @@ function CTestShotgun:Reload()
 			PlaySound(self.snds[3], mt.pos, 300)
 		end
 
+		-- hold gun straight
+		self.animator.timeSinceFire = 0.0
+
 		self.specialReload = 1
 		self.timeWeaponIdle = curTime + 0.6
 		self.nextFire = self:GetNextAttackDelay(1.0)
@@ -207,7 +210,7 @@ function CTestShotgun:Reload()
 
 		PlayFireSound(self.snds[2], mt.pos, 300)
 
-		if self.isLocal then self:RecoilAngPunch(Vec(GetRandomFloat(3, 4), GetRandomFloat(0, 0.5), GetRandomFloat(-3, -1))) end
+		if self.isLocal then self:RecoilAngPunch(Vec(GetRandomFloat(3, 4), GetRandomFloat(0, 1), GetRandomFloat(-6, -2))) end
 		self:RecoilPosPunch(Vec(0, 0.1, 0.1))
 
 		self.timeWeaponIdle = curTime + 0.5
@@ -215,6 +218,9 @@ function CTestShotgun:Reload()
 		-- Add them to the clip
 		self.ammoLoaded = self.ammoLoaded + 1
 		self.specialReload = 1
+
+		-- hold gun straight
+		self.animator.timeSinceFire = 0.0
 	end
 end
 
