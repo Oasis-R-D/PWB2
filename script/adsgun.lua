@@ -116,7 +116,7 @@ function CAdsGun:PrimaryAttack(dt)
 end
 
 function CAdsGun:Reload()
-	if not self:DefaultReload(self.ammoLoadedMax50, 1.5) then return end
+	if not self:DefaultReload(1.5) then return end
 	
 	if self.isLocal then
 		self:PlayFollowingSound(self.snds[2], 1.258)

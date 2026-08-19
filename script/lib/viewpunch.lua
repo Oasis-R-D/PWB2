@@ -41,9 +41,10 @@ function client.SRC_DecayPunchAngle(dt)
 		vecPunchAngle = VecAdd(vecPunchAngle, VecScale(vecPunchAngleVel, dt))
 		local damping = 1 - (9 * dt)
 		
+		--[[
 		if damping < 0 then 
 			damping = 0
-		end
+		end]]
 
 		vecPunchAngleVel = VecScale(vecPunchAngleVel, damping)
 		

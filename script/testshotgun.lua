@@ -85,6 +85,9 @@ function CTestShotgun:PrimaryAttack(dt)
 			self:RecoilAngReset(-15)
 			self:RecoilAngPunch(Vec(GetRandomFloat(2, 3), GetRandomFloat(-0.5, 0.5), GetRandomFloat(-2, 1)))
 
+			client.SRC_PunchAxis(1, 2)
+			client.SRC_PunchAxis(2, GetRandomFloat(-0.5, 0.5))
+
 			-- shell ejection
 			ejectBrass(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_shtgn.xml", FSFX_SHTGN)
 		end
@@ -140,6 +143,9 @@ function CTestShotgun:SecondaryAttack(dt)
 			self:RecoilAngReset(-15)
 			self:RecoilAngPunch(Vec(GetRandomFloat(4, 5), GetRandomFloat(-0.5, 0.5), GetRandomFloat(-5, -1)))
 
+			client.SRC_PunchAxis(1, 5)
+			client.SRC_PunchAxis(2, GetRandomFloat(-0.5, 0.5))
+			
 			-- shell ejection
 			ejectBrass(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_shtgn.xml", FSFX_SHTGN)
 			ejectBrass(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_shtgn.xml", FSFX_SHTGN)
@@ -196,27 +202,39 @@ function CTestShotgun:Reload()
 		-- hold gun straight
 		self.animator.timeSinceFire = 0.0
 
-		self.specialReload = 2
+		self.specialReload = 3
 		self.timeWeaponIdle = curTime + 0.6
 		self.nextFire = self:GetNextAttackDelay(1.0)
 		self.nextAltFire = curTime + 1.0
 		return
-	elseif self.specialReload == 1 then
+	elseif self.specialReload == 1 or self.specialReload == 3 then
 		-- waiting for gun to move to side
 		if self.timeWeaponIdle > curTime then
 			return end
-		
+
+		-- fixes first shell not adding to clip
+		if self.specialReload == 3 then
+			-- Add them to the clip
+			self.ammoLoaded = self.ammoLoaded + 1
+		end
+
 		self.specialReload = 2
 
 		PlayFireSound(self.snds[2], mt.pos, 300)
 
-		if self.isLocal then self:RecoilAngPunch(Vec(GetRandomFloat(3, 4), GetRandomFloat(0, 1), GetRandomFloat(-6, -2))) end
+		if self.isLocal then
+			self:RecoilAngPunch(Vec(GetRandomFloat(3, 4), GetRandomFloat(0, 1), GetRandomFloat(-6, -2)))
+			client.SRC_PunchAxis(3, -0.33)
+			client.SRC_PunchAxis(1, -0.33)
+		end
+		
 		self:RecoilPosPunch(Vec(0, 0.1, 0.1))
 
 		self.timeWeaponIdle = curTime + 0.5
 	else
 		-- Add them to the clip
 		self.ammoLoaded = self.ammoLoaded + 1
+
 		self.specialReload = 1
 
 		-- hold gun straight

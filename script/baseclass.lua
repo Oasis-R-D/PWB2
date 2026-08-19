@@ -519,7 +519,8 @@ function baseWeap:DrawHUD()
 end
 
 --=========================================================================
--- 	Weapon recoil handling
+-- 	WEAPON MODEL RECOIL
+-- 	Don't modify these, just edit the per class constants
 --=========================================================================
 function baseWeap:Animate(dt)
 	if self.isLocal then
@@ -672,10 +673,8 @@ function baseWeap:GetNextAttackDelay(delay)
 	return flNextAttack
 end
 
------------------------------------------------------------
 -- IsUseable - this function determines whether or not a
 -- weapon is useable by the player in its current state.
------------------------------------------------------------
 function baseWeap:IsUseable()
 	if self.ammoLoaded > 0 then
 		return true
@@ -705,7 +704,7 @@ function baseWeap:IsUseable()
 	return false --CanDeploy()
 end
 
-function baseWeap:DefaultReload(iClipSize, fDelay)
+function baseWeap:DefaultReload(fDelay)
 	if self.ammoTotal <= 0 then return false end
 
 	local j = math.min(self.ammoLoadedMax - self.ammoLoaded, self.ammoTotal)
@@ -713,10 +712,8 @@ function baseWeap:DefaultReload(iClipSize, fDelay)
 
 	local curTime = GetTime()
 
-	--[[m_pPlayer->m_flNextAttack]] self.nextFire = curTime + fDelay
+	self.nextFire = curTime + fDelay
 	self.nextAltFire = self.nextFire
-
-	--!!UNDONE -- reload sound goes here !!!
 
 	self.inReload = true
 
@@ -756,8 +753,8 @@ function baseWeap:DumpGlobals()
 		DebugWatch(prefix .. "inSecondary", 		self.inSecondary)
 	end
 
-	DebugWatch(prefix .. "nextFire",			string.format("%.2f", math.max(0, self.nextFire - GetTime())))
-	DebugWatch(prefix .. "nextAltFire", 		string.format("%.2f", math.max(0, self.nextAltFire - GetTime())))
+	DebugWatch(prefix .. "nextFire",			string.format("%.5f", math.max(0, self.nextFire - GetTime())))
+	DebugWatch(prefix .. "nextAltFire", 		string.format("%.5f", math.max(0, self.nextAltFire - GetTime())))
 
 	DebugWatch(prefix .. "prevPrimFireTime", 	self.prevPrimFireTime)
 	DebugWatch(prefix .. "lastFireTime", 		self.lastFireTime)
