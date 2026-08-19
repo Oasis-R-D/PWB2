@@ -63,6 +63,8 @@ function CMelee:Swing(fFirst)
 	local vecEnd = vecSrc + gpGlobals->v_forward * 32
 
 	UTIL_TraceLine(vecSrc, vecEnd, dont_ignore_monsters, ENT(m_pPlayer->pev), &tr)
+	QueryRaycast(vecSrc, direction, 1)
+
 
 	if server then
 		if tr.flFraction >= 1.0 then
@@ -95,12 +97,12 @@ function CMelee:Swing(fFirst)
 			fDidHit = true
 			CBaseEntity* pEntity = CBaseEntity::Instance(tr.pHit)
 
-			if ((self.nextFire + 1.0f <= GetTime()) or isMP()) then
+			if ((self.nextFire + 1.0) <= GetTime()) or isMP() then
 				-- first swing does full damage
-				pEntity->TraceAttack(m_pPlayer->pev, gSkillData.plrDmgCrowbar, gpGlobals->v_forward, &tr, DMG_CLUB)
+				ApplyPlayerDamage(pEntity, self.dmg_plyr, self.toolName, self.owner)
 			else
 				-- subsequent swings do half
-				pEntity->TraceAttack(m_pPlayer->pev, gSkillData.plrDmgCrowbar / 2, gpGlobals->v_forward, &tr, DMG_CLUB)
+				ApplyPlayerDamage(pEntity, self.dmg_plyr / 2, self.toolName, self.owner)
 			end
 
 			-- play thwack, smack, or dong sound
@@ -134,16 +136,10 @@ function CMelee:Swing(fFirst)
 			end
 
 			-- play texture hit sound
-			-- UNDONE: Calculate the correct point of intersection when we hit with the hull instead of the line
-
 			if fHitWorld then
 				local fvolbar = TEXTURETYPE_PlaySound(&tr, vecSrc, vecSrc + (vecEnd - vecSrc) * 2, BULLET_PLAYER_CROWBAR)
-
-				if isMP() then
-					-- override the volume here, cause we don't play texture sounds in multiplayer,
-					-- and fvolbar is going to be 0 from the above call.
-					fvolbar = 1
-				end
+				
+				PlayImpactSFX(fHitWorld, vecEnd, Vec()--[[TO-DO: NORMAL]])
 
 				-- also play crowbar strike
 				switch (RANDOM_LONG(0, 1))
@@ -159,7 +155,7 @@ function CMelee:Swing(fFirst)
 				-- delay the decal a bit
 				m_trHit = tr
 			end
-
+			self.hitpos = vecEnd
 			self.hitDelay = GetTime() + 0.2
 		end
 	end
