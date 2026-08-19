@@ -38,7 +38,9 @@ NEW TOOL ANIMATOR FEATURES:
 - fp/tp_secaction: a secondary action position, can only activated with the forceSecondaryActionPose bool
 
 ==============================================================================================
+==============================================================================================
 -- WEAPON DEFINITION EXAMPLE
+==============================================================================================
 ==============================================================================================
 
 demoWeap = {} -- goes in GLOBAL_WEAPONS
@@ -70,11 +72,11 @@ demoWeap.toolID 			   = "demoWeap"	 -- used by the engine. lowercase and no spac
 demoWeap.toolName 			= "PWB2 Weapon" -- shown in killfeed
 demoWeap.toolSlot			   = 3
 
-demoWeap.ammoLoadedMax 	   = 45						      -- max clip 	 	-- -1 for no clip (pulls from reserve)
-demoWeap.ammoAltLoadedMax	= -1 						      -- max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
-demoWeap.ammoPickupSize	   = demoWeap.ammoLoadedMax	-- defaults to full mag
-demoWeap.dmg_world			= 0.4                      -- world damage, 'gun' does around 0.5
-demoWeap.dmg_plyr			   = 0.05						   -- 0.0-1.0
+demoWeap.ammoLoadedMax 	   = 45						    -- max clip 	 	-- -1 for no clip (pulls from reserve)
+demoWeap.ammoAltLoadedMax	= -1 						    -- max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
+demoWeap.ammoPickupSize	   = demoWeap.ammoLoadedMax -- defaults to full mag
+demoWeap.dmg_world			= 0.4                    -- world damage, 'gun' does around 0.5
+demoWeap.dmg_plyr			   = 0.05						 -- 0.0-1.0
 
 demoWeap.flags				   = 0 -- weapon flags
 demoWeap.snds				   = 0 -- temp value, will be set to the sound array on init
