@@ -269,12 +269,16 @@ function baseWeap:tickPlayer_cl(dt)
 	end
 
 	local fireKeyDown, altfireKeyDown = false, false
-	if hasFlag(self.flags, FWPN_NEEDSCLICKED) then
-		fireKeyDown    = InputPressed("usetool", self.owner)
-		altfireKeyDown = InputPressed("grab", 	 self.owner)
+	if hasFlag(self.flags, FWPN_CLICK_PRIM) then
+		fireKeyDown = InputPressed("usetool", self.owner)
 	else
-		fireKeyDown    = InputDown("usetool", self.owner)
-		altfireKeyDown = InputDown("grab", 	  self.owner)
+		fireKeyDown = InputDown("usetool", self.owner)
+	end
+
+	if hasFlag(self.flags, FWPN_CLICK_SEC) then
+		altfireKeyDown = InputPressed("grab", self.owner)
+	else
+		altfireKeyDown = InputDown("grab", self.owner)
 	end
 
 	if not self.holstered then
@@ -305,7 +309,7 @@ function baseWeap:tickPlayer_cl(dt)
 			self.inPrimary = false
 
 			-- update server ASAP! Otherwise will cause desync if you press both at the same time
-			if not hasFlag(self.flags, FWPN_SV_CALLONCE) or hasFlag(self.flags, FWPN_SV_CALLONCESEC) then
+			if (not hasFlag(self.flags, FWPN_SV_CALLONCE) and not hasFlag(self.flags, FWPN_CLICK_PRIM)) or hasFlag(self.flags, FWPN_SV_CALLONCESEC) then
 				self:ServerWpnCall("SV_StopFire")
 			end
 		end
@@ -321,7 +325,7 @@ function baseWeap:tickPlayer_cl(dt)
 
 		if not altfireKeyDown or empty_sec then
 			self.inSecondary = false
-			if not hasFlag(self.flags, FWPN_SV_CALLONCESEC) then
+			if not hasFlag(self.flags, FWPN_SV_CALLONCESEC) and not hasFlag(self.flags, FWPN_CLICK_SEC) then
 				self:ServerWpnCall("SV_StopAltFire")
 			end
 		end
@@ -410,7 +414,7 @@ function baseWeap:DefaultPrimaryAttack(dt, empty)
 	elseif self.isLocal then
 		if self.inPrimary == false and (self.ammoLoaded > 0 or (self.ammoLoadedMax == WEAPON_NOCLIP and self.ammoTotal > 0)) then
 			self.inPrimary = true
-			if not hasFlag(self.flags, FWPN_SV_CALLONCE) then
+			if not hasFlag(self.flags, FWPN_SV_CALLONCE) and not hasFlag(self.flags, FWPN_CLICK_PRIM) then
 				self:ServerWpnCall("SV_StartFire")
 			end
 		end
@@ -425,7 +429,7 @@ function baseWeap:DefaultSecondaryAttack(dt, empty)
 	elseif self.isLocal then
 		if self.inSecondary == false then
 			self.inSecondary = true
-			if not hasFlag(self.flags, FWPN_SV_CALLONCESEC) then
+			if not hasFlag(self.flags, FWPN_SV_CALLONCESEC) and not hasFlag(self.flags, FWPN_CLICK_SEC) then
 				self:ServerWpnCall("SV_StartAltFire")
 			end
 		end

@@ -154,8 +154,8 @@ GLOBAL_20DEGREES  = 0.17365
 
 
 -- WEAPONS
-#include "script/testgun2.lua"
 #include "script/testgun.lua"
+#include "script/adsgun.lua"
 #include "script/testshotgun.lua"
 
 -- MELEE
@@ -170,8 +170,8 @@ GLOBAL_20DEGREES  = 0.17365
 
 -- pointers to each weapon's class
 GLOBAL_WEAPONS = {
-   CTestGun2,
    CTestGun,
+   CAdsGun,
    CTestShotgun,
 }
 

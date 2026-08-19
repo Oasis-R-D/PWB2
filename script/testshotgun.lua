@@ -34,10 +34,10 @@ end
 -- Static values for this specific weapon
 -- These don't need redefined in a weapon if a var is just the default value
 CTestShotgun.model				= "MOD/models/xml/shotgun.xml" -- path to the XML model file
-CTestShotgun.casingOrg			= Vec(0.02, 0.05, 0.033)	-- where casings are ejected
+CTestShotgun.casingOrg			= Vec(0.02, 0.05, 0.033)	   -- where casings are ejected
 
-CTestShotgun.toolID 			= "testshotgun"				-- used by the engine. lowercase and no spaces
-CTestShotgun.toolName 			= "PWB2 Test ShotGun"		-- shown in killfeed
+CTestShotgun.toolID 			= "testshotgun"		  -- used by the engine. lowercase and no spaces
+CTestShotgun.toolName 			= "PWB2 ShotGun" -- shown in killfeed
 CTestShotgun.toolSlot			= 3
 
 CTestShotgun.ammoLoadedMax 		= 8							-- max clip 	 	-- -1 for no clip (pulls from reserve)
@@ -46,11 +46,11 @@ CTestShotgun.ammoPickupSize		= CTestShotgun.ammoLoadedMax-- defaults to full mag
 CTestShotgun.dmg_world			= 0.35
 CTestShotgun.dmg_plyr			= 0.1						-- 0.0-1.0
 
-CTestShotgun.flags				= FWPN_SV_CALLONCESEC		-- weapon flags
-CTestShotgun.snds				= 0							-- temp value, will be set to the sound array on init
+CTestShotgun.flags				= FWPN_SV_CALLONCESEC -- weapon flags
+CTestShotgun.snds				= 0					  -- temp value, will be set to the sound array on init
 
 -- override initVars to add new variables
-function CTestGun2:initVars(owner)
+function CTestShotgun:initVars(owner)
 	baseWeap.initVars(self, owner)
 
 	if client and self.isLocal then

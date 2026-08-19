@@ -15,8 +15,9 @@ end
 ----------------------------------------------------------------------------------------------
 
 -- WEAPON FLAGS
-FWPN_NEEDSCLICKED = leftShift(0) -- Weapon needs clicked to fire, no holding
-FWPN_NOHUD        = leftShift(1) -- Don't draw HUD
+FWPN_CLICK_PRIM = leftShift(0) -- Weapon needs clicked to fire, no holding
+FWPN_CLICK_SEC  = leftShift(1) -- Weapon needs clicked to fire, no holding
+FWPN_NOHUD        = leftShift(2) -- Don't draw HUD
 
 FWPN_SV_CALLONCE     = leftShift(2) -- Does 1 servercall every fire instead of 1 on start and stop
 FWPN_SV_CALLONCESEC  = leftShift(3) -- Same as above but for secondary fire
