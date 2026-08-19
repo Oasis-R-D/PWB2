@@ -36,7 +36,7 @@ end
 CTestShotgun.model				= "MOD/models/xml/shotgun.xml" -- path to the XML model file
 CTestShotgun.casingOrg			= Vec(0.02, 0.05, 0.033)	   -- where casings are ejected
 
-CTestShotgun.toolID 			= "testshotgun"		  -- used by the engine. lowercase and no spaces
+CTestShotgun.toolID 			= "testshotgun"  -- used by the engine. lowercase and no spaces
 CTestShotgun.toolName 			= "PWB2 ShotGun" -- shown in killfeed
 CTestShotgun.toolSlot			= 3
 
@@ -46,8 +46,8 @@ CTestShotgun.ammoPickupSize		= CTestShotgun.ammoLoadedMax-- defaults to full mag
 CTestShotgun.dmg_world			= 0.35
 CTestShotgun.dmg_plyr			= 0.1						-- 0.0-1.0
 
-CTestShotgun.flags				= FWPN_SV_CALLONCESEC -- weapon flags
-CTestShotgun.snds				= 0					  -- temp value, will be set to the sound array on init
+CTestShotgun.flags				= addFlags(0, FWPN_SV_CALLONCESEC, FWPN_SV_CALLONCESEC, FWPN_CLICK_PRIM, FWPN_CLICK_SEC) -- weapon flags
+CTestShotgun.snds				= 0 -- temp value, will be set to the sound array on init
 
 -- override initVars to add new variables
 function CTestShotgun:initVars(owner)
@@ -80,6 +80,8 @@ function CTestShotgun:PrimaryAttack(dt)
 		self:RecoilPosPunch(Vec(0, 0.1, GetRandomFloat(0.15, 0.2)))
 
 		if self.isLocal then
+			self:ServerWpnCall("PrimaryAttack", dt)
+
 			PointLight(mt.pos, 1, 0.7, 0.5, 3)
 
 			self:RecoilAngReset(-15)
@@ -135,7 +137,6 @@ function CTestShotgun:SecondaryAttack(dt)
 		self:RecoilPosPunch(Vec(0, 0.2, GetRandomFloat(0.2, 0.3)))
 
 		if self.isLocal then
-			-- not likely to be full auto'd with the alt fire. Don't do 2 every shot, just send 1
 			self:ServerWpnCall("SecondaryAttack", dt)
 
 			PointLight(mt.pos, 1, 0.7, 0.5, 3)
@@ -213,10 +214,10 @@ function CTestShotgun:Reload()
 			return end
 
 		-- fixes first shell not adding to clip
-		if self.specialReload == 3 then
+		--if true or self.specialReload == 3 then
 			-- Add them to the clip
 			self.ammoLoaded = self.ammoLoaded + 1
-		end
+		--end
 
 		self.specialReload = 2
 
@@ -233,7 +234,7 @@ function CTestShotgun:Reload()
 		self.timeWeaponIdle = curTime + 0.5
 	else
 		-- Add them to the clip
-		self.ammoLoaded = self.ammoLoaded + 1
+		--self.ammoLoaded = self.ammoLoaded + 1
 
 		self.specialReload = 1
 
@@ -250,10 +251,10 @@ function CTestShotgun:WeaponIdle()
 	local curTime = GetTime()
 
 	if self.timeWeaponIdle < curTime then
-		if self.ammoLoaded == 0 and self.specialReload == 0 and 0 ~= self.ammoTotal then
+		if self.ammoLoaded == 0 and self.specialReload == 0 and self.ammoLoaded ~= self.ammoTotal then
 			self:Reload()
 		elseif self.specialReload ~= 0 then
-			if self.ammoLoaded ~= self.ammoLoadedMax and 0 ~= self.ammoTotal then
+			if self.ammoLoaded ~= self.ammoLoadedMax and self.ammoLoaded ~= self.ammoTotal then
 				self:Reload()
 			else
 				-- reload debounce has timed out
