@@ -57,34 +57,17 @@ end
 function CMelee:Swing(fFirst)
 	local fDidHit = false
 
-	TraceResult tr
-
-	local vecSrc = GetPlayerEyeTransform(self.owner)
-	local vecEnd = vecSrc + gpGlobals->v_forward * 32
-
-	UTIL_TraceLine(vecSrc, vecEnd, dont_ignore_monsters, ENT(m_pPlayer->pev), &tr)
-	QueryRaycast(vecSrc, direction, 1)
-
-
-	if server then
-		if tr.flFraction >= 1.0 then
-			UTIL_TraceHull(vecSrc, vecEnd, dont_ignore_monsters, head_hull, ENT(m_pPlayer->pev), &tr)
-			if tr.flFraction < 1.0 then
-				-- Calculate the point of intersection of the line (or hull) and the object we hit
-				-- This is and approximation of the "best" intersection
-				CBaseEntity* pHit = CBaseEntity::Instance(tr.pHit)
-				if not pHit or pHit->IsBSPModel())
-					FindHullIntersection(vecSrc, tr, VEC_DUCK_HULL_MIN, VEC_DUCK_HULL_MAX, m_pPlayer->edict())
-				vecEnd = tr.vecEndPos -- This is the point on the actual surface (the hull could have hit space)
-			end
-		end
-	end
+	local vecSrc = GetPlayerEyeTransform(self.owner)	
+	local dir = TransformToParentVec(GetPlayerEyeTransform(p), Vec(0, 0, -1))
+	local pHit, pDist, pHitWorld, pHitPlayer, _, pNorm = QueryShot(vecSrc, dir, 1, 0, self.owner)
+	
+	local vecEnd = VecAdd(vecSrc, VecScale(dir, pDist))
 
 	-- TO-DO: EVENT CODE HERE
 	if fFirst and client then
 	end
 
-	if tr.flFraction >= 1.0 the
+	if not pHit then
 		if fFirst then
 			-- miss
 			self.nextFire = self:GetNextAttackDelay(0.5)
@@ -95,53 +78,54 @@ function CMelee:Swing(fFirst)
 		if server then
 			-- hit
 			fDidHit = true
-			CBaseEntity* pEntity = CBaseEntity::Instance(tr.pHit)
 
-			if ((self.nextFire + 1.0) <= GetTime()) or isMP() then
-				-- first swing does full damage
-				ApplyPlayerDamage(pEntity, self.dmg_plyr, self.toolName, self.owner)
-			else
-				-- subsequent swings do half
-				ApplyPlayerDamage(pEntity, self.dmg_plyr / 2, self.toolName, self.owner)
-			end
+			local hitAnimator = GetBodyAnimator(GetShapeBody(pHitWorld))
 
 			-- play thwack, smack, or dong sound
 			local flVol = 1.0
 			local fHitWorld = true
 
-			if pEntity then
-				if pEntity->Classify() != CLASS_NONE and pEntity->Classify() != CLASS_MACHINE then
-					-- play thwack or smack sound
-					switch (RANDOM_LONG(0, 2))
-					{
-					case 0:
-						EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/cbar_hitbod1.wav", 1, ATTN_NORM)
-						break
-					case 1:
-						EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/cbar_hitbod2.wav", 1, ATTN_NORM)
-						break
-					case 2:
-						EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/cbar_hitbod3.wav", 1, ATTN_NORM)
-						break
-					}
-					
-					if GetPlayerHealth(pEntity) <= 0 then
+			if pHitPlayer or hitAnimator then
+				-- play thwack or smack sound
+				--[[
+				switch (RANDOM_LONG(0, 2))
+				{
+				case 0:
+					EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/cbar_hitbod1.wav", 1, ATTN_NORM)
+					break
+				case 1:
+					EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/cbar_hitbod2.wav", 1, ATTN_NORM)
+					break
+				case 2:
+					EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/cbar_hitbod3.wav", 1, ATTN_NORM)
+					break
+				}]]
+				
+				if pHitPlayer ~= 0 then
+					if ((self.nextFire + 1.0) <= GetTime()) or isMP() then
+						-- first swing does full damage
+						ApplyPlayerDamage(pHitPlayer, self.dmg_plyr, self.toolName, self.owner)
+					else
+						-- subsequent swings do half
+						ApplyPlayerDamage(pHitPlayer, self.dmg_plyr / 2, self.toolName, self.owner)
+					end
+
+					if pHitPlayer and GetPlayerHealth(pHitPlayer) <= 0 then
 						return true
 					else
 						flVol = 0.1
 					end
-
-					fHitWorld = false
 				end
+
+				fHitWorld = false
 			end
 
 			-- play texture hit sound
 			if fHitWorld then
-				local fvolbar = TEXTURETYPE_PlaySound(&tr, vecSrc, vecSrc + (vecEnd - vecSrc) * 2, BULLET_PLAYER_CROWBAR)
-				
-				PlayImpactSFX(fHitWorld, vecEnd, Vec()--[[TO-DO: NORMAL]])
+				PlayImpactSFX(fHitWorld, vecEnd, pNorm)
 
 				-- also play crowbar strike
+				--[[
 				switch (RANDOM_LONG(0, 1))
 				{
 				case 0:
@@ -150,11 +134,9 @@ function CMelee:Swing(fFirst)
 				case 1:
 					EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/cbar_hit2.wav", fvolbar, ATTN_NORM, 0, 98 + RANDOM_LONG(0, 3))
 					break
-				}
-
-				-- delay the decal a bit
-				m_trHit = tr
+				}]]
 			end
+			
 			self.hitpos = vecEnd
 			self.hitDelay = GetTime() + 0.2
 		end
