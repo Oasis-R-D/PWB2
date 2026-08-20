@@ -42,6 +42,8 @@ function CMelee:initVars(owner)
 	end
 
 	self.swingAgainDelay = -1
+
+	self.animator.maxActionPoseTime = 0.1
 end
 
 
@@ -70,6 +72,7 @@ function CMelee:Swing(fFirst)
 
 	-- TO-DO: EVENT CODE HERE
 	if fFirst and client then
+		self.animator.timeSinceFire = 0.0
 	end
 
 	if not pHit then
