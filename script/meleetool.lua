@@ -37,11 +37,11 @@ function CMelee:initVars(owner)
 	baseWeap.initVars(self, owner)
 	
 	if server then
-		self.hitDelay 	 = -1
-		self.hitPos   	 = Vec()
+		self.hitDelay 	 			= -1
+		self.hitPos   	 			= Vec()
 	end
 
-	self.swingAgainDelay = -1
+	self.swingAgainDelay 			= -1
 
 	self.animator.maxActionPoseTime = 0.1
 end
@@ -54,6 +54,11 @@ end
 --=========================================================================
 -- Weapon functions
 --=========================================================================
+
+function CMelee:Holster()
+	self.swingAgainDelay = -1
+	self.hitDelay = -1
+end
 
 function CMelee:PrimaryAttack(dt)
 	if self:Swing(true) == true then
