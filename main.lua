@@ -163,6 +163,7 @@ GLOBAL_20DEGREES  = 0.17365
 #include "script/testshotgun.lua"
 
 -- MELEE
+#include "script/meleetool.lua"
 
 -- SPECIAL
 
@@ -177,6 +178,7 @@ GLOBAL_WEAPONS = {
    CTestGun,
    CAdsGun,
    CTestShotgun,
+   CMelee
 }
 
 -- only calculate this once

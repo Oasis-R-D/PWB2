@@ -200,6 +200,8 @@ function CTestShotgun:Reload()
 			PlaySound(self.snds[3], mt.pos, 300)
 		end
 
+		if self.ammoLoaded == 0 then self.pumpTime = -1 end
+
 		-- hold gun straight
 		self.animator.timeSinceFire = 0.0
 
@@ -257,14 +259,17 @@ function CTestShotgun:WeaponIdle()
 			if self.ammoLoaded ~= self.ammoLoadedMax and self.ammoLoaded ~= self.ammoTotal then
 				self:Reload()
 			else
-				-- reload debounce has timed out
-				self.slideTime = 0
+				if self.pumpTime == -1 then
+					self.pumpTime = 0
+					-- reload debounce has timed out
+					self.slideTime = 0
 
-				local mt = GetToolLocationWorldTransform("muzzle", self.owner)
+					local mt = GetToolLocationWorldTransform("muzzle", self.owner)
 
-				-- play cocking sound
-				PlaySound(self.snds[1], mt.pos, 300)
-
+					-- play cocking sound
+					PlaySound(self.snds[1], mt.pos, 300)
+				end
+				
 				self.specialReload = 0
 				self.timeWeaponIdle = curTime + 1.5
 			end
@@ -273,7 +278,7 @@ function CTestShotgun:WeaponIdle()
 end
 
 function CTestShotgun:tickPlayer_cl(dt)
-	if 0 ~= self.pumpTime and self.pumpTime <= GetTime() then
+	if self.pumpTime > 0 and self.pumpTime <= GetTime() then
 		local mt = GetToolLocationWorldTransform("muzzle", self.owner)
 
 		-- play pumping sound
