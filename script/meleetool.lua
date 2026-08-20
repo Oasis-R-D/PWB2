@@ -18,7 +18,7 @@ end
 
 -- Static values for this specific weapon
 -- These don't need redefined in a weapon if a var is just the default value
-CMelee.model				= "MOD/models/xml/smg1.xml" -- path to the XML model file
+CMelee.model			= "MOD/models/xml/crowbar.xml" -- path to the XML model file
 
 CMelee.toolID 			= "testgmelee"	  	-- used by the engine. lowercase and no spaces
 CMelee.toolName 		= "PWB2 Test Melee" -- shown in killfeed
@@ -42,6 +42,11 @@ function CMelee:initVars(owner)
 	end
 
 	self.swingAgainDelay = -1
+end
+
+
+function CMelee:callToolAnimator(dt)
+	tickToolAnimator(self.animator, dt, nil, self.owner, 6, true)
 end
 
 --=========================================================================

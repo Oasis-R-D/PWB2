@@ -248,13 +248,18 @@ function baseWeap:SV_FireAltEmptyCond() return false end
 --=========================================================================
 -- 	Input handling and HUD
 --=========================================================================
+
+function baseWeap:callToolAnimator(dt)
+	tickToolAnimator(self.animator, dt, nil, self.owner)
+end
+
 function baseWeap:tickPlayer_cl(dt)
 	self:DumpGlobals()
 	
 	self:Animate(dt)
 
-	tickToolAnimator(self.animator, dt, nil, self.owner)
-
+	self:callToolAnimator(dt)
+	
 	local curTime = GetTime()
 
 	if self.isLocal then

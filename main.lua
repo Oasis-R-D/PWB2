@@ -111,6 +111,8 @@ end
       muzzle dynamically face the target spot though)
 
    -  Source viewpunch is 'laggy'
+
+   -  Overwritable tickToolAnimator
 ============================================================================================]]
 
 #version 2
