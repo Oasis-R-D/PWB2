@@ -56,6 +56,8 @@ function CMelee:initVars(owner)
 		self.swingStartPos 				= 0
 
 		self.lasHitObj 					= -1
+
+		self.strength					= 0
 	end
 
 	self.startHitDelay = -1
@@ -83,6 +85,8 @@ function CMelee:PrimaryAttack(dt)
 		if self.swingNumb == -4 then self.swingNumb = -1 end
 		
 		self.animator.forceSecondaryActionPose = true
+	elseif self.edgeType ~= 0 then
+		self.strength = GetRandomFloat(0.8, 1)
 	end
 
 	self.nextFire = self:GetNextAttackDelay(0.5)
@@ -137,13 +141,19 @@ function CMelee:CheckHit()
 				mat = GetShapeMaterialAtPos(pHitWorld, hitPos)
 			end
 
-			if mat ~= "" and self.edgeType ~= 0 then
-				if mat == "hardmetal" or mat == "metal" or mat == "rock" or mat == "hardmasonry" or mat == "masonry" or mat == "heavymetal" then
-					self.hitDelay = GetTime() + 0.25
+			if self.edgeType ~= 0 then
+				local penalty = 0.05
+				if mat ~= "" then
+					if mat == "hardmetal" or mat == "metal" or mat == "rock" or mat == "hardmasonry" or mat == "masonry" or mat == "heavymetal" then
+						penalty = penalty + 0.05
+					end
 				end
-			end
+				self.strength = math.max(self.strength - penalty, 0)
 
-			MakeHole(hitPos, 0.5, 0.2, 0.1)
+				MakeHole(hitPos, 0.5*self.strength, 0.25*self.strength, 0.125*self.strength)
+			else
+				MakeHole(hitPos, 0.5, 0.25, 0.125)
+			end
 
 			-- give chunks velocity here
 			local list = QueryAabbBodies(VecSub(hitPos, Vec(0.2, 0.2, 0.2)), VecAdd(hitPos, Vec(0.2, 0.2, 0.2)))
@@ -158,7 +168,6 @@ function CMelee:CheckHit()
 	end
 end
 
-function CMelee:ShouldWeaponIdle() return true end
 
 function CMelee:StopSwing()
 	self.stopHitDelay = -1
@@ -167,6 +176,7 @@ function CMelee:StopSwing()
 	self.lasHitObj = -1
 end
 
+function CMelee:ShouldWeaponIdle() return true end
 function CMelee:WeaponIdle()
 	if self.startHitDelay ~= -1 and self.startHitDelay < GetTime() then
 		if client then
