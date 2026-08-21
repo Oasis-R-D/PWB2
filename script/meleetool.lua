@@ -12,6 +12,8 @@ CMelee = {} -- goes in GLOBAL_WEAPONS
 -- in order for clients to get the correct result.
 
 -- weapon swings start from the secaction pos and end at the action pos.
+
+-- edge hit detection is done from the vox model's origin.
 ---------------------------------------------------------------------------
 
 --=========================================================================
@@ -33,7 +35,6 @@ end
 -- These don't need redefined in a weapon if a var is just the default value
 CMelee.model			= "MOD/models/xml/crowbar.xml" -- path to the XML model file
 
-CMelee.edgePos			= Vec(0,1,0)	-- where will hits be detected
 CMelee.edgeDir			= Vec(0,1,-1)	-- what direction hits will be considered
 CMelee.edgeType			= 1				-- 0: blunt 1: slice (slice hits things multiple times)
 CMelee.hitDist			= 1.33			-- how far from the edge to check hits
