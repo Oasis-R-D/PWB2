@@ -1,4 +1,18 @@
 CMelee = {} -- goes in GLOBAL_WEAPONS
+---------------------------------------------------------------------------
+-- MELEE WEAPON DOCS:
+-- Melee weapons in PWB2 use a system similar to Left4Dead2's for it's melee
+-- weapons. A melee weapon can either be sharp or blunt. Blunt weapons
+-- can only hit a surface again if it hits another first (x->y->x but not x->x).
+-- Sharp weapons continuously hit surfaces with a decaying damage amount.
+-- Sharp weapons should have less force and player damage as it can hit the same
+-- object up to ~20 times in one swing
+
+-- third person animations must closely match first person animations
+-- in order for clients to get the correct result.
+
+-- weapon swings start from the secaction pos and end at the action pos.
+---------------------------------------------------------------------------
 
 --=========================================================================
 -- Define the weapon's SFX / VFX
@@ -126,7 +140,9 @@ function CMelee:CheckHit()
 			-- play thwack or smack sound
 			BloodVFX(hitPos, VecNormalize(hitForce), self.dmg_plyr, pHitPlayer)
 
-			PlaySound(self.snd[1], hitPos)
+			if self.edgeType == 0 or self.lasHitObj ~= pHitPlayer then
+				PlaySound(self.snd[1], hitPos)
+			end
 
 			if pHitPlayer ~= 0 then
 				ApplyPlayerDamage(pHitPlayer, self.dmg_plyr, self.toolName, self.owner)
@@ -147,7 +163,9 @@ function CMelee:CheckHit()
 				if mat ~= "" then
 					if mat == "hardmetal" or mat == "metal" or mat == "rock" or mat == "hardmasonry" or mat == "masonry" or mat == "heavymetal" then
 						penalty = penalty + 0.05
-						PlaySound(self.snd[2], hitPos)
+						if self.lasHitObj ~= pHitWorld then
+							PlaySound(self.snd[2], hitPos)
+						end
 					end
 				end
 				self.strength = math.max(self.strength - penalty, 0)
