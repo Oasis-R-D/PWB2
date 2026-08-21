@@ -44,18 +44,18 @@ function CMelee:initVars(owner)
 
 	if client then
 		self.animator.maxActionPoseTime = 0.2
-		self.animator.collider.enabled = true
-		self.animator.collider.radius = 0.02
+		self.animator.collider.enabled  = true
+		self.animator.collider.radius   = 0.02
 
-		self.swingNumb = -1 -- 1-6
+		self.swingNumb 					= -1 -- 1-3
 	else
-		self.hitDelay = -1
+		self.hitDelay 					= -1
 
-		self.stopHitDelay = -1
+		self.stopHitDelay 				= -1
 
-		self.swingStartPos = 0
+		self.swingStartPos 				= 0
 
-		self.lasHitObj = -1
+		self.lasHitObj 					= -1
 	end
 
 	self.startHitDelay = -1
@@ -79,7 +79,9 @@ function CMelee:PrimaryAttack(dt)
 	self.startHitDelay = GetTime() + 0.1
 
 	if client then
-		self.swingNumb = GetRandomInt(-3, -1)
+		self.swingNumb = self.swingNumb - 1
+		if self.swingNumb == -4 then self.swingNumb = -1 end
+		
 		self.animator.forceSecondaryActionPose = true
 	end
 
