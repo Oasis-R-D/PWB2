@@ -14,13 +14,13 @@
 			<location name="fp_secaction3" tags="name=fp_secaction3" pos="0.2 0.1 -0.5" rot="80 3.0 0.0"/>
 
 
-			<location name="tp_action1" tags="name=tp_action1" pos="-0.5 -0.2 -1.25" rot="-100.0 0.0 -90"/>
+			<location name="tp_action1" tags="name=tp_action1" pos="-0.5 -0.2 -1.0" rot="-100.0 0.0 -90"/>
 			<location name="tp_secaction1" tags="name=tp_secaction1" pos="0.4 -0.1 -0.5" rot="80 3.0 -60"/>
 
-			<location name="tp_action2" tags="name=tp_action2" pos="0.5 -0.2 -1.25" rot="-100.0 0.0 90"/>
+			<location name="tp_action2" tags="name=tp_action2" pos="0.5 -0.2 -1.0" rot="-100.0 0.0 90"/>
 			<location name="tp_secaction2" tags="name=tp_secaction2" pos="-0.4 -0.1 -0.5" rot="-80 3.0 60"/>
 
-			<location name="tp_action3" tags="name=tp_action3" pos="0.0 -0.4 -1.25" rot="-100.0 3.0 0.0"/>
+			<location name="tp_action3" tags="name=tp_action3" pos="0.0 -0.4 -1.0" rot="-100.0 3.0 0.0"/>
 			<location name="tp_secaction3" tags="name=tp_secaction3" pos="0.2 0.1 -0.5" rot="80 3.0 0.0"/>
 
 

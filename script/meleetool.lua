@@ -47,7 +47,7 @@ CMelee.toolSlot			= 1
 CMelee.ammoLoadedMax 	= -1   -- max clip 	 	-- -1 for no clip (pulls from reserve)
 CMelee.ammoPickupSize	= 9999 -- defaults to full mag
 CMelee.dmg_world		= 0.4
-CMelee.dmg_plyr			= 0.33 -- 0.0-1.0
+CMelee.dmg_plyr			= 0.1 -- 0.0-1.0
 
 CMelee.flags = 0	-- weapon flags
 CMelee.snds	 = 0	-- temp value, will be set to the sound array on init
@@ -142,7 +142,7 @@ function CMelee:CheckHit()
 			BloodVFX(hitPos, VecNormalize(hitForce), self.dmg_plyr, pHitPlayer)
 
 			if self.edgeType == 0 or self.lasHitObj ~= pHitPlayer then
-				PlaySound(self.snd[1], hitPos)
+				PlaySound(self.snds[1], hitPos)
 			end
 
 			if pHitPlayer ~= 0 then
@@ -165,7 +165,7 @@ function CMelee:CheckHit()
 					if mat == "hardmetal" or mat == "metal" or mat == "rock" or mat == "hardmasonry" or mat == "masonry" or mat == "heavymetal" then
 						penalty = penalty + 0.05
 						if self.lasHitObj ~= pHitWorld then
-							PlaySound(self.snd[2], hitPos)
+							PlaySound(self.snds[2], hitPos)
 						end
 					end
 				end

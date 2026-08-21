@@ -93,7 +93,7 @@ function tickToolAnimator(toolAnimator, dt, defaultPoseTransform, playerId, swin
 	noheldaction = noheldaction or false
 	
     -- Get current tool and hand pose transforms
-    local thirdPerson = (playerId and playerId > 0 and not IsPlayerLocal(playerId)) or GetBool("game.thirdperson")
+    local thirdPerson = not IsPlayerLocal(playerId) or GetBool("game.thirdperson")
 
     local prefix = "fp_"
     if thirdPerson then
@@ -139,8 +139,8 @@ function tickToolAnimator(toolAnimator, dt, defaultPoseTransform, playerId, swin
 		getHandPoseTransforms(prefix .. "action"..swingamnts, poseRightHand, poseLeftHand, playerId)
 		mixWithPose(prefix.."action_crouch"..swingamnts, getCrouching(playerId), pose, poseRightHand, poseLeftHand, playerId)
 	else
-		getHandPoseTransforms(prefix .. "secaction", poseRightHand, poseLeftHand, playerId)
-		mixWithPose(prefix.."secaction_crouch", getCrouching(playerId), pose, poseRightHand, poseLeftHand, playerId)
+		getHandPoseTransforms(prefix .. "secaction"..swingamntsALT, poseRightHand, poseLeftHand, playerId)
+		mixWithPose(prefix.."secaction_crouch"..swingamntsALT, getCrouching(playerId), pose, poseRightHand, poseLeftHand, playerId)
 	end
 	
     toolAnimator.timeSinceFire = toolAnimator.timeSinceFire + dt

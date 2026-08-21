@@ -277,7 +277,7 @@ function client.update(dt)
       dt,	-- Simulation time
 	   GetTime(), -- Absolute time on client
 	   10 -- True gravity on client
-   )	
+   )
 end
 
 -- Draws the magazine hud and scopes
@@ -289,7 +289,7 @@ function client.draw()
    local tool = GetPlayerTool()
    local wpns = PLAYER_WEAPONS[GetLocalPlayer()]
    if not wpns then return end
-   
+
    for i=1, GLOBAL_WEAPONS_AMNT do
       if tool == wpns[i].toolID then
          wpns[i]:DrawHUD()
