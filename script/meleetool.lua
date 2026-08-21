@@ -189,7 +189,6 @@ function CMelee:CheckHit()
 	end
 end
 
-
 function CMelee:StopSwing()
 	self.stopHitDelay = -1
 	self.hitDelay = -1
@@ -217,9 +216,7 @@ function CMelee:WeaponIdle()
 
 	if self.stopHitDelay ~= -1 and self.stopHitDelay < GetTime() then
 		self:StopSwing()
-	end
-
-	if self.hitDelay ~= -1 and self.hitDelay < GetTime() then
+	elseif self.hitDelay ~= -1 and self.hitDelay < GetTime() then
 		self:CheckHit()
 	end
 end
