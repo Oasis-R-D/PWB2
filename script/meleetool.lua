@@ -20,6 +20,12 @@ end
 -- These don't need redefined in a weapon if a var is just the default value
 CMelee.model			= "MOD/models/xml/crowbar.xml" -- path to the XML model file
 
+CMelee.edgePos			= Vec(0,1,0)	-- where will hits be detected
+CMelee.edgeDir			= Vec(0,1,-1)	-- what direction hits will be considered
+CMelee.edgeType			= 1				-- 0: blunt 1: slice (slice hits things multiple times)
+CMelee.hitDist			= 1.33			-- how far from the edge to check hits
+CMelee.knockbackMult    = 500			-- object impulse multiplier, rec: 1000 for blunt, 50 for slice
+
 CMelee.toolID 			= "testmelee"	  	-- used by the engine. lowercase and no spaces
 CMelee.toolName 		= "PWB2 Test Melee" -- shown in killfeed
 CMelee.toolSlot			= 1
@@ -27,7 +33,7 @@ CMelee.toolSlot			= 1
 CMelee.ammoLoadedMax 	= -1   -- max clip 	 	-- -1 for no clip (pulls from reserve)
 CMelee.ammoPickupSize	= 9999 -- defaults to full mag
 CMelee.dmg_world		= 0.4
-CMelee.dmg_plyr			= 0.05 -- 0.0-1.0
+CMelee.dmg_plyr			= 0.33 -- 0.0-1.0
 
 CMelee.flags = 0	-- weapon flags
 CMelee.snds	 = 0	-- temp value, will be set to the sound array on init
@@ -37,15 +43,26 @@ function CMelee:initVars(owner)
 	baseWeap.initVars(self, owner)
 
 	if client then
-		self.animator.maxActionPoseTime = 0.075
+		self.animator.maxActionPoseTime = 0.2
+		self.animator.collider.enabled = true
+		self.animator.collider.radius = 0.02
+
+		self.swingNumb = -1 -- 1-6
+	else
+		self.hitDelay = -1
+
+		self.stopHitDelay = -1
+
+		self.swingStartPos = 0
+
+		self.lasHitObj = -1
 	end
 
-	self.swingAgainDelay 				= -1
+	self.startHitDelay = -1
 end
 
 function CMelee:callToolAnimator(dt)
-	tickToolAnimator(self.animator, dt, nil, self.owner, 6, true)
-	DebugCross(self.debugpoint)
+	tickToolAnimator(self.animator, dt, nil, self.owner, self.swingNumb, self.swingNumb, true)
 end
 
 --=========================================================================
@@ -53,90 +70,123 @@ end
 --=========================================================================
 
 function CMelee:Holster()
-	self.swingAgainDelay = -1
-	self.hitDelay = -1
+	if server then
+		self:StopSwing()
+	end
 end
 
 function CMelee:PrimaryAttack(dt)
-	if self:Swing(true) == true then
-		self.swingAgainDelay = GetTime() + 0.1
+	self.startHitDelay = GetTime() + 0.1
+
+	if client then
+		self.swingNumb = GetRandomInt(-3, -1)
+		self.animator.forceSecondaryActionPose = true
 	end
+
+	self.nextFire = self:GetNextAttackDelay(0.5)
 end
 
-function CMelee:Swing(fFirst)
-	local fDidHit = false
+function CMelee:CheckHit()
+	self.hitDelay = GetTime() + 0.01
 
-	local vecSrc = GetPlayerEyeTransform(self.owner).pos
-	local dir = TransformToParentVec(GetPlayerEyeTransform(self.owner), Vec(0, 0, -1))
-	local pHit, pDist, pHitWorld, pHitPlayer, _, pNorm = QueryShot(vecSrc, dir, 1.25, 0, self.owner)
+	local t = GetBodyTransform(GetToolBody(self.owner))
+	local dir = TransformToParentVec(t, self.edgeDir)
 	
-	local vecEnd = VecAdd(vecSrc, VecScale(dir, pDist))
-
-	-- TO-DO: EVENT CODE HERE
-	if client then
-		self.animator.timeSinceFire = 0.0
+	if self.swingStartPos == 0 then 
+		self.swingStartPos = t.pos
+		self.hitDelay = GetTime() + 0.025
+		return
 	end
 
-	if not pHit then
-		if fFirst then
-			-- miss
-			self.nextFire = self:GetNextAttackDelay(0.5)
+	QueryRequire("large physical, visible")
+	local pHit, pDist, pHitWorld, pHitPlayer, _, pNorm = QueryShot(t.pos, dir, self.hitDist, 0.25, self.owner)
+	
+	if pHit then
+		local hitPos = VecAdd(t.pos, VecScale(dir, pDist))   
+		hitPos = VecAdd(hitPos, VecScale(pNorm, -0.25))
+		self.debugpoint = hitPos
+
+		-- blunt weapons hit something once
+		if self.edgeType == 0 then
+			if self.lasHitObj == pHitPlayer or self.lasHitObj == pHitWorld then
+				return
+			end
 		end
-	else
-		self.nextFire = self:GetNextAttackDelay(0.25)
 
-		-- hit
-		fDidHit = true
+		local hitForce = VecSub(self.swingStartPos, t.pos)
+		ApplyBodyImpulse(GetShapeBody(pHitWorld), hitPos, VecScale(hitForce, -self.knockbackMult))
 
-		if server then
-			-- play thwack, smack, or dong sound
-			local flVol = 1.0
+		local hitAnimator = GetBodyAnimator(GetShapeBody(pHitWorld))
+		if pHitPlayer ~= 0 or hitAnimator ~= 0 then
+			-- play thwack or smack sound
+			BloodVFX(hitPos, VecNormalize(hitForce), self.dmg_plyr, pHitPlayer)
+			
+			if pHitPlayer ~= 0 then
+				ApplyPlayerDamage(pHitPlayer, self.dmg_plyr, self.toolName, self.owner)
+				self.lasHitObj = pHitPlayer
+			else
+				self.lasHitObj = pHitWorld
+			end
+		elseif pHitWorld ~= 0 then
+			local mat = ""
+			if self.lasHitObj ~= pHitWorld then
+				mat = PlayImpactSFX(pHitWorld, hitPos)
+			else
+				mat = GetShapeMaterialAtPos(pHitWorld, hitPos)
+			end
 
-			local hitAnimator = GetBodyAnimator(GetShapeBody(pHitWorld))
-			if pHitPlayer or hitAnimator then
-				-- play thwack or smack sound
-				
-				if pHitPlayer ~= 0 then
-					if ((self.nextFire + 1.0) <= GetTime()) or isMP() then
-						-- first swing does full damage
-						ApplyPlayerDamage(pHitPlayer, self.dmg_plyr, self.toolName, self.owner)
-					else
-						-- subsequent swings do half
-						ApplyPlayerDamage(pHitPlayer, self.dmg_plyr / 2, self.toolName, self.owner)
-					end
-
-					if pHitPlayer and GetPlayerHealth(pHitPlayer) <= 0 then
-						return true
-					else
-						flVol = 0.1
-					end
+			if mat ~= "" and self.edgeType ~= 0 then
+				if mat == "hardmetal" or mat == "metal" or mat == "rock" or mat == "hardmasonry" or mat == "masonry" or mat == "heavymetal" then
+					self.hitDelay = GetTime() + 0.25
 				end
-
-				pHitWorld = false
 			end
 
-			-- play texture hit sound
-			if pHitWorld then
-				PlayImpactSFX(pHitWorld, vecEnd, pNorm)
+			MakeHole(hitPos, 0.5, 0.2, 0.1)
 
-				-- also play crowbar strike
+			-- give chunks velocity here
+			local list = QueryAabbBodies(VecSub(hitPos, Vec(0.2, 0.2, 0.2)), VecAdd(hitPos, Vec(0.2, 0.2, 0.2)))
+			for i=1, #list do
+				local body = list[i]
+				local distFromHit = VecLength(VecSub(GetBodyTransform(body).pos, hitPos))
+				ApplyBodyImpulse(body, hitPos, VecScale(hitForce, -self.knockbackMult * 0.05))
 			end
 
-			if not fFirst then
-				MakeHole(vecEnd, 0.5, 0.33, 0.25)
-			end
+			self.lasHitObj = pHitWorld
 		end
 	end
-
-	return fDidHit
 end
 
 function CMelee:ShouldWeaponIdle() return true end
 
+function CMelee:StopSwing()
+	self.stopHitDelay = -1
+	self.hitDelay = -1
+	self.swingStartPos = 0
+	self.lasHitObj = -1
+end
+
 function CMelee:WeaponIdle()
-	if self.swingAgainDelay ~= -1 and self.swingAgainDelay < GetTime() then
-		DebugPrint("SWING 2")
-		self:Swing(false)
-		self.swingAgainDelay = -1
+	if self.startHitDelay ~= -1 and self.startHitDelay < GetTime() then
+		if client then
+			self.animator.forceSecondaryActionPose = false
+			self.animator.timeSinceFire = 0.0
+		else
+			self.hitDelay = 0
+			self.stopHitDelay = GetTime() + 0.2
+		end
+
+		self.startHitDelay = -1
+	end
+
+	if client then return end
+
+	DebugCross(self.debugpoint)
+
+	if self.stopHitDelay ~= -1 and self.stopHitDelay < GetTime() then
+		self:StopSwing()
+	end
+
+	if self.hitDelay ~= -1 and self.hitDelay < GetTime() then
+		self:CheckHit()
 	end
 end

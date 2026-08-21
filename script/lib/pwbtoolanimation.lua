@@ -87,9 +87,9 @@ function ToolAnimator()
     return anim
 end
 
-function tickToolAnimator(toolAnimator, dt, defaultPoseTransform, playerId, swingamnts, noheldaction)
-
+function tickToolAnimator(toolAnimator, dt, defaultPoseTransform, playerId, swingamnts, swingamntsALT, noheldaction)
 	swingamnts = swingamnts or ""
+    swingamntsALT = swingamntsALT or ""
 	noheldaction = noheldaction or false
 	
     -- Get current tool and hand pose transforms
@@ -97,14 +97,25 @@ function tickToolAnimator(toolAnimator, dt, defaultPoseTransform, playerId, swin
 
     local prefix = "fp_"
     if thirdPerson then
-		swingamnts = ""
         prefix = "tp_"
     end
 	
-	if swingamnts ~= "" then
-		swingamnts = math.random(1, swingamnts)
+    if swingamnts ~= "" then
+        if swingamnts > 0 then
+            swingamnts = math.random(1, swingamnts)
+        elseif swingamnts < 0 then
+            swingamnts = swingamnts * -1
+        end
 	end
-	
+
+    if swingamntsALT ~= "" then
+        if swingamntsALT > 0 then
+            swingamntsALT = math.random(1, swingamntsALT)
+        elseif swingamntsALT < 0 then
+            swingamntsALT = swingamntsALT * -1
+        end
+    end
+
     local poseRightHand = HandPose()
     local poseLeftHand = HandPose()
 	
@@ -113,7 +124,7 @@ function tickToolAnimator(toolAnimator, dt, defaultPoseTransform, playerId, swin
 	if toolAnimator.forceSecondaryActionPose == false then
 		pose = getPoseTransform(prefix.."action"..swingamnts, playerId)
 	else
-		pose = getPoseTransform(prefix.."secaction", playerId)
+		pose = getPoseTransform(prefix.."secaction"..swingamntsALT, playerId)
 	end
 	
     if defaultPoseTransform ~= nil then

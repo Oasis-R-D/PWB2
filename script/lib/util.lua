@@ -189,20 +189,22 @@ function getAimVector(pos, range, spreadRad, p, spreadRadVert)
 	return newPos, newDir
 end
 
-function PlayImpactSFX(shape, pos, normal, mag)
-	mag = mag or "l"
-
-	pos = VecSub(pos, VecScale(normal, 0.05))
-
-	local playPos = pos
+function GetShapeMaterialAtPos(shape, pos)
+	local _, point = GetShapeClosestPoint(shape, pos)
 	
-	pos = TransformToLocalPoint(GetShapeWorldTransform(shape), pos)
+	pos = TransformToLocalPoint(GetShapeWorldTransform(shape), point)
 
 	for i = 1, 3 do
 		pos[i] = math.floor(pos[i]*10)
 	end
 
-	local material = GetShapeMaterialAtIndex(shape, pos[1], pos[2], pos[3])
+	return GetShapeMaterialAtIndex(shape, pos[1], pos[2], pos[3])
+end
+
+function PlayImpactSFX(shape, pos, mag)
+	mag = mag or "l"
+
+	local material = GetShapeMaterialAtPos(shape, pos)
 
 	-- Some materials share sounds!
 	local playMat = material
@@ -214,9 +216,10 @@ function PlayImpactSFX(shape, pos, normal, mag)
 		playMat = "metal"
 	end
 
-	if playMat ~= "" then PlaySound(LoadSound(playMat .. "/hit-" .. mag .. "0.ogg"), playPos) end
+	if playMat ~= "" then PlaySound(LoadSound(playMat .. "/hit-" .. mag .. "0.ogg"), pos) end
 
-	DebugPrint(material)
+	--DebugPrint("mat: " .. material)
+	return material
 end
 
 -- hook the Shoot func to add new stuff

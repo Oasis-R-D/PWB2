@@ -1,23 +1,37 @@
 <prefab version="1.5.4">
 	<group name="instance=MOD/models/xml/crowbar.xml" pos="-3.1 1.2 -1.6" rot="0.0 0.0 0.0">
 		<group name="eye_space">
-			<location name="fp_action1" tags="name=fp_action1" pos="-0.1 0.1 -3" rot="-50.0 3.5 45.0"/>
-			<location name="fp_action2" tags="name=fp_action2" pos="-0.1 0.1 -3" rot="-55.0 5.0 -45.0"/>
-			<location name="fp_action3" tags="name=fp_action3" pos="-0.1 0.1 -3" rot="-45.0 3.0 0.0"/>
-			<location name="fp_action4" tags="name=fp_action4" pos="-0.1 0.1 -3" rot="-60.0 3.5 90"/>
-			<location name="fp_action5" tags="name=fp_action5" pos="-0.1 0.1 -3" rot="-55.0 5.0 -90"/>
-			<location name="fp_action6" tags="name=fp_action6" pos="-0.1 0.1 -3" rot="-80.0 5.0 0.0"/>
+			<location name="fp_action1" tags="name=fp_action1" pos="-0.5 -0.2 -1.25" rot="-100.0 0.0 -90"/>
+			<location name="fp_secaction1" tags="name=fp_secaction1" pos="0.4 -0.1 -0.5" rot="80 3.0 -60"/>
+
+			<location name="fp_action2" tags="name=fp_action2" pos="0.5 -0.2 -1.25" rot="-100.0 0.0 90"/>
+			<location name="fp_secaction2" tags="name=fp_secaction2" pos="-0.4 -0.1 -0.5" rot="-80 3.0 60"/>
+
+			<location name="fp_action3" tags="name=fp_action3" pos="0.1 -0.4 -1.25" rot="-100.0 3.0 0.0"/>
+			<location name="fp_secaction3" tags="name=fp_secaction3" pos="0.2 0.1 -0.5" rot="80 3.0 0.0"/>
+
 
 			<location name="fp_run" tags="name=fp_run" pos="0.4 0.0 -0.75" rot="5.0 2.0 0.0"/>
-			<location name="tp_action" tags="name=tp_action" pos="0.25 0.0 -0.3" rot="-20.0 5.0 0.0"/>
+
+			<location name="tp_action1" tags="name=tp_action1" pos="0.25 0.0 -0.3" rot="-20.0 5.0 0.0"/>
+			<location name="tp_secaction1" tags="name=tp_secaction1" pos="0.25 0.0 0.15" rot="80.0 0 0"/>
+
 			<location name="tp_run" tags="name=tp_run" pos="0.25 0.25 0.15" rot="60.0 0 0"/>
 			<location name="tp_crouch" tags="name=tp_crouch" pos="0.25 0.25 0.15" rot="60.0 0 0"/>
 		</group>
 		<group name="tool_space">
 			<body dynamic="false">
-				<vox texture="12 0.5" blendtexture="3 0.1" file="MOD/models/crowbar.vox" scale="0.4"/>
+				<vox texture="12 0.95" blendtexture="3 0.75" file="MOD/models/crowbar.vox" scale="0.4"/>
 			</body>
-			<location name="tp_action_rh" tags="name=tp_action_rh ik_hand" pos="0.0 -0.4 0.0" rot="0.0 90.0 0.0"/>
+
+			<location name="tp_action1_rh" tags="name=tp_action1_rh ik_hand" pos="0.0 -0.4 0.0" rot="0.0 90.0 0.0"/>
+			<location name="tp_secaction1_rh" tags="name=tp_secaction1_rh ik_hand" pos="0.0 -0.4 0.0" rot="0.0 90.0 0.0"/>
+			<location name="tp_action2_rh" tags="name=tp_action2_rh ik_hand" pos="0.0 -0.4 0.0" rot="0.0 90.0 0.0"/>
+			<location name="tp_secaction2_rh" tags="name=tp_secaction2_rh ik_hand" pos="0.0 -0.4 0.0" rot="0.0 90.0 0.0"/>
+			<location name="tp_action3_rh" tags="name=tp_action3_rh ik_hand" pos="0.0 -0.4 0.0" rot="0.0 90.0 0.0"/>
+			<location name="tp_secaction3_rh" tags="name=tp_secaction3_rh ik_hand" pos="0.0 -0.4 0.0" rot="0.0 90.0 0.0"/>
+
+
 			<location name="tp_run_rh" tags="name=tp_run_rh ik_hand" pos="0.0 -0.4 0.0" rot="0.0 90.0 0.0"/>
 			<location name="tp_crouch_rh" tags="name=tp_crouch_rh ik_hand" pos="0.0 -0.4 0.0" rot="0.0 90.0 0.0"/>
 		</group>
