@@ -6,9 +6,8 @@ CMelee = {} -- goes in GLOBAL_WEAPONS
 
 function CMelee:WeaponSounds()
 	return {
-		{"MOD/snd/smg1_fire.ogg", 	"sv", 10},
-		{"MOD/snd/smg1_reload.ogg", "cl", 10},
-		{"MOD/snd/smg1_reload.ogg", "cl", 10, true}
+		{"MOD/snd/smg1_fire.ogg", 	"sv", 10}, -- Player hit
+		{"MOD/snd/smg1_fire.ogg", 	"sv", 10}, -- Hard object hit
 	}
 end
 
@@ -126,7 +125,9 @@ function CMelee:CheckHit()
 		if pHitPlayer ~= 0 or hitAnimator ~= 0 then
 			-- play thwack or smack sound
 			BloodVFX(hitPos, VecNormalize(hitForce), self.dmg_plyr, pHitPlayer)
-			
+
+			PlaySound(self.snd[1], hitPos)
+
 			if pHitPlayer ~= 0 then
 				ApplyPlayerDamage(pHitPlayer, self.dmg_plyr, self.toolName, self.owner)
 				self.lasHitObj = pHitPlayer
@@ -146,6 +147,7 @@ function CMelee:CheckHit()
 				if mat ~= "" then
 					if mat == "hardmetal" or mat == "metal" or mat == "rock" or mat == "hardmasonry" or mat == "masonry" or mat == "heavymetal" then
 						penalty = penalty + 0.05
+						PlaySound(self.snd[2], hitPos)
 					end
 				end
 				self.strength = math.max(self.strength - penalty, 0)
