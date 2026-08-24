@@ -39,7 +39,7 @@ local WEAPON_NOCLIP = -1
 -- at the beginning if overriding vars
 -- at the end otherwise if preferred
 -----------------------------------------------------------
-function baseWeap:initVars(owner, wpnSlot)
+function baseWeap:initVars(owner)
 	if client then
 		-- can be used for shotgun pumpping, bolt cycling
 		-- or any post firing stuff really
@@ -84,15 +84,18 @@ function baseWeap:initVars(owner, wpnSlot)
 		end
 	end
 
-	-- total ammo
-	self.ammoTotal			= 0 
-
 	if server or (client and self.isLocal == true) then
 		-- used for server networking
 		self.inPrimary 		= false
 		self.inSecondary 	= false
+		
+		-- list of currently playing following sounds
+		self.followingSNDS 		= {}
 	end
-
+	
+	-- total ammo
+	self.ammoTotal			= 0 
+	
 	-- compare against GetTime()
 	self.nextFire           = 0
 	self.nextAltFire        = 0
@@ -109,9 +112,6 @@ function baseWeap:initVars(owner, wpnSlot)
 
 	-- which player owns this instance
 	self.owner				= owner
-
-	-- list of currently playing following sounds
-	self.followingSNDS 		= {}
 end
 
 --=========================================================================
@@ -136,8 +136,7 @@ function baseWeap:init_tool()
 	SetToolAmmoPickupAmount(self.toolID, self.ammoPickupSize)
 end
 
--- to add a new weapon just do CHILD = baseWeap:new(CHILD, owner) where CHILD is {}
--- to add a weapon to a player do PLCHILD = baseWeap.new(CHILD, PLCHILD, owner)
+-- to add a new weapon just do WPNPTR = baseWeap:new(CHILD, owner) where CHILD is {}
 function baseWeap:new(obj, owner)
     owner = owner or -1
 
