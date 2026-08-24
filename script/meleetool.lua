@@ -67,7 +67,7 @@ function CMelee:initVars(owner)
 
 		self.stopHitDelay 				= -1
 
-		self.swingStartPos 				= 0
+		self.swingStartPos 				= false
 
 		self.lasHitObj 					= -1
 
@@ -112,7 +112,7 @@ function CMelee:CheckHit()
 	local t = GetBodyTransform(GetToolBody(self.owner))
 	local dir = TransformToParentVec(t, self.edgeDir)
 	
-	if self.swingStartPos == 0 then 
+	if not self.swingStartPos then 
 		self.swingStartPos = t.pos
 		self.hitDelay = GetTime() + 0.025
 		return
@@ -192,7 +192,7 @@ end
 function CMelee:StopSwing()
 	self.stopHitDelay = -1
 	self.hitDelay = -1
-	self.swingStartPos = 0
+	self.swingStartPos = false
 	self.lasHitObj = -1
 end
 
