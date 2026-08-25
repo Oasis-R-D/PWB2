@@ -3,10 +3,10 @@
 ----------------------------------------------------------------------------------------------
 
 this file calls all weapon functions. To add your weapon just add a pointer to it's class
-in GLOBAL_WEAPONS (make sure to '#include' it's lua file).
+in GLOBAL_WEAPONS (make sure to '#include' it's lua file also).
 
-weapon systems are built to function like the weapon systems from
-Half-Life: 1 / Counter Strike and can fully support weapons from both with minimal adaptation.
+weapon systems are built to function like the weapon systems from Half-Life: 1 / Counter Strike
+and can fully support weapons from both with (near) minimal adaptation.
 
 Weapon HUD order is set by the order they are listed in the GLOBAL_WEAPONS table
 

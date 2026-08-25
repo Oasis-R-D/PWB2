@@ -143,6 +143,7 @@ function baseWeap:new(obj, owner)
     -- make new table
     local instance = {}
     if obj then
+		-- copy values from used class
         for k, v in pairs(obj) do
             instance[k] = v
         end
