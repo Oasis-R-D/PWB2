@@ -113,7 +113,7 @@ function CAdsGun:PrimaryAttack(dt)
 	else
 		local pos, dir = getAimVector(GetPlayerEyeTransform(self.owner).pos, 100, self.ads and GLOBAL_1DEGREE or GLOBAL_3DEGREES, self.owner)
 	
-		server.ShootHook(pos, dir, "bullet", self.dmg_world, self.dmg_plyr, 100, self.owner, self.toolID, self.toolName)
+		server.ShootHook(pos, dir, self.dmg_world, self.dmg_plyr, 100, self.owner, self.toolID, self.toolName)
 
 		PlayFireSound(self.snds[1], mt.pos, 300)
 

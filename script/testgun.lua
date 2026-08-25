@@ -84,7 +84,7 @@ function CTestGun:PrimaryAttack(dt)
 		self.ammoLoaded = self.ammoLoaded - 1
 	else
 		local pos, dir = getAimVector(GetPlayerEyeTransform(self.owner).pos, 100, GLOBAL_5DEGREES, self.owner)
-		server.ShootHook(pos, dir, "bullet", self.dmg_world, self.dmg_plyr, 100, self.owner, self.toolID, self.toolName)
+		server.ShootHook(pos, dir, self.dmg_world, self.dmg_plyr, 100, self.owner, self.toolID, self.toolName)
 		
 		PlayFireSound(self.snds[1], mt.pos, 300)
 
@@ -139,7 +139,7 @@ function CTestGun:SecondaryAttack(dt)
 	else
 		for i=1, 4 do
 			local pos, dir = getAimVector(GetPlayerEyeTransform(self.owner).pos, 100, GLOBAL_5DEGREES, self.owner)
-			server.ShootHook(pos, dir, "bullet", self.dmg_world, self.dmg_plyr, 100, self.owner, self.toolID, self.toolName)
+			server.ShootHook(pos, dir, self.dmg_world, self.dmg_plyr, 100, self.owner, self.toolID, self.toolName)
 		end
 
 		PlayFireSound(self.snds[1], mt.pos, 300)

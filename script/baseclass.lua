@@ -643,6 +643,76 @@ end
 --	UTIL FUNCS
 --=========================================================================
 
+-- hook the Shoot func to add new stuff
+function baseWeap:FireBulletsPlayer(pos, dir, range, impulseMult, radius)
+	impulseMult = impulseMult or 1
+	radius = radius or 0
+
+	QueryShootRope(pos, dir, range)
+	
+	-- figure out whether we need to run player or world hit code
+	local bHit, pdist, pShape, playerhit = QueryShot(pos, dir, range, 0, self.owner)
+
+	if radius > 0 then
+		QueryRequire("player")
+		HULLbHit, HULLpdist, HULLpShape, HULLplayerhit, _, normal = QueryShot(pos, dir, range, radius, self.owner)
+
+		if HULLplayerhit ~= 0 then
+			local hitPoint = VecAdd(pos, VecAdd(VecScale(dir, HULLpdist), VecScale(normal, -radius)))
+			pdist = HULLpdist
+			dir = VecNormalize(VecSub(hitPoint, pos))
+			playerhit = HULLplayerhit
+			bHit = true
+		end
+	end
+
+	-- knock back objects some more
+	if bHit then
+		ApplyBodyImpulse(GetShapeBody(pShape), VecAdd(pos, VecScale(dir, pdist)), VecScale(dir, 800 * impulseMult))
+	end
+
+	local hitAnimator = GetBodyAnimator(GetShapeBody(pShape))
+
+	if playerhit == 0 and hitAnimator == 0 then
+		-- use normal shooting for world
+		Shoot(pos, dir, "bullet", self.dmg_world, range, self.owner, self.toolID)
+	elseif self.dmg_plyr then
+		-- play player impact SFX
+		local SoundPoint = VecAdd(pos, VecScale(dir, pdist))
+		PlaySound(LoadSound("MOD/snd/bullet_hit0.ogg"), SoundPoint, 2)
+
+		-- don't actually hit the player so we can do our own damage and vfx
+		local newrange = pdist - 0.5
+		if newrange > 0 then Shoot(pos, dir, "bullet", 0.0, newrange, self.owner, self.toolID) end
+
+		if playerhit ~= 0 then
+			-- apply hitgroups
+			QueryRequire("player")
+			QueryInclude("player")
+			QueryRejectPlayer(self.owner)
+			local _, _, _, bodyPart = QueryRaycast(pos, dir, pdist + 0.25)
+			
+			local dmg = self.dmg_plyr
+
+			local hitPart = GetTagValue(GetShapeBody(bodyPart), "bone")
+			if hitPart == "head" or hitPart == "neck" then
+				dmg = self.dmg_plyr * GLOBAL_HEADSHOTMULT
+			end
+
+			-- Deal damage
+			ApplyPlayerDamage(playerhit, dmg, self.toolName, self.owner)
+
+			-- Blood VFX
+			BloodVFX(SoundPoint, dir, dmg, playerhit)
+		else
+			-- Blood VFX
+			BloodVFX(SoundPoint, dir, self.dmg_plyr, nil, hitAnimator)
+		end
+	end
+
+	return bHit, pdist, playerhit
+end
+
 function baseWeap:ShouldWeaponIdle()
 	return false -- override me!
 end

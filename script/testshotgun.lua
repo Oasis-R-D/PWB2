@@ -111,7 +111,7 @@ function CTestShotgun:PrimaryAttack(dt)
 		local eyePos = GetPlayerEyeTransform(self.owner).pos
 		for i=1, 6 do
 			local pos, dir = getAimVector(eyePos, 80, GLOBAL_10DEGREES, self.owner)
-			server.ShootHook(pos, dir, "bullet", self.dmg_world, self.dmg_plyr, 80, self.owner, self.toolID, self.toolName)
+			server.ShootHook(pos, dir, self.dmg_world, self.dmg_plyr, 80, self.owner, self.toolID, self.toolName)
 		end
 
 		PlayFireSound(self.snds[1], mt.pos, 300)
@@ -169,7 +169,7 @@ function CTestShotgun:SecondaryAttack(dt)
 		local eyePos = GetPlayerEyeTransform(self.owner).pos
 		for i=1, 12 do
 			local pos, dir = getAimVector(eyePos, 80, GLOBAL_10DEGREES, self.owner)
-			server.ShootHook(pos, dir, "bullet", self.dmg_world, self.dmg_plyr, 80, self.owner, self.toolID, self.toolName)
+			server.ShootHook(pos, dir, self.dmg_world, self.dmg_plyr, 80, self.owner, self.toolID, self.toolName)
 		end
 
 		PlayFireSound(self.snds[2], mt.pos, 300)

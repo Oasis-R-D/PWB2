@@ -222,18 +222,21 @@ function PlayImpactSFX(shape, pos, mag)
 	return material
 end
 
--- hook the Shoot func to add new stuff
-function server.ShootHook(pos, dir, shoottype, damage, playerdamage, range, player, weaponid, weaponname, impulseMult, radius)
-	impulseMult = impulseMult or 1
-	playerdamage = playerdamage or 0
-	radius = radius or 0
-
-	-- destroy ropes (only runs once!!)
+function QueryShootRope(pos, dir, range)
 	local ropeHit, ropeDist, ropeJoint = QueryRaycastRope(pos, dir, range)
 	if ropeHit then
 		local breakPoint = VecAdd(pos, VecScale(dir, ropeDist))
 		BreakRope(ropeJoint, breakPoint)
 	end
+end
+
+-- hook the Shoot func to add new stuff
+function server.ShootHook(pos, dir, damage, playerdamage, range, player, weaponid, weaponname, impulseMult, radius)
+	impulseMult = impulseMult or 1
+	playerdamage = playerdamage or 0
+	radius = radius or 0
+
+	QueryShootRope(pos, dir, range)
 	
 	-- figure out whether we need to run player or world hit code
 	local bHit, pdist, pShape, playerhit = QueryShot(pos, dir, range, 0, player)
@@ -260,7 +263,7 @@ function server.ShootHook(pos, dir, shoottype, damage, playerdamage, range, play
 
 	if playerhit == 0 and hitAnimator == 0 then
 		-- use normal shooting for world
-		Shoot(pos, dir, shoottype, damage, range, player, weaponid)
+		Shoot(pos, dir, "bullet", damage, range, player, weaponid)
 	elseif playerdamage > 0 then
 		-- play player impact SFX
 		local SoundPoint = VecAdd(pos, VecScale(dir, pdist))
@@ -268,7 +271,7 @@ function server.ShootHook(pos, dir, shoottype, damage, playerdamage, range, play
 
 		-- don't actually hit the player so we can do our own damage and vfx
 		local newrange = pdist - 0.5
-		if newrange > 0 then Shoot(pos, dir, shoottype, 0.0, newrange, player, weaponid) end
+		if newrange > 0 then Shoot(pos, dir, "bullet", 0.0, newrange, player, weaponid) end
 
 		if playerhit ~= 0 then
 			-- apply hitgroups
