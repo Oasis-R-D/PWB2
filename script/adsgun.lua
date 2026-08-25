@@ -60,6 +60,14 @@ end
 -- Weapon functions
 --=========================================================================
 
+function CAdsGun:Holster()
+	if client then
+		self.animator.forceSecondaryActionPose = false
+	else
+		self.ads = false
+	end
+end
+
 function CAdsGun:PrimaryAttack(dt)
 	local mt = GetToolLocationWorldTransform("muzzle", self.owner)
 	if not mt then return end
@@ -117,12 +125,18 @@ end
 
 function CAdsGun:Reload()
 	if not self:DefaultReload(1.5) then return end
-	
+
 	if self.isLocal then
 		self:PlayFollowingSound(self.snds[2], 1.258)
+
+		if self.animator.forceSecondaryActionPose then
+			self:ServerWpnCall("SecondaryAttack", 0, false)
+		end
 	else
 		PlaySound(self.snds[1], GetPlayerPos(self.owner), 1)
 	end
+	
+	self.animator.forceSecondaryActionPose = false
 end
 
 function CAdsGun:SecondaryAttack(dt, ads)

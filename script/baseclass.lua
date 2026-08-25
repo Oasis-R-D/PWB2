@@ -440,7 +440,9 @@ function baseWeap:DefaultSecondaryAttack(dt, empty)
 	end
 
 	-- hold gun straight
-	self.animator.timeSinceFire = 0.0
+	if not hasFlag(self.flags, FWPN_NOALTACTIONPOSE) then
+		self.animator.timeSinceFire = 0.0
+	end
 
 	self:SecondaryAttack(dt)
 end

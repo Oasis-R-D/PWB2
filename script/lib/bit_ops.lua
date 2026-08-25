@@ -17,13 +17,14 @@ end
 -- WEAPON FLAGS
 FWPN_CLICK_PRIM = leftShift(0) -- Weapon needs clicked to fire, no holding
 FWPN_CLICK_SEC  = leftShift(1) -- Weapon needs clicked to fire, no holding
-FWPN_NOHUD        = leftShift(2) -- Don't draw HUD
+FWPN_NOHUD      = leftShift(2) -- Don't draw HUD
 
-FWPN_SV_CALLONCE     = leftShift(2) -- Does 1 servercall every fire instead of 1 on start and stop
-FWPN_SV_CALLONCESEC  = leftShift(3) -- Same as above but for secondary fire
+FWPN_SV_CALLONCE     = leftShift(3) -- Does 1 servercall every fire instead of 1 on start and stop
+FWPN_SV_CALLONCESEC  = leftShift(4) -- Same as above but for secondary fire
                                     -- Use these if the weapons fire rate is really slow or has flag FWPN_NEEDSCLICKED
 
-FWPN_NOAUTORELOAD = leftShift(4) -- Don't automatically start reloading weapon on empty
+FWPN_NOAUTORELOAD = leftShift(5)    -- Don't automatically start reloading weapon on empty
+FWPN_NOALTACTIONPOSE = leftShift(6) -- Don't automatically do the action animation when holding grab
 
 -- TEMP ENTS
 FTENT_NONE = 0

@@ -49,8 +49,8 @@ CMelee.ammoPickupSize	= 9999 -- defaults to full mag
 CMelee.dmg_world		= 0.4
 CMelee.dmg_plyr			= 0.1 -- 0.0-1.0
 
-CMelee.flags = 0	-- weapon flags
-CMelee.snds	 = 0	-- temp value, will be set to the sound array on init
+CMelee.flags = FWPN_NOALTACTIONPOSE	-- weapon flags
+CMelee.snds	 = 0					-- temp value, will be set to the sound array on init
 
 -- override initVars to add new variables
 function CMelee:initVars(owner)
@@ -120,7 +120,8 @@ function CMelee:CheckHit()
 
 	QueryRequire("large physical, visible")
 	local pHit, pDist, pHitWorld, pHitPlayer, _, pNorm = QueryShot(t.pos, dir, self.hitDist, 0.25, self.owner)
-	
+	pDist = math.min(pDist, self.hitDist-0.5)
+
 	if pHit then
 		local hitPos = VecAdd(t.pos, VecScale(dir, pDist))   
 		hitPos = VecAdd(hitPos, VecScale(pNorm, -0.25))
