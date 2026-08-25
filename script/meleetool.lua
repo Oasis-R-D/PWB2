@@ -120,6 +120,8 @@ function CMelee:CheckHit()
 
 	QueryRequire("large physical, visible")
 	local pHit, pDist, pHitWorld, pHitPlayer, _, pNorm = QueryShot(t.pos, dir, self.hitDist, 0.25, self.owner)
+
+	-- pull out a little to prevent overshooting
 	pDist = math.min(pDist, self.hitDist-0.5)
 
 	if pHit then
