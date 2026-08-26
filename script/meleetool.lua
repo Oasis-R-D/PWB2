@@ -142,7 +142,7 @@ function CMelee:CheckHit()
 		local hitAnimator = GetBodyAnimator(GetShapeBody(pHitWorld))
 		if pHitPlayer ~= 0 or hitAnimator ~= 0 then
 			-- play thwack or smack sound
-			BloodVFX(hitPos, VecNormalize(hitForce), self.dmg_plyr, pHitPlayer)
+			server.BloodDecal(hitPos, VecNormalize(hitForce), self.dmg_plyr, pHitPlayer)
 
 			if self.edgeType == 0 or self.lasHitObj ~= pHitPlayer then
 				PlaySound(self.snds[1], hitPos)
