@@ -103,9 +103,6 @@ end
 ==============================================================================================
 -- TO-DO
 ==============================================================================================
-   -  Loop based sound system for reloads, will make it so sounds follow the player proper
-      (only on firing client?)
-   
    -  alt fire can use another tools ammo
 
    -  making the gun fire in the muzzle dir could be intersting (would need to make the model
@@ -113,7 +110,7 @@ end
 
    -  Source viewpunch is 'laggy'
 
-   -  Overwritable tickToolAnimator
+   -  make 1 global animator for all weapons (better for memory)
 ============================================================================================]]
 
 #version 2
