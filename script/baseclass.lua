@@ -580,20 +580,14 @@ function baseWeap:decayPosRecoil(dt)
 end
 
 function baseWeap:decayAngRecoil(dt)
-	if VecLength(self.recoilAng) > 0.03 or VecLength(self.recoilAngVel) > 0.03 then
+	if VecLength(self.recoilAng) > 0.0001 or VecLength(self.recoilAngVel) > 0.0001 then
 		self.recoilAng = VecAdd(self.recoilAng, VecScale(self.recoilAngVel, dt))
-		local damping = 1 - (self.recoilAngDamp * dt)
-		
-		if damping < 0 then 
-			damping = 0
-		end
+		local damping = math.max(1 - (self.recoilAngDamp * dt), 0)
 
 		self.recoilAngVel = VecScale(self.recoilAngVel, damping)
 		
 		-- torsional spring
-		-- UNDONE: Per-axis spring constant?
-		local springForceMagnitude = self.recoilAngSpring * dt
-		springForceMagnitude = math.clamp( springForceMagnitude, 0.0, 2.0 )
+		local springForceMagnitude = math.min( self.recoilAngSpring * dt, 2.0 )
 		self.recoilAngVel = VecSub(self.recoilAngVel, VecScale(self.recoilAng, springForceMagnitude))
 
 		-- don't wrap around

@@ -19,7 +19,11 @@ function client.GS_DropPunchAngle(dt)
 end
 
 function client.GS_PunchAxis(axis, punch)
-	cl_punchangle[axis] = punch
+	cl_punchangle[axis] = cl_punchangle[axis] + punch
+end
+
+function client.GS_PunchVec(punch)
+	cl_punchangle = VecAdd(cl_punchangle, punch)
 end
 
 ----------------------------------------------------------------------------------------------
@@ -39,18 +43,12 @@ end
 function client.SRC_DecayPunchAngle(dt)
 	if VecLength(vecPunchAngle) > 0.000001 or VecLength(vecPunchAngleVel) > 0.000001 then
 		vecPunchAngle = VecAdd(vecPunchAngle, VecScale(vecPunchAngleVel, dt))
-		local damping = 1 - (9 * dt)
-		
-		if damping < 0 then 
-			damping = 0
-		end
+		local damping = math.max(1 - (9 * dt), 0)
 
 		vecPunchAngleVel = VecScale(vecPunchAngleVel, damping)
 		
 		-- torsional spring
-		-- UNDONE: Per-axis spring constant?
-		local springForceMagnitude = 65 * dt
-		springForceMagnitude = math.clamp( springForceMagnitude, 0.0, 2.0 )
+		local springForceMagnitude = math.min(65 * dt, 2.0)
 		vecPunchAngleVel = VecSub(vecPunchAngleVel, VecScale(vecPunchAngle, springForceMagnitude))
 
 		-- don't wrap around
@@ -63,8 +61,14 @@ function client.SRC_DecayPunchAngle(dt)
 	end
 end
 
-function client.SRC_PunchAxis(axis, punch)
-	vecPunchAngleVel[axis] = vecPunchAngleVel[axis] + punch * 20
+function client.SRC_PunchAxis(axis, punch, mult)
+	mult = mult and mult or 20
+	vecPunchAngleVel[axis] = vecPunchAngleVel[axis] + punch * mult
+end
+
+function client.SRC_PunchVec(punch, mult)
+	mult = mult and mult or 20
+	vecPunchAngleVel = VecAdd(vecPunchAngleVel, VecScale(punch, mult))
 end
 
 function client.SRC_PunchReset(tolerance)
@@ -74,7 +78,9 @@ function client.SRC_PunchReset(tolerance)
 
 		local check = VecLength(vecPunchAngleVel) + VecLength(vecPunchAngle)
 
-		if check > tolerance then
+		if tolerance > 0 and check > tolerance then
+			return
+		elseif tolerance < 0 and check < (tolerance*-1) then
 			return
 		end
 	end
