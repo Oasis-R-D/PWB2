@@ -150,7 +150,7 @@ function CAdsGun:SecondaryAttack(dt, ads)
 	end
 
 	self.nextFire = self:GetNextAttackDelay(0.33)
-	self.nextAltFire = GetTime() + 0.5
+	self.nextAltFire = GetTime() + 0.33
 end
 
 function CAdsGun:WeaponIdle()
@@ -159,7 +159,8 @@ end
 
 function CAdsGun:tickPlayer_cl(dt)
 	if self.isLocal and self.animator.forceSecondaryActionPose then
-		self.idleCycleScale = 0.1 end
+		self.idleCycleScale = 0.1
+	end
 
 	baseWeap.tickPlayer_cl(self, dt)
 end
