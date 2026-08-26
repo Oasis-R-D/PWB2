@@ -108,16 +108,12 @@ function CTestShotgun:PrimaryAttack(dt)
 			self.timeWeaponIdle = 1
 		end
 	else
-		local eyePos = GetPlayerEyeTransform(self.owner).pos
-		for i=1, 6 do
-			local pos, dir = getAimVector(eyePos, 80, GLOBAL_10DEGREES, self.owner)
-			server.ShootHook(pos, dir, self.dmg_world, self.dmg_plyr, 80, self.owner, self.toolID, self.toolName)
-		end
-
 		PlayFireSound(self.snds[1], mt.pos, 300)
 
 		baseWeap.DepleteAmmo(self, 4)
 	end
+
+	self:FireBulletsPlayer(6, GetPlayerEyeTransform(self.owner).pos, GLOBAL_10DEGREES, 80)
 
 	self.nextFire = self:GetNextAttackDelay(0.75)
 	self.nextAltFire = GetTime() + 0.75
@@ -166,16 +162,12 @@ function CTestShotgun:SecondaryAttack(dt)
 			self.timeWeaponIdle = 1.5
 		end
 	else
-		local eyePos = GetPlayerEyeTransform(self.owner).pos
-		for i=1, 12 do
-			local pos, dir = getAimVector(eyePos, 80, GLOBAL_10DEGREES, self.owner)
-			server.ShootHook(pos, dir, self.dmg_world, self.dmg_plyr, 80, self.owner, self.toolID, self.toolName)
-		end
-
 		PlayFireSound(self.snds[2], mt.pos, 300)
 
 		baseWeap.DepleteAmmo(self, 4)
 	end
+
+	self:FireBulletsPlayer(12, GetPlayerEyeTransform(self.owner).pos, GLOBAL_10DEGREES, 80)
 
 	self.nextFire = self:GetNextAttackDelay(1.5)
 	self.nextAltFire = GetTime() + 1.5

@@ -111,14 +111,13 @@ function CAdsGun:PrimaryAttack(dt)
 		
 		self.ammoLoaded = self.ammoLoaded - 1
 	else
-		local pos, dir = getAimVector(GetPlayerEyeTransform(self.owner).pos, 100, self.ads and GLOBAL_1DEGREE or GLOBAL_3DEGREES, self.owner)
-	
-		server.ShootHook(pos, dir, self.dmg_world, self.dmg_plyr, 100, self.owner, self.toolID, self.toolName)
-
 		PlayFireSound(self.snds[1], mt.pos, 300)
 
 		baseWeap.DepleteAmmo(self)
 	end
+
+	local inAds = (server and self.ads) or (client and self.animator.forceSecondaryActionPose)
+	self:FireBulletsPlayer(1, GetPlayerEyeTransform(self.owner).pos, inAds and GLOBAL_1DEGREE or GLOBAL_3DEGREES, 100)
 
 	self.nextFire = self:GetNextAttackDelay(0.133)
 end

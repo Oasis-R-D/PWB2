@@ -83,14 +83,13 @@ function CTestGun:PrimaryAttack(dt)
 		
 		self.ammoLoaded = self.ammoLoaded - 1
 	else
-		local pos, dir = getAimVector(GetPlayerEyeTransform(self.owner).pos, 100, GLOBAL_5DEGREES, self.owner)
-		server.ShootHook(pos, dir, self.dmg_world, self.dmg_plyr, 100, self.owner, self.toolID, self.toolName)
-		
 		PlayFireSound(self.snds[1], mt.pos, 300)
 
 		baseWeap.DepleteAmmo(self)
 	end
-	
+
+	self:FireBulletsPlayer(1, GetPlayerEyeTransform(self.owner).pos, GLOBAL_5DEGREES, 100)
+
 	self.nextFire = self:GetNextAttackDelay(0.075)
 	self.nextAltFire = GetTime() + 0.075
 end
@@ -137,15 +136,12 @@ function CTestGun:SecondaryAttack(dt)
 		
 		self.ammoLoaded = self.ammoLoaded - 4
 	else
-		for i=1, 4 do
-			local pos, dir = getAimVector(GetPlayerEyeTransform(self.owner).pos, 100, GLOBAL_5DEGREES, self.owner)
-			server.ShootHook(pos, dir, self.dmg_world, self.dmg_plyr, 100, self.owner, self.toolID, self.toolName)
-		end
-
 		PlayFireSound(self.snds[1], mt.pos, 300)
 
 		baseWeap.DepleteAmmo(self, 4)
 	end
+
+	self:FireBulletsPlayer(4, GetPlayerEyeTransform(self.owner).pos, GLOBAL_5DEGREES, 100)
 
 	-- Use get time because GetNextAttackDelay breaks here
 	self.nextFire = GetTime() + 0.5

@@ -645,73 +645,121 @@ end
 --=========================================================================
 
 -- hook the Shoot func to add new stuff
-function baseWeap:FireBulletsPlayer(pos, dir, range, impulseMult, radius)
+
+shared.seed = 1
+
+function baseWeap:FireBulletsPlayer(shots, pos, spreadRad, range, impulseMult, radius)
+	shots = shots or 1
 	impulseMult = impulseMult or 1
 	radius = radius or 0
 
-	QueryShootRope(pos, dir, range)
-	
-	-- figure out whether we need to run player or world hit code
-	local bHit, pdist, pShape, playerhit = QueryShot(pos, dir, range, 0, self.owner)
+	for i=1, shots do
+		local _, posUse, _, dir = GetPlayerAimInfo(pos, range, self.owner)
 
-	if radius > 0 then
-		QueryRequire("player")
-		HULLbHit, HULLpdist, HULLpShape, HULLplayerhit, _, normal = QueryShot(pos, dir, range, radius, self.owner)
+		-- Get Spread (Based on code from Novena)
+		if spreadRad > 0 then
+			local cosAngle = math.cos(spreadRad)
+			local z = 1 - UTIL_SharedRandomFloat(shared.seed + i, 0,1)*(1 - cosAngle)
+			local phi = UTIL_SharedRandomFloat(shared.seed + (2 + i), 0,1)*math.pi*2
+			local r = math.sqrt(1 - z*z)
+			local x = r * math.cos(phi)
+			local y = r * math.sin(phi)
+			local vec = Vec(x, y, z)
 
-		if HULLplayerhit ~= 0 then
-			local hitPoint = VecAdd(pos, VecAdd(VecScale(dir, HULLpdist), VecScale(normal, -radius)))
-			pdist = HULLpdist
-			dir = VecNormalize(VecSub(hitPoint, pos))
-			playerhit = HULLplayerhit
-			bHit = true
+			if dir[3] > 0.9999 then
+				dir = vec
+			elseif dir[3] < -0.9999 then
+				dir = VecScale(vec,-1)
+			else
+				local quat = QuatLookAt(Vec(0,0,0),VecScale(dir,-1))
+				dir = TransformToParentVec(Transform(Vec(0,0,0),quat),vec)
+			end
 		end
-	end
 
-	-- knock back objects some more
-	if bHit then
-		ApplyBodyImpulse(GetShapeBody(pShape), VecAdd(pos, VecScale(dir, pdist)), VecScale(dir, 800 * impulseMult))
-	end
+		if server then QueryShootRope(posUse, dir, range) end
+		
+		-- figure out whether we need to run player or world hit code
+		local bHit, pdist, pShape, playerhit = QueryShot(posUse, dir, range, 0, self.owner)
 
-	local hitAnimator = GetBodyAnimator(GetShapeBody(pShape))
-
-	if playerhit == 0 and hitAnimator == 0 then
-		-- use normal shooting for world
-		Shoot(pos, dir, "bullet", self.dmg_world, range, self.owner, self.toolID)
-	elseif self.dmg_plyr then
-		-- play player impact SFX
-		local SoundPoint = VecAdd(pos, VecScale(dir, pdist))
-		PlaySound(LoadSound("MOD/snd/bullet_hit0.ogg"), SoundPoint, 2)
-
-		-- don't actually hit the player so we can do our own damage and vfx
-		local newrange = pdist - 0.5
-		if newrange > 0 then Shoot(pos, dir, "bullet", 0.0, newrange, self.owner, self.toolID) end
-
-		if playerhit ~= 0 then
-			-- apply hitgroups
+		if radius > 0 then
 			QueryRequire("player")
-			QueryInclude("player")
-			QueryRejectPlayer(self.owner)
-			local _, _, _, bodyPart = QueryRaycast(pos, dir, pdist + 0.25)
-			
-			local dmg = self.dmg_plyr
+			HULLbHit, HULLpdist, HULLpShape, HULLplayerhit, _, normal = QueryShot(posUse, dir, range, radius, self.owner)
 
-			local hitPart = GetTagValue(GetShapeBody(bodyPart), "bone")
-			if hitPart == "head" or hitPart == "neck" then
-				dmg = self.dmg_plyr * GLOBAL_HEADSHOTMULT
+			if HULLplayerhit ~= 0 then
+				local hitPoint = VecAdd(posUse, VecAdd(VecScale(dir, HULLpdist), VecScale(normal, -radius)))
+				pdist = HULLpdist
+				dir = VecNormalize(VecSub(hitPoint, posUse))
+				playerhit = HULLplayerhit
+				bHit = true
+			end
+		end
+
+		-- knock back objects some more
+		if bHit and server then
+			ApplyBodyImpulse(GetShapeBody(pShape), VecAdd(posUse, VecScale(dir, pdist)), VecScale(dir, 800 * impulseMult))
+		end
+
+		local hitAnimator = GetBodyAnimator(GetShapeBody(pShape))
+
+		if playerhit == 0 and hitAnimator == 0 then
+			if server then
+				-- use normal shooting for world
+				Shoot(posUse, dir, "bullet", self.dmg_world, range, self.owner)
+			end
+		elseif self.dmg_plyr then
+			local SoundPoint = VecAdd(posUse, VecScale(dir, pdist))
+
+			if server then
+				-- play player impact SFX
+				PlaySound(LoadSound("MOD/snd/bullet_hit0.ogg"), SoundPoint, 2)
+				
+				-- don't actually hit the player so we can do our own damage and vfx
+				local newrange = pdist - 0.5
+				if newrange > 0 then Shoot(posUse, dir, "bullet", 0.0, newrange, self.owner) end
 			end
 
-			-- Deal damage
-			ApplyPlayerDamage(playerhit, dmg, self.toolName, self.owner)
+			if playerhit ~= 0 then
+				-- apply hitgroups
+				QueryRequire("player")
+				QueryInclude("player")
+				QueryRejectPlayer(self.owner)
+				local _, _, _, bodyPart = QueryRaycast(posUse, dir, pdist + 0.25)
+				
+				local dmg = self.dmg_plyr
 
-			-- Blood VFX
-			BloodVFX(SoundPoint, dir, dmg, playerhit)
-		else
-			-- Blood VFX
-			BloodVFX(SoundPoint, dir, self.dmg_plyr, nil, hitAnimator)
+				local hitPart = GetTagValue(GetShapeBody(bodyPart), "bone")
+				if hitPart == "head" or hitPart == "neck" then
+					dmg = self.dmg_plyr * GLOBAL_HEADSHOTMULT
+				end
+
+				if client then
+					client.BloodParticles(SoundPoint, dir, dmg, playerhit)
+				else
+					server.BloodDecal(SoundPoint, dir, self.dmg_plyr, nil, hitAnimator)
+
+					-- Deal damage
+					ApplyPlayerDamage(playerhit, dmg, self.toolName, self.owner)
+				end
+			elseif client then
+				client.BloodParticles(SoundPoint, dir, self.dmg_plyr, playerhit)
+			else
+				server.BloodDecal(SoundPoint, dir, self.dmg_plyr, nil, hitAnimator)
+			end
+		end
+
+		debugspot = VecAdd(posUse, VecScale(dir, pdist))
+
+		if shots == 1 then
+			-- Reset seed AFTER using it on both server and client
+			-- Should work for most cases!
+			if server then shared.seed = GetRandomInt(0,1000) end
+
+			return bHit, pdist, playerhit
 		end
 	end
-
-	return bHit, pdist, playerhit
+	-- Reset seed AFTER using it on both server and client
+	-- Should work for most cases!
+	if server then shared.seed = GetRandomInt(0,1000) end
 end
 
 function baseWeap:ShouldWeaponIdle()
@@ -823,6 +871,8 @@ function baseWeap:DumpGlobals()
 		DebugWatch(prefix .. "ammoAltTotal",		self.ammoAltTotal)
 	end
 
+	DebugWatch(prefix .. "spreadSeed", 			shared.seed)
+
 	--DebugWatch(prefix .. "ammoTotal", 		self.ammoTotal)
 
 	if server or self.isLocal then
@@ -833,8 +883,8 @@ function baseWeap:DumpGlobals()
 	DebugWatch(prefix .. "nextFire",			string.format("%.5f", math.max(0, self.nextFire - GetTime())))
 	DebugWatch(prefix .. "nextAltFire", 		string.format("%.5f", math.max(0, self.nextAltFire - GetTime())))
 
-	DebugWatch(prefix .. "prevPrimFireTime", 	self.prevPrimFireTime)
-	DebugWatch(prefix .. "lastFireTime", 		self.lastFireTime)
+	--DebugWatch(prefix .. "prevPrimFireTime", 	self.prevPrimFireTime)
+	--DebugWatch(prefix .. "lastFireTime", 		self.lastFireTime)
 
 	-- unused
 	--DebugWatch(prefix .. "timeWeaponIdle", 	self.timeWeaponIdle)
