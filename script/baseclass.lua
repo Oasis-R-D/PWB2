@@ -647,6 +647,33 @@ end
 -- hook the Shoot func to add new stuff
 
 shared.seed = 1
+function GetPlaerAimInfoSpread(pos, spreadRad, range, p, add)
+	local _, posUse, _, dir = GetPlayerAimInfo(pos, range, self.owner)
+
+	-- Get Spread (Based on code from Novena)
+	if spreadRad > 0 then
+		local cosAngle = math.cos(spreadRad)
+		SetRandomSeed(shared.seed + add)
+		local z = 1 - GetRandomFloat(0,1)*(1 - cosAngle)
+		SetRandomSeed(shared.seed + (2+add))
+		local phi = GetRandomFloat(0,1)*math.pi*2
+		local r = math.sqrt(1 - z*z)
+		local x = r * math.cos(phi)
+		local y = r * math.sin(phi)
+		local vec = Vec(x, y, z)
+
+		if dir[3] > 0.9999 then
+			dir = vec
+		elseif dir[3] < -0.9999 then
+			dir = VecScale(vec,-1)
+		else
+			local quat = QuatLookAt(Vec(0,0,0),VecScale(dir,-1))
+			dir = TransformToParentVec(Transform(Vec(0,0,0),quat),vec)
+		end
+	end
+	
+	return posUse, dir
+end
 
 function baseWeap:FireBulletsPlayer(shots, pos, spreadRad, range, impulseMult, radius)
 	shots = shots or 1
@@ -654,34 +681,14 @@ function baseWeap:FireBulletsPlayer(shots, pos, spreadRad, range, impulseMult, r
 	radius = radius or 0
 
 	for i=1, shots do
-		local _, posUse, _, dir = GetPlayerAimInfo(pos, range, self.owner)
-
-		-- Get Spread (Based on code from Novena)
-		if spreadRad > 0 then
-			local cosAngle = math.cos(spreadRad)
-			local z = 1 - UTIL_SharedRandomFloat(shared.seed + i, 0,1)*(1 - cosAngle)
-			local phi = UTIL_SharedRandomFloat(shared.seed + (2 + i), 0,1)*math.pi*2
-			local r = math.sqrt(1 - z*z)
-			local x = r * math.cos(phi)
-			local y = r * math.sin(phi)
-			local vec = Vec(x, y, z)
-
-			if dir[3] > 0.9999 then
-				dir = vec
-			elseif dir[3] < -0.9999 then
-				dir = VecScale(vec,-1)
-			else
-				local quat = QuatLookAt(Vec(0,0,0),VecScale(dir,-1))
-				dir = TransformToParentVec(Transform(Vec(0,0,0),quat),vec)
-			end
-		end
+		local posUse, dir = GetPlayerAimInfoSpread(pos, spreadRad, range, self.owner, i)
 
 		if server then QueryShootRope(posUse, dir, range) end
 		
 		-- figure out whether we need to run player or world hit code
 		local bHit, pdist, pShape, playerhit = QueryShot(posUse, dir, range, 0, self.owner)
 
-		if radius > 0 then
+		if radius > 0 and playerhit == 0 then
 			QueryRequire("player")
 			HULLbHit, HULLpdist, HULLpShape, HULLplayerhit, _, normal = QueryShot(posUse, dir, range, radius, self.owner)
 
@@ -746,18 +753,11 @@ function baseWeap:FireBulletsPlayer(shots, pos, spreadRad, range, impulseMult, r
 				server.BloodDecal(SoundPoint, dir, self.dmg_plyr, nil, hitAnimator)
 			end
 		end
-
-		if shots == 1 then
-			-- Reset seed AFTER using it on both server and client
-			-- Should work for most cases!
-			if server then shared.seed = GetRandomInt(0,1000) end
-
-			return bHit, pdist, playerhit
-		end
 	end
+
 	-- Reset seed AFTER using it on both server and client
 	-- Should work for most cases!
-	if server then shared.seed = GetRandomInt(0,1000) end
+	if server then shared.seed = GetRandomInt(0,10000) end
 end
 
 function baseWeap:ShouldWeaponIdle()

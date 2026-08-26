@@ -129,6 +129,7 @@ function math.lerp(a, b, t)
     return a + (b - a) * t
 end
 
+--[[
 local glSeed = 1
 
 local seed_table = {
@@ -200,4 +201,4 @@ function UTIL_SharedRandomFloat(seed, low, high)
 
 		return low + offset * range
 	end
-end
+end]]
