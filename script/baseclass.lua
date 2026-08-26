@@ -747,8 +747,6 @@ function baseWeap:FireBulletsPlayer(shots, pos, spreadRad, range, impulseMult, r
 			end
 		end
 
-		debugspot = VecAdd(posUse, VecScale(dir, pdist))
-
 		if shots == 1 then
 			-- Reset seed AFTER using it on both server and client
 			-- Should work for most cases!
@@ -872,8 +870,6 @@ function baseWeap:DumpGlobals()
 	end
 
 	DebugWatch(prefix .. "spreadSeed", 			shared.seed)
-
-	--DebugWatch(prefix .. "ammoTotal", 		self.ammoTotal)
 
 	if server or self.isLocal then
 		DebugWatch(prefix .. "inPrimary", 			self.inPrimary)

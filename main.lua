@@ -239,10 +239,9 @@ function client.init()
       baseWeap.init_cl(GLOBAL_WEAPONS[weapon], weapon)
    end
 end
-debugspot = Vec()
+
 -- Runs most weapon code
 function client.tick(dt)
-   DebugCross(debugspot)
    for p in PlayersAdded() do
       PLAYER_WEAPONS[p] = {}
       for weapon=1, GLOBAL_WEAPONS_AMNT do
