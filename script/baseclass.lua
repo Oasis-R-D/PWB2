@@ -869,13 +869,13 @@ function baseWeap:DumpGlobals()
 		DebugWatch(prefix .. "ammoAltTotal",		self.ammoAltTotal)
 	end
 
-	DebugWatch(prefix .. "spreadSeed", 			shared.seed)
-
 	if server or self.isLocal then
 		DebugWatch(prefix .. "inPrimary", 			self.inPrimary)
 		DebugWatch(prefix .. "inSecondary", 		self.inSecondary)
 	end
 
+	DebugWatch(prefix .. "spreadSeed", 			shared.seed)
+	
 	DebugWatch(prefix .. "nextFire",			string.format("%.5f", math.max(0, self.nextFire - GetTime())))
 	DebugWatch(prefix .. "nextAltFire", 		string.format("%.5f", math.max(0, self.nextAltFire - GetTime())))
 

@@ -37,14 +37,13 @@ function client.SRC_ApplyPlayerPunch(dt)
 end
 
 function client.SRC_DecayPunchAngle(dt)
-	if VecLength(vecPunchAngle) > 0.03 or VecLength(vecPunchAngleVel) > 0.03 then
+	if VecLength(vecPunchAngle) > 0.000001 or VecLength(vecPunchAngleVel) > 0.000001 then
 		vecPunchAngle = VecAdd(vecPunchAngle, VecScale(vecPunchAngleVel, dt))
 		local damping = 1 - (9 * dt)
 		
-		--[[
 		if damping < 0 then 
 			damping = 0
-		end]]
+		end
 
 		vecPunchAngleVel = VecScale(vecPunchAngleVel, damping)
 		
