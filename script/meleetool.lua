@@ -47,7 +47,7 @@ CMelee.toolSlot			= 1
 CMelee.ammoLoadedMax 	= -1   -- max clip 	 	-- -1 for no clip (pulls from reserve)
 CMelee.ammoPickupSize	= 9999 -- defaults to full mag
 CMelee.dmg_world		= 0.4
-CMelee.dmg_plyr			= 0.1 -- 0.0-1.0
+CMelee.dmg_plyr			= 0.05 -- 0.0-1.0
 
 CMelee.flags = FWPN_NOALTACTIONPOSE	-- weapon flags
 CMelee.snds	 = 0					-- temp value, will be set to the sound array on init
@@ -142,7 +142,7 @@ function CMelee:CheckHit()
 		local hitAnimator = GetBodyAnimator(GetShapeBody(pHitWorld))
 		if pHitPlayer ~= 0 or hitAnimator ~= 0 then
 			-- play thwack or smack sound
-			server.BloodDecal(hitPos, VecNormalize(hitForce), self.dmg_plyr, pHitPlayer)
+			server.BloodDecal(hitPos, VecNormalize(VecScale(hitForce, -1)), self.dmg_plyr, pHitPlayer)
 
 			if self.edgeType == 0 or self.lasHitObj ~= pHitPlayer then
 				PlaySound(self.snds[1], hitPos)

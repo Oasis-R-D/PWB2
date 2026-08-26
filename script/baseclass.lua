@@ -639,36 +639,6 @@ end
 --=========================================================================
 
 -- hook the Shoot func to add new stuff
-
-shared.seed = 1
-function GetPlaerAimInfoSpread(pos, spreadRad, range, p, add)
-	local _, posUse, _, dir = GetPlayerAimInfo(pos, range, self.owner)
-
-	-- Get Spread (Based on code from Novena)
-	if spreadRad > 0 then
-		local cosAngle = math.cos(spreadRad)
-		SetRandomSeed(shared.seed + add)
-		local z = 1 - GetRandomFloat(0,1)*(1 - cosAngle)
-		SetRandomSeed(shared.seed + (2+add))
-		local phi = GetRandomFloat(0,1)*math.pi*2
-		local r = math.sqrt(1 - z*z)
-		local x = r * math.cos(phi)
-		local y = r * math.sin(phi)
-		local vec = Vec(x, y, z)
-
-		if dir[3] > 0.9999 then
-			dir = vec
-		elseif dir[3] < -0.9999 then
-			dir = VecScale(vec,-1)
-		else
-			local quat = QuatLookAt(Vec(0,0,0),VecScale(dir,-1))
-			dir = TransformToParentVec(Transform(Vec(0,0,0),quat),vec)
-		end
-	end
-	
-	return posUse, dir
-end
-
 function baseWeap:FireBulletsPlayer(shots, pos, spreadRad, range, impulseMult, radius)
 	shots = shots or 1
 	impulseMult = impulseMult or 1
