@@ -253,8 +253,11 @@ function CTestShotgun:WeaponIdle()
 			else
 				if self.pumpTime == -1 then
 					self.pumpTime = 0
+
 					-- reload debounce has timed out
-					self.slideTime = 0
+					if self.isLocal then
+						self.slideTime = 0
+					end
 
 					local mt = GetToolLocationWorldTransform("muzzle", self.owner)
 
@@ -276,7 +279,10 @@ function CTestShotgun:tickPlayer_cl(dt)
 		-- play pumping sound
 		PlaySound(self.snds[1], mt.pos, 300)
 
-		self.slideTime = 0
+		if self.isLocal then
+			self.slideTime = 0
+		end
+
 		self.pumpTime = 0
 	end
 
@@ -284,8 +290,10 @@ function CTestShotgun:tickPlayer_cl(dt)
 end
 
 function CTestShotgun:CustomAnimate(dt)
+	if not self.isLocal then return end
+
 	--Animate Slide
-	local GunBody = GetToolBody(p)
+	local GunBody = GetToolBody()
 	if self.body ~= GunBody then
 		self.body = GunBody
 		-- Slide is the third shape in vox file. Remember original position in attachment frame
