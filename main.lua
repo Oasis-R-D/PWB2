@@ -111,8 +111,6 @@ end
    -  Source viewpunch is 'laggy'
 
    -  make 1 global animator for all weapons (better for memory)
-
-   - fix grease gun ADS disabling server firing for a little
 ============================================================================================]]
 
 #version 2

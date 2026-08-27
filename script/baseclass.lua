@@ -724,8 +724,9 @@ function baseWeap:FireBulletsPlayer(shots, pos, spreadRad, range, impulseMult, r
 	if server then shared.seed = GetRandomInt(0,10000) end
 end
 
+-- Should the weapon idle even when reloading or firing?
 function baseWeap:ShouldWeaponIdle()
-	return false -- override me!
+	return false
 end
 
 function baseWeap:CanAttack(attack_time, curtime)
