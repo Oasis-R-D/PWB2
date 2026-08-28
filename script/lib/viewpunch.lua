@@ -137,3 +137,25 @@ function client.DoMachineGunKick(maxVerticleKickAngle, fireDurationTime, slideLi
 	client.SRC_PunchAxis(2, vecScratch[2])
 	client.SRC_PunchAxis(3, vecScratch[3])
 end
+
+----------------------------------------------------------------------------------------------
+-- FOV vfx
+----------------------------------------------------------------------------------------------
+
+local FOV_cur = nil
+local FOV_mult = 1
+
+function client.FOV_update(dt)
+	local baseFOV = GetFloat("options.gfx.fov")
+	if not FOV_cur then FOV_cur = baseFOV end
+
+	local diff = math.abs(FOV_cur - (baseFOV*FOV_mult))
+	local FOV_new = math.lerp(FOV_cur, baseFOV*FOV_mult, diff * 0.5 * dt + dt)
+	FOV_cur = FOV_new
+
+	SetCameraFov(FOV_cur)
+end
+
+function client.FOV_set(multiplier)
+	FOV_mult = multiplier
+end

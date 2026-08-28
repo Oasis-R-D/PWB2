@@ -267,8 +267,12 @@ end
 function client.update(dt)
    checkDeathReset()
 
+   -- Simulate viewpunch
    client.GS_ApplyPlayerPunch(dt)
    client.SRC_ApplyPlayerPunch(dt)
+
+   -- Simulate FOV
+   client.FOV_update(dt)
 
    HUD_TempEntUpdate_(
       dt,	-- Simulation time

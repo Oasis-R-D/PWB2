@@ -158,8 +158,14 @@ function CAdsGun:WeaponIdle()
 end
 
 function CAdsGun:tickPlayer_cl(dt)
-	if self.isLocal and self.animator.forceSecondaryActionPose then
-		self.idleCycleScale = 0.1
+	if self.isLocal then
+		if self.animator.forceSecondaryActionPose then
+			self.idleCycleScale = 0.1
+			client.FOV_set(0.9)
+		else
+			client.FOV_set(1)
+		end
+
 	end
 
 	baseWeap.tickPlayer_cl(self, dt)
