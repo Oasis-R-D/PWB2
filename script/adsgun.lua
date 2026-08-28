@@ -63,6 +63,7 @@ end
 function CAdsGun:Holster()
 	if client then
 		self.animator.forceSecondaryActionPose = false
+		if self.isLocal then client.FOV_set(1) end
 	else
 		self.ads = false
 	end
@@ -139,12 +140,14 @@ function CAdsGun:Reload()
 end
 
 function CAdsGun:SecondaryAttack(dt, ads)
-	if self.isLocal then
-		self:ServerWpnCall("SecondaryAttack", dt, not self.animator.forceSecondaryActionPose)
-	end
-
 	if client then
-		self.animator.forceSecondaryActionPose = not self.animator.forceSecondaryActionPose
+		ads = not self.animator.forceSecondaryActionPose
+		self.animator.forceSecondaryActionPose = ads
+		
+		if self.isLocal then
+			self:ServerWpnCall("SecondaryAttack", dt, ads)
+			if ads then client.FOV_set(0.9) else client.FOV_set(1) end
+		end
 	else
 		self.ads = ads
 	end
@@ -161,11 +164,7 @@ function CAdsGun:tickPlayer_cl(dt)
 	if self.isLocal then
 		if self.animator.forceSecondaryActionPose then
 			self.idleCycleScale = 0.1
-			client.FOV_set(0.9)
-		else
-			client.FOV_set(1)
 		end
-
 	end
 
 	baseWeap.tickPlayer_cl(self, dt)
