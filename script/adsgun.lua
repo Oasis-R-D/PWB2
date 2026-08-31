@@ -109,14 +109,12 @@ function CAdsGun:PrimaryAttack(dt)
 		end
 
 		self:muzzleFlash(mt.pos, 1)
-		
-		self.ammoLoaded = self.ammoLoaded - 1
 	else
 		PlayFireSound(self.snds[1], mt.pos, 300)
-
-		baseWeap.DepleteAmmo(self)
 	end
 
+	baseWeap.DepleteAmmo(self, 1, 1)
+	
 	local inAds = (server and self.ads) or (client and self.animator.forceSecondaryActionPose)
 	self:FireBulletsPlayer(1, GetPlayerEyeTransform(self.owner).pos, inAds and GLOBAL_1DEGREE or GLOBAL_3DEGREES, 100)
 

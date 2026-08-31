@@ -80,13 +80,11 @@ function CTestGun:PrimaryAttack(dt)
 		end
 
 		self:muzzleFlash(mt.pos, 2)
-		
-		self.ammoLoaded = self.ammoLoaded - 1
 	else
 		PlayFireSound(self.snds[1], mt.pos, 300)
-
-		baseWeap.DepleteAmmo(self)
 	end
+
+	baseWeap.DepleteAmmo(self, 1, 1)
 
 	self:FireBulletsPlayer(1, GetPlayerEyeTransform(self.owner).pos, GLOBAL_5DEGREES, 100)
 
@@ -133,13 +131,11 @@ function CTestGun:SecondaryAttack(dt)
 		end
 
 		self:muzzleFlash(mt.pos, 2)
-		
-		self.ammoLoaded = self.ammoLoaded - 4
 	else
 		PlayFireSound(self.snds[1], mt.pos, 300)
-
-		baseWeap.DepleteAmmo(self, 4)
 	end
+
+	baseWeap.DepleteAmmo(self, 4, 4)
 
 	self:FireBulletsPlayer(4, GetPlayerEyeTransform(self.owner).pos, GLOBAL_5DEGREES, 100)
 

@@ -496,6 +496,24 @@ function baseWeap:DefaultHolster()
 	self:Holster()
 end
 
+function baseWeap:DefaultReload(fDelay)
+	if self.ammoTotal <= 0 then return false end
+
+	local j = math.min(self.ammoLoadedMax - self.ammoLoaded, self.ammoTotal)
+	if j <= 0 then return false end
+
+	local curTime = GetTime()
+
+	self.nextFire = curTime + fDelay
+	self.nextAltFire = self.nextFire
+
+	self.inReload = true
+
+	self.timeWeaponIdle = curTime + 3
+
+	return true
+end
+
 -- Should the weapon idle even when reloading or firing?
 function baseWeap:ShouldWeaponIdle()
 	return false
@@ -536,33 +554,15 @@ function baseWeap:DrawHUD()
 end
 
 --=========================================================================
--- 	WEAPON MODEL RECOIL
--- 	Don't modify these, just edit the per class constants
+-- 	WEAPON MODEL ANIMATIONS
+--	Controls recoil and idle movement
 --=========================================================================
 
 function baseWeap:Animate(dt)
 	if self.isLocal then
-		local idlePos = Vec(
-			math.sin(self.idleCycleTime*0.5) + math.cos(self.idleCycleTime*0.25),
-			-math.sin(self.idleCycleTime*0.5) + math.cos(self.idleCycleTime*0.25),
-			0
-		)
+		self:ApplyWeaponMovement(dt)
 
-		self.idleCycleTime = self.idleCycleTime + dt
-
-		if self.timeWeaponIdle > GetTime() then
-			self.idleCycleScale = math.lerp(self.idleCycleScale, 0.0, dt)
-		else
-			self.idleCycleScale = math.lerp(self.idleCycleScale, 1.0, dt)
-		end
-
-		idlePos = VecScale(VecSub(VecScale(idlePos, 0.01), Vec(0.01, 0.01, 0)), self.idleCycleScale)
-
-		self.animator.offsetTransform = Transform(
-			VecAdd(self.recoilPos, idlePos),
-			QuatEuler(self.recoilAng[1], self.recoilAng[2], self.recoilAng[3])
-		)
-
+		self.animator.offsetTransform.rot = QuatEuler(self.recoilAng[1], self.recoilAng[2], self.recoilAng[3])
 		self:decayAngRecoil(dt)
 	else
 		self.animator.offsetTransform.pos = self.recoilPos
@@ -598,7 +598,7 @@ function baseWeap:decayAngRecoil(dt)
 		self.recoilAngVel = VecScale(self.recoilAngVel, damping)
 		
 		-- torsional spring
-		local springForceMagnitude = math.min( self.recoilAngSpring * dt, 2.0 )
+		local springForceMagnitude = math.min(self.recoilAngSpring * dt, 2.0)
 		self.recoilAngVel = VecSub(self.recoilAngVel, VecScale(self.recoilAng, springForceMagnitude))
 
 		-- don't wrap around
@@ -622,8 +622,42 @@ function baseWeap:RecoilAngReset(tolerance)
 		end
 	end
 
-	self.recoilAng 	 = Vec(0,0,0)
+	self.recoilAng 	  = Vec(0,0,0)
 	self.recoilAngVel = Vec(0,0,0)
+end
+
+function baseWeap:RecoilPosReset(tolerance)
+	if tolerance then
+		local check = VecLength(self.recoilPos)
+
+		if tolerance > 0 and check > tolerance then
+			return
+		elseif tolerance < 0 and check < (tolerance*-1) then
+			return
+		end
+	end
+
+	self.recoilPos = Vec(0,0,0)
+end
+
+function baseWeap:ApplyWeaponMovement(dt)
+	local idlePos = Vec(
+			math.sin(self.idleCycleTime*0.5) + math.cos(self.idleCycleTime*0.25),
+		-math.sin(self.idleCycleTime*0.5) + math.cos(self.idleCycleTime*0.25),
+		0
+	)
+
+	self.idleCycleTime = self.idleCycleTime + dt
+
+	if self.timeWeaponIdle > GetTime() then
+		self.idleCycleScale = math.lerp(self.idleCycleScale, 0.0, dt)
+	else
+		self.idleCycleScale = math.lerp(self.idleCycleScale, 1.0, dt)
+	end
+
+	idlePos = VecScale(VecSub(VecScale(idlePos, 0.01), Vec(0.01, 0.01, 0)), self.idleCycleScale)
+
+	self.animator.offsetTransform.pos = VecAdd(self.recoilPos, idlePos)
 end
 
 --=========================================================================
@@ -735,15 +769,28 @@ function baseWeap:FireBulletsPlayer(shots, pos, spreadRad, range, impulseMult, r
 	end
 
 	-- Reset seed AFTER using it on both server and client
-	-- Should work for most cases!
+	-- Can be unreliable at high latency
 	if server then shared.seed = GetRandomInt(0,10000) end
 end
 
-function baseWeap:CanAttack(attack_time, curtime)
-	return (attack_time <= curtime) and GetPlayerCanUseTool(self.owner) == true
+function baseWeap:DepleteAmmo(ammoReduced, clipReduced)
+	if server then
+		ammoReduced = ammoReduced or 1
+		local ammo = GetToolAmmo(self.toolID, self.owner)
+
+		if ammo < 9999 then
+			SetToolAmmo(self.toolID, ammo-ammoReduced, self.owner)
+		end
+	elseif clipReduced then
+		self.ammoLoaded = self.ammoLoaded - clipReduced
+	end
 end
 
--- GetNextAttackDelay - Accurate way of getting the next primary fire time.
+function baseWeap:CanAttack(attack_time, curtime)
+	return attack_time <= curtime and GetPlayerCanUseTool(self.owner)
+end
+
+-- Accurate way of getting the next primary fire time.
 function baseWeap:GetNextAttackDelay(delay)
     local curTime = GetTime()
 
@@ -761,18 +808,18 @@ function baseWeap:GetNextAttackDelay(delay)
 		flCreep = flTimeBetweenFires - self.prevPrimFireTime -- postive or negative
     end
 
-	-- save the last fire time
 	self.lastFireTime = curTime
 
 	local flNextAttack = curTime + delay - flCreep
+
 	-- we need to remember what the self.prevPrimFireTime time is set to for each shot,
 	-- store it as self.prevPrimFireTime.
 	self.prevPrimFireTime = flNextAttack - curTime
 	return flNextAttack
 end
 
--- IsUseable - this function determines whether or not a
--- weapon is useable by the player in its current state.
+-- determines whether or not a weapon
+-- is useable by the player in its current state.
 function baseWeap:IsUseable()
 	if self.ammoLoaded > 0 then
 		return true
@@ -800,33 +847,6 @@ function baseWeap:IsUseable()
 
 	-- clip is empty (or nonexistant) and the player has no more ammo of this type.
 	return false --CanDeploy()
-end
-
-function baseWeap:DefaultReload(fDelay)
-	if self.ammoTotal <= 0 then return false end
-
-	local j = math.min(self.ammoLoadedMax - self.ammoLoaded, self.ammoTotal)
-	if j <= 0 then return false end
-
-	local curTime = GetTime()
-
-	self.nextFire = curTime + fDelay
-	self.nextAltFire = self.nextFire
-
-	self.inReload = true
-
-	self.timeWeaponIdle = curTime + 3
-
-	return true
-end
-
-function baseWeap:DepleteAmmo(amount)
-	amount = amount or 1
-	local ammo = GetToolAmmo(self.toolID, self.owner)
-
-	if ammo < 9999 then
-		SetToolAmmo(self.toolID, ammo-amount, self.owner)
-	end
 end
 
 --=========================================================================

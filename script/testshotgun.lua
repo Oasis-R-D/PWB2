@@ -95,8 +95,6 @@ function CTestShotgun:PrimaryAttack(dt)
 		end
 
 		self:muzzleFlash(mt.pos, 2)
-		
-		self.ammoLoaded = self.ammoLoaded - 1
 
 		self.pumpTime = GetTime() + 0.5
 
@@ -109,9 +107,9 @@ function CTestShotgun:PrimaryAttack(dt)
 		end
 	else
 		PlayFireSound(self.snds[1], mt.pos, 300)
-
-		baseWeap.DepleteAmmo(self, 4)
 	end
+
+	baseWeap.DepleteAmmo(self, 1, 1)
 
 	self:FireBulletsPlayer(6, GetPlayerEyeTransform(self.owner).pos, GLOBAL_10DEGREES, 80)
 
@@ -149,8 +147,6 @@ function CTestShotgun:SecondaryAttack(dt)
 		end
 
 		self:muzzleFlash(mt.pos, 3, Vec(1.33, 1, 1))
-		
-		self.ammoLoaded = self.ammoLoaded - 2
 
 		self.pumpTime = GetTime() + 0.95
 
@@ -163,9 +159,9 @@ function CTestShotgun:SecondaryAttack(dt)
 		end
 	else
 		PlayFireSound(self.snds[2], mt.pos, 300)
-
-		baseWeap.DepleteAmmo(self, 4)
 	end
+
+	baseWeap.DepleteAmmo(self, 2, 2)
 
 	self:FireBulletsPlayer(12, GetPlayerEyeTransform(self.owner).pos, GLOBAL_10DEGREES, 80)
 
