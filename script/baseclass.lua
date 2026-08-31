@@ -245,6 +245,7 @@ function baseWeap:CustomAnimate(dt)	  		   	end -- called every frame, use for a
 -- These are ran on client only but if they're true, server isn't called												
 function baseWeap:SV_FireEmptyCond() 	return false end
 function baseWeap:SV_FireAltEmptyCond() return false end
+
 --=========================================================================
 -- 	Input handling and HUD
 --=========================================================================
@@ -495,6 +496,15 @@ function baseWeap:DefaultHolster()
 	self:Holster()
 end
 
+-- Should the weapon idle even when reloading or firing?
+function baseWeap:ShouldWeaponIdle()
+	return false
+end
+
+--=========================================================================
+--  HUD DRAWING
+--=========================================================================
+
 function baseWeap:DrawHUD()
 	if hasFlag(self.flags, FWPN_NOHUD) then return end
 
@@ -529,6 +539,7 @@ end
 -- 	WEAPON MODEL RECOIL
 -- 	Don't modify these, just edit the per class constants
 --=========================================================================
+
 function baseWeap:Animate(dt)
 	if self.isLocal then
 		local idlePos = Vec(
@@ -625,13 +636,18 @@ function baseWeap:SV_StopFire() self.inPrimary = false end
 function baseWeap:SV_StartAltFire() self.inSecondary = true end
 function baseWeap:SV_StopAltFire() self.inSecondary = false end
 
-function server.ReceiveSVcall(func, owner, slot, ...)
+-- this works on both client and the server (as long as you call it with the proper args)
+function ReceiveCall(func, owner, slot, ...)
 	local wpn = PLAYER_WEAPONS[owner][slot]
 	wpn[func](wpn, ...)
 end
 
 function baseWeap:ServerWpnCall(func, ...)
-	ServerCall("server.ReceiveSVcall", func, self.owner, self.weaponSlot, ...)
+	ServerCall("ReceiveCall", func, self.owner, self.weaponSlot, ...)
+end
+
+function baseWeap:ClientWpnCall(receivers, func, ...)
+	ClientCall(receivers, "ReceiveCall", func, self.owner, self.weaponSlot, ...)
 end
 
 --=========================================================================
@@ -640,7 +656,6 @@ end
 
 -- hook the Shoot func to add new stuff
 function baseWeap:FireBulletsPlayer(shots, pos, spreadRad, range, impulseMult, radius)
-	shots = shots or 1
 	impulseMult = impulseMult or 1
 	radius = radius or 0
 
@@ -722,11 +737,6 @@ function baseWeap:FireBulletsPlayer(shots, pos, spreadRad, range, impulseMult, r
 	-- Reset seed AFTER using it on both server and client
 	-- Should work for most cases!
 	if server then shared.seed = GetRandomInt(0,10000) end
-end
-
--- Should the weapon idle even when reloading or firing?
-function baseWeap:ShouldWeaponIdle()
-	return false
 end
 
 function baseWeap:CanAttack(attack_time, curtime)
