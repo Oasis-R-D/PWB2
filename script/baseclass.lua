@@ -3,12 +3,22 @@
 -- 							  (see main.lua for more info)
 --
 --	do NOT modify these functions directly in this file unless you know what you're doing!
+--
+--				   for making melee weapons, see code in 'meleetool.lua'
 --============================================================================================
 
 baseWeap = {}
 
--- Static values for this specific weapon. These are shared for all instances of the class
--- These don't need redefined in a weapon if a var is just the default value
+-----------------------------------------------------------
+-- Static values for this specific weapon.
+--
+---These are shared for all instances of
+-- the class and they don't need redefined
+-- for a weapon if using the default value.
+--
+-- Weapons can define their own
+-- custom static values if needed.
+-----------------------------------------------------------
 baseWeap.model				= "MOD/models/xml/mdl.xml"	-- path to the XML model file
 baseWeap.casingOrg			= Vec(0,0,0)				-- where casings are ejected
 
@@ -32,7 +42,7 @@ baseWeap.recoilAngDamp		= 9	  -- bigger number makes the response more damped, s
 
 local WEAPON_NOCLIP = -1
 
------------------------------------------------------------								
+-----------------------------------------------------------
 -- Values that ALL weapons share/use
 -- override initVars() to add variables
 -- add 'baseWeap.initVars(self, owner)'
