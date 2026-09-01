@@ -612,9 +612,9 @@ function baseWeap:decayAngRecoil(dt)
 		self.recoilAngVel = VecSub(self.recoilAngVel, VecScale(self.recoilAng, springForceMagnitude))
 
 		-- don't wrap around
-		self.recoilAng[1] = math.clamp(self.recoilAng[1], -89,  89 )
-		self.recoilAng[2] = math.clamp(self.recoilAng[2], -179, 179)
-		self.recoilAng[3] = math.clamp(self.recoilAng[3], -89,  89 )
+		self.recoilAng[1] = clamp(self.recoilAng[1], -89,  89 )
+		self.recoilAng[2] = clamp(self.recoilAng[2], -179, 179)
+		self.recoilAng[3] = clamp(self.recoilAng[3], -89,  89 )
 	else
 		self.recoilAng 	  = Vec(0,0,0)
 		self.recoilAngVel = Vec(0,0,0)
@@ -660,9 +660,9 @@ function baseWeap:ApplyWeaponMovement(dt)
 	self.idleCycleTime = self.idleCycleTime + dt
 
 	if self.timeWeaponIdle > GetTime() then
-		self.idleCycleScale = math.lerp(self.idleCycleScale, 0.0, dt)
+		self.idleCycleScale = lerp(self.idleCycleScale, 0.0, dt)
 	else
-		self.idleCycleScale = math.lerp(self.idleCycleScale, 1.0, dt)
+		self.idleCycleScale = lerp(self.idleCycleScale, 1.0, dt)
 	end
 
 	idlePos = VecScale(VecSub(VecScale(idlePos, 0.01), Vec(0.01, 0.01, 0)), self.idleCycleScale)

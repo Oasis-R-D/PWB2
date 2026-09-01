@@ -52,9 +52,9 @@ function client.SRC_DecayPunchAngle(dt)
 		vecPunchAngleVel = VecSub(vecPunchAngleVel, VecScale(vecPunchAngle, springForceMagnitude))
 
 		-- don't wrap around
-		vecPunchAngle[1] = math.clamp(vecPunchAngle[1], -89,  89 )
-		vecPunchAngle[2] = math.clamp(vecPunchAngle[2], -179, 179)
-		vecPunchAngle[3] = math.clamp(vecPunchAngle[3], -89,  89 )
+		vecPunchAngle[1] = clamp(vecPunchAngle[1], -89,  89 )
+		vecPunchAngle[2] = clamp(vecPunchAngle[2], -179, 179)
+		vecPunchAngle[3] = clamp(vecPunchAngle[3], -89,  89 )
 	else
 		vecPunchAngle 	 = Vec(0,0,0)
 		vecPunchAngleVel = Vec(0,0,0)
@@ -150,7 +150,7 @@ function client.FOV_update(dt)
 	if not FOV_cur then FOV_cur = baseFOV end
 
 	local diff = math.abs(FOV_cur - (baseFOV*FOV_mult))
-	local FOV_new = math.lerp(FOV_cur, baseFOV*FOV_mult, diff * 0.5 * dt + dt)
+	local FOV_new = lerp(FOV_cur, baseFOV*FOV_mult, diff * 0.5 * dt + dt)
 	FOV_cur = FOV_new
 
 	SetCameraFov(FOV_cur)

@@ -60,7 +60,8 @@ FSFX_SHTGN = leftShift(1)
 -- hacky bit operators (ONLY TAKES POWER OF 2! [otherwise these'd be very expensive])
 ----------------------------------------------------------------------------------------------
 
-function hasFlag(var, flag) return math.floor(var / flag) % 2 == 1
+function hasFlag(var, flag) return
+    math.floor(var / flag) % 2 == 1
 end
 
 function hasFlags_OR(var, ...)
@@ -87,7 +88,8 @@ end
 
 ----------------------------------------------------------------------------------------------
 
-function addFlag(var, flag) return (var % (2 * flag) >= flag) and var or (var + flag)
+function addFlag(var, flag) 
+    return (var % (2 * flag) >= flag) and var or (var + flag)
 end
 
 function addFlags(var, ...)
@@ -103,7 +105,8 @@ end
 
 ----------------------------------------------------------------------------------------------
 
-function clearFlag(var, flag) return var % (flag * 2) >= flag and var - flag or var
+function clearFlag(var, flag) 
+    return var % (flag * 2) >= flag and var - flag or var
 end
 
 function clearFlags(var, ...)
@@ -119,12 +122,12 @@ end
 
 ----------------------------------------------------------------------------------------------
 
-function math.clamp(val, min, max)
+function clamp(val, min, max)
     if val < min then return min end
     if val > max then return max end
     return val
 end
 
-function math.lerp(a, b, t)
+function lerp(a, b, t)
     return a + (b - a) * t
 end
