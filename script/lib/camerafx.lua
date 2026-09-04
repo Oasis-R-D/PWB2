@@ -5,14 +5,16 @@
 local cl_punchangle = Vec(0,0,0)
 
 function client.PUNCHBASIC_Apply(dt)
+	local len = VecLength(cl_punchangle)
+	if len <= 0 then return end
+
 	local t = Transform(Vec(), QuatEuler(cl_punchangle[1], cl_punchangle[2], cl_punchangle[3]))
 	SetPlayerCameraOffsetTransform(t, true)
 
-	client.PUNCHBASIC_Decay(dt)
+	client.PUNCHBASIC_Decay(dt, len)
 end
 
-function client.PUNCHBASIC_Decay(dt)
-	local len = VecLength(cl_punchangle)
+function client.PUNCHBASIC_Decay(dt, len)
 	len = len - ((10.0 + len * 0.5) * dt)
 	len = math.max(len, 0.0)
 	cl_punchangle = VecScale(VecNormalize(cl_punchangle), len)
@@ -34,6 +36,12 @@ local vecPunchAngle    = Vec(0,0,0)
 local vecPunchAngleVel = Vec(0,0,0)
 
 function client.PUNCH_Apply(dt)
+	if VecLength(vecPunchAngle) <= 0.000001 and VecLength(vecPunchAngleVel) <= 0.000001 then
+		vecPunchAngle 	 = Vec(0,0,0)
+		vecPunchAngleVel = Vec(0,0,0)
+		return
+	end
+
 	client.PUNCH_Decay(dt)
 	
 	local t = Transform(Vec(), QuatEuler(vecPunchAngle[1], vecPunchAngle[2], vecPunchAngle[3]))
@@ -41,24 +49,19 @@ function client.PUNCH_Apply(dt)
 end
 
 function client.PUNCH_Decay(dt)
-	if VecLength(vecPunchAngle) > 0.000001 or VecLength(vecPunchAngleVel) > 0.000001 then
-		vecPunchAngle = VecAdd(vecPunchAngle, VecScale(vecPunchAngleVel, dt))
-		local damping = math.max(1 - (9 * dt), 0)
+	vecPunchAngle = VecAdd(vecPunchAngle, VecScale(vecPunchAngleVel, dt))
+	local damping = math.max(1 - (9 * dt), 0)
 
-		vecPunchAngleVel = VecScale(vecPunchAngleVel, damping)
-		
-		-- torsional spring
-		local springForceMagnitude = math.min(65 * dt, 2.0)
-		vecPunchAngleVel = VecSub(vecPunchAngleVel, VecScale(vecPunchAngle, springForceMagnitude))
+	vecPunchAngleVel = VecScale(vecPunchAngleVel, damping)
+	
+	-- torsional spring
+	local springForceMagnitude = math.min(65 * dt, 2.0)
+	vecPunchAngleVel = VecSub(vecPunchAngleVel, VecScale(vecPunchAngle, springForceMagnitude))
 
-		-- don't wrap around
-		vecPunchAngle[1] = clamp(vecPunchAngle[1], -89,  89 )
-		vecPunchAngle[2] = clamp(vecPunchAngle[2], -179, 179)
-		vecPunchAngle[3] = clamp(vecPunchAngle[3], -89,  89 )
-	else
-		vecPunchAngle 	 = Vec(0,0,0)
-		vecPunchAngleVel = Vec(0,0,0)
-	end
+	-- don't wrap around
+	vecPunchAngle[1] = clamp(vecPunchAngle[1], -89,  89 )
+	vecPunchAngle[2] = clamp(vecPunchAngle[2], -179, 179)
+	vecPunchAngle[3] = clamp(vecPunchAngle[3], -89,  89 )
 end
 
 function client.PUNCH_Axis(axis, punch, mult)

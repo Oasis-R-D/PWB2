@@ -68,7 +68,7 @@ function CTestGun:PrimaryAttack(dt)
 		self:RecoilPosPunch(Vec(0, 0, GetRandomFloat(0.133, 0.166)))
 
 		if self.isLocal then
-			client.VFX_DynLight(self.owner, 30, GetTime() + 0.08, Vec(0.7, 0.5, 0.3), 0, "muzzle")
+			client.VFX_DynLight(self.owner, 25, GetTime() + 0.08, Vec(0.7, 0.5, 0.3), 0, "muzzle")
 
 			client.PUNCH_MachineGunKick(1, self.timeFiring, 2)
 			
