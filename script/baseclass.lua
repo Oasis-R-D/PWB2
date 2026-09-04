@@ -169,6 +169,7 @@ end
 --=========================================================================
 -- Weapon SFX / VFX
 --=========================================================================
+
 function baseWeap:muzzleFlash(pos, size, color)
 	color = color or Vec(1, 1, 1)
 
@@ -239,6 +240,7 @@ end
 -- Weapon interactions
 -- These should be overriden per weapon
 --=========================================================================
+
 function baseWeap:Deploy()   		 		  	end -- called when weapon is equipped
 function baseWeap:Holster()			  		   	end -- called when weapon is unequipped
 
@@ -864,7 +866,7 @@ function baseWeap:IsUseable()
 	end
 
 	-- clip is empty (or nonexistant) and the player has no more ammo of this type.
-	return false --CanDeploy()
+	return false
 end
 
 --=========================================================================
@@ -872,31 +874,30 @@ end
 --=========================================================================
 
 function baseWeap:DumpGlobals()
+	if not self.isLocal then return end
+
 	local prefix = "SV "
 	if client then prefix = "CL "
-		
 		DebugWatch(prefix .. "inReload", 			self.inReload)
-
 		
 		DebugWatch(prefix .. "ammoLoaded", 			self.ammoLoaded)
 		DebugWatch(prefix .. "ammoAltTotal",		self.ammoAltTotal)
 	end
 
-	if server or self.isLocal then
-		DebugWatch(prefix .. "inPrimary", 			self.inPrimary)
-		DebugWatch(prefix .. "inSecondary", 		self.inSecondary)
-	end
+	DebugWatch(prefix .. "inPrimary", 			self.inPrimary)
+	DebugWatch(prefix .. "inSecondary", 		self.inSecondary)
 
 	DebugWatch(prefix .. "spreadSeed", 			shared.seed)
 	
 	DebugWatch(prefix .. "nextFire",			string.format("%.5f", math.max(0, self.nextFire - GetTime())))
 	DebugWatch(prefix .. "nextAltFire", 		string.format("%.5f", math.max(0, self.nextAltFire - GetTime())))
-
-	--DebugWatch(prefix .. "prevPrimFireTime", 	self.prevPrimFireTime)
-	--DebugWatch(prefix .. "lastFireTime", 		self.lastFireTime)
-
-	-- unused
-	--DebugWatch(prefix .. "timeWeaponIdle", 	self.timeWeaponIdle)
-
+	
 	DebugWatch(prefix .. "holstered", 			self.holstered)
+
+	if false then
+		DebugWatch(prefix .. "prevPrimFireTime", 	self.prevPrimFireTime)
+		DebugWatch(prefix .. "lastFireTime", 		self.lastFireTime)
+
+		DebugWatch(prefix .. "timeWeaponIdle", 	self.timeWeaponIdle)
+	end
 end

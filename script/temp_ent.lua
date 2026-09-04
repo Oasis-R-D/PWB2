@@ -24,8 +24,8 @@ end
 
 local function newTempEnt()
 	return {
-		-- int
-		flags = 0, 
+		active = true, -- hasn't hit the ground?
+
 		hitSound = 0,
 
 		-- floats
@@ -44,7 +44,6 @@ local function CL_TempEntAlloc(org, model)
 
 	local tempent = newTempEnt()
 
-	tempent.flags = FTENT_NONE
 	tempent.die = 0
 	tempent.entity.model = Spawn(model, Transform(org))[1]
 	tempent.hitSound = 0
@@ -62,7 +61,6 @@ local function R_TempModel(pos, velocity, angles, life, model, soundtype)
 	local tempent = CL_TempEntAlloc(pos, model)
 
 	tempent.entity.angles = angles
-	tempent.flags = 1048614 --addFlags(FTENT_NONE, FTENT_COLLIDEWORLD, FTENT_GRAVITY, FTENT_BUOYANT, FTENT_ROTATE)
 	tempent.hitSound = soundtype
 	tempent.frameMax = 0 -- tempent.frameMax = framecount
 	
@@ -116,18 +114,17 @@ function ENT_UpdateTempents(
 				pTemp.entity.origin[j] = pTemp.entity.origin[j] + (pTemp.entity.velocity[j] * frametime)
 			end
 
-			if hasFlag(pTemp.flags, FTENT_ROTATE) then
+			if pTemp.active then
+				-- Ang vel ----------------------------------------------------
 				for j = 1, 3 do
 					pTemp.entity.angles[j] = pTemp.entity.angles[j] + pTemp.entity.angleVel[j] * frametime
 				end
-			end
 
-			local gravity = -frametime * cl_gravity
-
-			if hasFlag(pTemp.flags, FTENT_COLLIDEWORLD) then
+				-- Collision ----------------------------------------------------
 				local betweenDir = VecNormalize(pTemp.entity.velocity)
 				local betweenLen = VecLength(pTemp.entity.velocity) * frametime
-
+				local gravity = -frametime * cl_gravity
+				
 				QueryRequire("visible physical")
 				local hit, dist, traceNormal = QueryRaycast(pTemp.entity.prevOrigin, betweenDir, betweenLen)
 				
@@ -145,14 +142,12 @@ function ENT_UpdateTempents(
 
 					-- Damp velocity
 					damp = pTemp.bounceFactor
-					if hasFlag(pTemp.flags, FTENT_GRAVITY) ~= 0 then
-						damp = damp * 0.5
-						if traceNormal[2] > 0.9 then -- Hit floor?
-							if pTemp.entity.velocity[2] <= 0 and pTemp.entity.velocity[2] >= gravity * 2 then
-								damp = 0 -- Stop
-								pTemp.flags = clearFlags(pTemp.flags, FTENT_ROTATE, FTENT_GRAVITY, FTENT_COLLIDEWORLD)
-								pTemp.entity.angles[1] = 0
-							end
+					damp = damp * 0.5
+					if traceNormal[2] > 0.9 then -- Hit floor?
+						if pTemp.entity.velocity[2] <= 0 and pTemp.entity.velocity[2] >= gravity * 2 then
+							damp = 0 -- Stop
+							pTemp.active = false
+							pTemp.entity.angles[1] = 0
 						end
 					end
 
@@ -187,9 +182,8 @@ function ENT_UpdateTempents(
 						pTemp.entity.angleVel = VecScale(pTemp.entity.angleVel, 0.9)
 					end
 				end
-			end
 
-			if hasFlag(pTemp.flags, FTENT_GRAVITY) then
+				-- Gravity ----------------------------------------------------
 				pTemp.entity.velocity[2] = pTemp.entity.velocity[2] + gravity
 
 				-- From Post-Human
