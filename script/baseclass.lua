@@ -652,7 +652,7 @@ end
 
 function baseWeap:ApplyWeaponMovement(dt)
 	local idlePos = Vec(
-			math.sin(self.idleCycleTime*0.5) + math.cos(self.idleCycleTime*0.25),
+		 math.sin(self.idleCycleTime*0.5) + math.cos(self.idleCycleTime*0.25),
 		-math.sin(self.idleCycleTime*0.5) + math.cos(self.idleCycleTime*0.25),
 		0
 	)
@@ -667,7 +667,14 @@ function baseWeap:ApplyWeaponMovement(dt)
 
 	idlePos = VecScale(VecSub(VecScale(idlePos, 0.01), Vec(0.01, 0.01, 0)), self.idleCycleScale)
 
-	self.animator.offsetTransform.pos = VecAdd(self.recoilPos, idlePos)
+	-- add a nice shifting effect
+	local b = GetToolBody()
+	local shiftedPos = TransformToLocalVec(
+		GetBodyTransform(b), 
+		Vec(0, -0.03 * self.idleCycleScale, 0)
+	)
+
+	self.animator.offsetTransform.pos = VecSub(VecAdd(self.recoilPos, idlePos), shiftedPos)
 end
 
 --=========================================================================

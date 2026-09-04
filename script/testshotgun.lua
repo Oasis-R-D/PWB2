@@ -17,6 +17,11 @@ end
 
 function CTestShotgun:muzzleFlash(pos, size, color)
 	color = color or Vec(1, 1, 1)
+
+	if self.isLocal then
+		pos = VecAdd(pos, VecScale(GetPlayerVelocity(), GetTimeStep()))
+	end
+
 	local t = Transform(pos)
 	t.rot = QuatRotateQuat(GetCameraTransform().rot, QuatEuler(0,0,GetRandomFloat(-180, 180)))
 
@@ -82,13 +87,13 @@ function CTestShotgun:PrimaryAttack(dt)
 		if self.isLocal then
 			self:ServerWpnCall("PrimaryAttack", dt)
 
-			PointLight(mt.pos, 1, 0.7, 0.5, 3)
+			client.VFX_DynLight(self.owner, 40, GetTime() + 0.1, Vec(0.7, 0.5, 0.3), 0, "muzzle")
 
 			self:RecoilAngReset(-15)
 			self:RecoilAngPunch(Vec(GetRandomFloat(2, 3), GetRandomFloat(-0.5, 0.5), GetRandomFloat(-2, 1)))
 
-			client.SRC_PunchAxis(1, 2)
-			client.SRC_PunchAxis(2, GetRandomFloat(-0.5, 0.5))
+			client.PUNCH_Axis(1, 2)
+			client.PUNCH_Axis(2, GetRandomFloat(-0.5, 0.5))
 		end
 
 		self:muzzleFlash(mt.pos, 2)
@@ -98,7 +103,6 @@ function CTestShotgun:PrimaryAttack(dt)
 		self.specialReload = 0
 
 		if self.ammoLoaded ~= 0 then
-			self.timeWeaponIdle = GetTime() + 5.0
 		else
 			self.timeWeaponIdle = 1
 		end
@@ -130,16 +134,16 @@ function CTestShotgun:SecondaryAttack(dt)
 		if self.isLocal then
 			self:ServerWpnCall("SecondaryAttack", dt)
 
-			PointLight(mt.pos, 1, 0.7, 0.5, 3)
-			
+			client.VFX_DynLight(self.owner, 50, GetTime() + 0.15, Vec(0.7, 0.5, 0.3), 0, "muzzle")
+
 			self:RecoilAngReset(-15)
 			self:RecoilAngPunch(Vec(GetRandomFloat(4, 5), GetRandomFloat(-0.5, 0.5), GetRandomFloat(-5, -1)))
 
-			client.SRC_PunchAxis(1, 5)
-			client.SRC_PunchAxis(2, GetRandomFloat(-0.5, 0.5))
+			client.PUNCH_Axis(1, 5)
+			client.PUNCH_Axis(2, GetRandomFloat(-0.5, 0.5))
 			
 			-- shell ejection
-			ejectBrass(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_shtgn.xml", FSFX_SHTGN)
+			ENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_shtgn.xml", FSFX_SHTGN)
 		end
 
 		self:muzzleFlash(mt.pos, 3, Vec(1.33, 1, 1))
@@ -149,7 +153,6 @@ function CTestShotgun:SecondaryAttack(dt)
 		self.specialReload = 0
 
 		if self.ammoLoaded ~= 0 then
-			self.timeWeaponIdle = GetTime() + 6.0
 		else
 			self.timeWeaponIdle = 1.5
 		end
@@ -211,8 +214,8 @@ function CTestShotgun:Reload()
 
 		if self.isLocal then
 			self:RecoilAngPunch(Vec(GetRandomFloat(3, 4), GetRandomFloat(0, 1), GetRandomFloat(-6, -2)))
-			client.SRC_PunchAxis(3, -0.33)
-			client.SRC_PunchAxis(1, -0.33)
+			client.PUNCH_Axis(3, -0.33)
+			client.PUNCH_Axis(1, -0.33)
 		end
 		
 		self:RecoilPosPunch(Vec(0, 0.1, 0.1))
@@ -251,7 +254,7 @@ function CTestShotgun:WeaponIdle()
 						self.slideTime = 0
 
 						-- shell ejection
-						ejectBrass(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_shtgn.xml", FSFX_SHTGN)
+						ENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_shtgn.xml", FSFX_SHTGN)
 					end
 
 					local mt = GetToolLocationWorldTransform("muzzle", self.owner)
@@ -278,7 +281,7 @@ function CTestShotgun:tickPlayer_cl(dt)
 			self.slideTime = 0
 
 			-- shell ejection
-			ejectBrass(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_shtgn.xml", FSFX_SHTGN)
+			ENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_shtgn.xml", FSFX_SHTGN)
 		end
 
 		self.pumpTime = 0

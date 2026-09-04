@@ -4,25 +4,25 @@
 
 local cl_punchangle = Vec(0,0,0)
 
-function client.GS_ApplyPlayerPunch(dt)
+function client.PUNCHBASIC_Apply(dt)
 	local t = Transform(Vec(), QuatEuler(cl_punchangle[1], cl_punchangle[2], cl_punchangle[3]))
 	SetPlayerCameraOffsetTransform(t, true)
 
-	client.GS_DropPunchAngle(dt)
+	client.PUNCHBASIC_Decay(dt)
 end
 
-function client.GS_DropPunchAngle(dt)
+function client.PUNCHBASIC_Decay(dt)
 	local len = VecLength(cl_punchangle)
 	len = len - ((10.0 + len * 0.5) * dt)
 	len = math.max(len, 0.0)
 	cl_punchangle = VecScale(VecNormalize(cl_punchangle), len)
 end
 
-function client.GS_PunchAxis(axis, punch)
+function client.PUNCHBASIC_Axis(axis, punch)
 	cl_punchangle[axis] = cl_punchangle[axis] + punch
 end
 
-function client.GS_PunchVec(punch)
+function client.PUNCHBASIC_Vec(punch)
 	cl_punchangle = VecAdd(cl_punchangle, punch)
 end
 
@@ -33,14 +33,14 @@ end
 local vecPunchAngle    = Vec(0,0,0)
 local vecPunchAngleVel = Vec(0,0,0)
 
-function client.SRC_ApplyPlayerPunch(dt)
-	client.SRC_DecayPunchAngle(dt)
+function client.PUNCH_Apply(dt)
+	client.PUNCH_Decay(dt)
 	
 	local t = Transform(Vec(), QuatEuler(vecPunchAngle[1], vecPunchAngle[2], vecPunchAngle[3]))
 	SetPlayerCameraOffsetTransform(t, true)
 end
 
-function client.SRC_DecayPunchAngle(dt)
+function client.PUNCH_Decay(dt)
 	if VecLength(vecPunchAngle) > 0.000001 or VecLength(vecPunchAngleVel) > 0.000001 then
 		vecPunchAngle = VecAdd(vecPunchAngle, VecScale(vecPunchAngleVel, dt))
 		local damping = math.max(1 - (9 * dt), 0)
@@ -61,17 +61,17 @@ function client.SRC_DecayPunchAngle(dt)
 	end
 end
 
-function client.SRC_PunchAxis(axis, punch, mult)
+function client.PUNCH_Axis(axis, punch, mult)
 	mult = mult and mult or 20
 	vecPunchAngleVel[axis] = vecPunchAngleVel[axis] + punch * mult
 end
 
-function client.SRC_PunchVec(punch, mult)
+function client.PUNCH_Vec(punch, mult)
 	mult = mult and mult or 20
 	vecPunchAngleVel = VecAdd(vecPunchAngleVel, VecScale(punch, mult))
 end
 
-function client.SRC_PunchReset(tolerance)
+function client.PUNCH_Reset(tolerance)
 	tolerance = tolerance or 0
 	if tolerance ~= 0 then
 		tolerance = tolerance
@@ -89,7 +89,7 @@ function client.SRC_PunchReset(tolerance)
 	vecPunchAngleVel = Vec(0,0,0)
 end
 
-function client.DoMachineGunKick(maxVerticleKickAngle, fireDurationTime, slideLimitTime )
+function client.PUNCH_MachineGunKick(maxVerticleKickAngle, fireDurationTime, slideLimitTime )
 	local vecScratch = Vec()
 	
 	--Find how far into our accuracy degradation we are
@@ -97,7 +97,7 @@ function client.DoMachineGunKick(maxVerticleKickAngle, fireDurationTime, slideLi
 	local kickPerc = duration / slideLimitTime
 
 	-- do this to get a hard discontinuity, clear out anything under 10 degrees punch
-	client.SRC_PunchReset( 10 )
+	client.PUNCH_Reset( 10 )
 
 	--Apply this to the view angles as well
 	vecScratch[1] =    0.2 + ( maxVerticleKickAngle * kickPerc )
@@ -133,9 +133,9 @@ function client.DoMachineGunKick(maxVerticleKickAngle, fireDurationTime, slideLi
 	--Add it to the view punch
 	-- NOTE: 0.5 is just tuned to match the old effect before the punch became simulated
 	vecScratch = VecScale(vecScratch, 0.5)
-	client.SRC_PunchAxis(1, vecScratch[1])
-	client.SRC_PunchAxis(2, vecScratch[2])
-	client.SRC_PunchAxis(3, vecScratch[3])
+	client.PUNCH_Axis(1, vecScratch[1])
+	client.PUNCH_Axis(2, vecScratch[2])
+	client.PUNCH_Axis(3, vecScratch[3])
 end
 
 ----------------------------------------------------------------------------------------------
@@ -145,7 +145,7 @@ end
 local FOV_cur = nil
 local FOV_mult = 1
 
-function client.FOV_update(dt)
+function client.FOV_Apply(dt)
 	local baseFOV = GetFloat("options.gfx.fov")
 	if not FOV_cur then FOV_cur = baseFOV end
 

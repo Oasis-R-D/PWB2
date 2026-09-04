@@ -14,6 +14,11 @@ end
 
 function CAdsGun:muzzleFlash(pos, size, color)
 	color = color or Vec(1, 1, 1)
+
+	if self.isLocal then
+		pos = VecAdd(pos, VecScale(GetPlayerVelocity(), GetTimeStep()))
+	end
+
 	local t = Transform(pos)
 	t.rot = QuatRotateQuat(GetCameraTransform().rot, QuatEuler(0,0,GetRandomFloat(-15, 15)))
 
@@ -81,7 +86,7 @@ function CAdsGun:PrimaryAttack(dt)
 		end
 
 		if self.isLocal then
-			PointLight(mt.pos, 1, 0.7, 0.5, 3)
+			client.VFX_DynLight(self.owner, 35, GetTime() + 0.1, Vec(0.7, 0.5, 0.3), 0, "muzzle")
 
 			local punchVec = Vec()
 			if self.animator.forceSecondaryActionPose then
@@ -95,15 +100,15 @@ function CAdsGun:PrimaryAttack(dt)
 				self:RecoilAngPunch(Vec(GetRandomFloat(1, 3), GetRandomFloat(-2, 2), GetRandomFloat(-1, 1)))
 			end
 
-			client.SRC_PunchReset()
+			client.PUNCH_Reset()
 			for i=1, 3 do
-				client.SRC_PunchAxis(i, punchVec[4-i] * 10)
+				client.PUNCH_Axis(i, punchVec[4-i] * 10)
 			end
 
 			self:RecoilPosPunch(punchVec)
 
 			-- shell ejection
-			ejectBrass(self.owner, self.casingOrg, Vec(1, -1, 0), "MOD/models/xml/shell/casing_45acp.xml", FSFX_BRASS)
+			ENT_EjectShell(self.owner, self.casingOrg, Vec(1, -1, 0), "MOD/models/xml/shell/casing_45acp.xml", FSFX_BRASS)
 		else
 			self:RecoilPosPunch(Vec(GetRandomFloat(-0.05, 0.05), GetRandomFloat(0.0, 0.025), GetRandomFloat(0.05, 0.1)))
 		end
@@ -162,7 +167,7 @@ end
 function CAdsGun:tickPlayer_cl(dt)
 	if self.isLocal then
 		if self.animator.forceSecondaryActionPose then
-			self.idleCycleScale = 0.1
+			self.idleCycleScale = 0.05
 		end
 	end
 

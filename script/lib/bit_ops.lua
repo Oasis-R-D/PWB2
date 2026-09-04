@@ -1,4 +1,4 @@
--- PackMan09's wonderful bit math library!
+-- PackMan's wonderful bit math library!
 
 ----------------------------------------------------------------------------------------------
 -- SHIFTS

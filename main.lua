@@ -126,7 +126,8 @@ end
 -- LIBRARYS
 #include "script/lib/pwbtoolanimation.lua"
 #include "script/lib/bit_ops.lua"
-#include "script/lib/viewpunch.lua"
+#include "script/lib/camerafx.lua"
+#include "script/lib/lightfx.lua"
 #include "script/lib/util.lua"
 
 
@@ -191,14 +192,14 @@ PLAYER_WEAPONS = {}
 --============================================================================================
 --============================================================================================
 
--- Declares weapons, pickup amounts
--- Server doesn't have an option to be turned off since all weapons need it. Could automate that in the future though!
+-- Sets up weapon classes, pickup amounts, precaches SFX
 function server.init()
    for weapon=1, GLOBAL_WEAPONS_AMNT do
       baseWeap.init_sv(GLOBAL_WEAPONS[weapon], weapon)
    end
 end
 
+-- Runs firing code
 function server.tick(dt)
    for p in PlayersAdded() do
       PLAYER_WEAPONS[p] = {}
@@ -230,14 +231,14 @@ function server.update(dt)
    checkDeathReset()
 end
 
--- Load haptics, amongst other things
+-- Sets up weapon classes, precaches SFX and haptics
 function client.init()
    for weapon=1, GLOBAL_WEAPONS_AMNT do
       baseWeap.init_cl(GLOBAL_WEAPONS[weapon], weapon)
    end
 end
 
--- Runs most weapon code
+-- Runs majority of weapon code
 function client.tick(dt)
    for p in PlayersAdded() do
       PLAYER_WEAPONS[p] = {}
@@ -262,28 +263,26 @@ function client.tick(dt)
       end
    end
 
-   -- Simulate viewpunch
-   client.SRC_ApplyPlayerPunch(dt)
+   client.PUNCH_Apply(dt)
 
-   -- Simulate FOV
-   client.FOV_update(dt)
+   client.FOV_Apply(dt)
 end
 
 -- Global VFX
 function client.update(dt)
    checkDeathReset()
 
-   -- Simulate viewpunch
-   client.GS_ApplyPlayerPunch(dt)
+   client.PUNCHBASIC_Apply(dt)
 
-   HUD_TempEntUpdate_(
-      dt,	-- Simulation time
-	   GetTime(), -- Absolute time on client
-	   10 -- True gravity on client
+   client.VFX_DynLightDraw(dt)
+
+   ENT_UpdateTempents(
+      dt,
+	   GetTime(),
+	   10 -- Gravity
    )
 end
 
--- Draws the magazine hud and scopes
 function client.draw()
    if not PLAYER_WEAPONS then return end
 
@@ -291,7 +290,6 @@ function client.draw()
 
    local tool = GetPlayerTool()
    local wpns = PLAYER_WEAPONS[GetLocalPlayer()]
-   if not wpns then return end
 
    for i=1, GLOBAL_WEAPONS_AMNT do
       if tool == wpns[i].toolID then

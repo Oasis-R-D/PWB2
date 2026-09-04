@@ -71,7 +71,7 @@ local function R_TempModel(pos, velocity, angles, life, model, soundtype)
 	tempent.die = life + GetTime()
 end
 
-function ejectBrass(p, org, dir, model, casingtype)
+function ENT_EjectShell(p, org, dir, model, casingtype)
 	local transform = GetBodyTransform(GetToolBody(p))
 
 	local eject_origin = TransformToParentPoint(transform, org)
@@ -96,7 +96,7 @@ end
 local shellSFX_brass = 0
 local shellSFX_buck = 0
 
-function HUD_TempEntUpdate_(
+function ENT_UpdateTempents(
     frametime,	-- Simulation time
 	client_time, -- Absolute time on client
 	cl_gravity)	-- True gravity on client

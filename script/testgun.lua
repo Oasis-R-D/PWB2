@@ -68,15 +68,15 @@ function CTestGun:PrimaryAttack(dt)
 		self:RecoilPosPunch(Vec(0, 0, GetRandomFloat(0.133, 0.166)))
 
 		if self.isLocal then
-			PointLight(mt.pos, 1, 0.7, 0.5, 3)
+			client.VFX_DynLight(self.owner, 30, GetTime() + 0.08, Vec(0.7, 0.5, 0.3), 0, "muzzle")
 
-			client.DoMachineGunKick(1, self.timeFiring, 2)
+			client.PUNCH_MachineGunKick(1, self.timeFiring, 2)
 			
 			self:RecoilAngReset(-15)
 			self:RecoilAngPunch(Vec(GetRandomFloat(0.5, 1), GetRandomFloat(-0.5, 0.5), GetRandomFloat(-1, 1)))
 
 			-- shell ejection
-			ejectBrass(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
+			ENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
 		end
 
 		self:muzzleFlash(mt.pos, 2)
@@ -119,15 +119,15 @@ function CTestGun:SecondaryAttack(dt)
 		self:RecoilPosPunch(Vec(0, 0, GetRandomFloat(0.133, 0.166)))
 
 		if self.isLocal then
-			PointLight(mt.pos, 1, 0.7, 0.5, 3)
+			client.VFX_DynLight(self.owner, 45, GetTime() + 0.11, Vec(0.7, 0.5, 0.3), 0, "muzzle")
 
-			client.DoMachineGunKick(1, self.timeFiring, 2)
+			client.PUNCH_MachineGunKick(1, self.timeFiring, 2)
 			
 			self:RecoilAngReset(-15)
 			self:RecoilAngPunch(Vec(GetRandomFloat(0.5, 1), GetRandomFloat(-0.5, 0.5), GetRandomFloat(-1, 1)))
 
 			-- shell ejection
-			ejectBrass(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
+			ENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
 		end
 
 		self:muzzleFlash(mt.pos, 2)
