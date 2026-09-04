@@ -124,12 +124,12 @@ end
 ----------------------------------------------------------------------------------------------
 
 -- LIBRARYS
+#include "script/lib/menu.lua"
 #include "script/lib/pwbtoolanimation.lua"
 #include "script/lib/bit_ops.lua"
-#include "script/lib/camerafx.lua"
-#include "script/lib/lightfx.lua"
+#include "script/lib/vfx.lua"
 #include "script/lib/util.lua"
-
+#include "script/lib/temp_ent.lua"
 
 GLOBAL_HEADSHOTMULT = 2.0
 
@@ -153,7 +153,6 @@ GLOBAL_20DEGREES  = 0.17365
 -- GLOBALS
 #include "script/baseclass.lua"
 #include "script/include/player.lua"
-#include "script/temp_ent.lua"
 
 
 -- WEAPONS
@@ -236,7 +235,12 @@ function client.init()
    for weapon=1, GLOBAL_WEAPONS_AMNT do
       baseWeap.init_cl(GLOBAL_WEAPONS[weapon], weapon)
    end
+
+   client.settingsInit()
 end
+
+menuAlpha = 0
+menuActive = false
 
 -- Runs majority of weapon code
 function client.tick(dt)
@@ -266,6 +270,19 @@ function client.tick(dt)
    client.PUNCH_Apply(dt)
 
    client.FOV_Apply(dt)
+
+   if PauseMenuButton("PWB2 Settings") then
+      menuActive = true
+      SetBool("game.ui.hidemods", true)
+   end
+   
+   if menuActive and menuAlpha == 0.0 then
+      SetValue("menuAlpha", 1.0, "easeout", 0.3)
+   end
+   if not menuActive and menuAlpha == 1.0 then
+      SetValue("menuAlpha", 0.0, "easein", 0.3)
+         SetBool("game.ui.hidemods", false)
+   end
 end
 
 -- Global VFX
@@ -284,6 +301,8 @@ function client.update(dt)
 end
 
 function client.draw()
+   if client.settingsDraw() then return end
+
    if not PLAYER_WEAPONS then return end
 
    if GetPlayerHealth() <= 0 or GetPlayerVehicle() ~= 0 then return end

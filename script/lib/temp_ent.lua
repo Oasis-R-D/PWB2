@@ -70,6 +70,8 @@ local function R_TempModel(pos, velocity, angles, life, model, soundtype)
 end
 
 function ENT_EjectShell(p, org, dir, model, casingtype)
+	if settings.shelleject == false then return end
+
 	local transform = GetBodyTransform(GetToolBody(p))
 
 	local eject_origin = TransformToParentPoint(transform, org)
@@ -98,12 +100,9 @@ function ENT_UpdateTempents(
     frametime,	-- Simulation time
 	client_time, -- Absolute time on client
 	cl_gravity)	-- True gravity on client
-
-    local pTempEnts_Length = #pTempEnts
-
+	
     for i, pTemp in pairs(pTempEnts) do
-		local life = pTemp.die - client_time
-		if life < 0 then
+		if (pTemp.die - client_time) < 0 then
 			Delete(pTemp.entity.model)
 			table.remove(pTempEnts, i)
 		else
@@ -184,20 +183,22 @@ function ENT_UpdateTempents(
 				end
 
 				-- Gravity ----------------------------------------------------
-				pTemp.entity.velocity[2] = pTemp.entity.velocity[2] + gravity
+				if pTemp.active then
+					pTemp.entity.velocity[2] = pTemp.entity.velocity[2] + gravity
 
-				-- From Post-Human
-				if IsPointInWater(pTemp.entity.origin) == true then
-					pTemp.entity.velocity[2] = pTemp.entity.velocity[2] - gravity
+					-- From Post-Human
+					if IsPointInWater(pTemp.entity.origin) == true then
+						pTemp.entity.velocity[2] = pTemp.entity.velocity[2] - gravity
 
-					pTemp.entity.velocity = VecScale(pTemp.entity.velocity, 0.98)
-					pTemp.entity.angles = VecScale(pTemp.entity.angles, 0.98)
+						pTemp.entity.velocity = VecScale(pTemp.entity.velocity, 0.98)
+						pTemp.entity.angles = VecScale(pTemp.entity.angles, 0.98)
 
-					if pTemp.entity.velocity[2] < 0 then
-						pTemp.entity.velocity[2] = pTemp.entity.velocity[2] * 0.95
+						if pTemp.entity.velocity[2] < 0 then
+							pTemp.entity.velocity[2] = pTemp.entity.velocity[2] * 0.95
+						end
+
+						pTemp.entity.velocity[2] = pTemp.entity.velocity[2] + ((math.sin(3 * GetTime()) * 0.00127) + 0.0127)
 					end
-
-					pTemp.entity.velocity[2] = pTemp.entity.velocity[2] + ((math.sin(3 * GetTime()) * 0.00127) + 0.0127)
 				end
 			end
 

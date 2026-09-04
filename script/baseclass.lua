@@ -267,7 +267,8 @@ function baseWeap:callToolAnimator(dt)
 end
 
 function baseWeap:tickPlayer_cl(dt)
-	self:DumpGlobals()
+	if settings.debug then
+		self:Debug() end
 	
 	self:Animate(dt)
 
@@ -380,8 +381,9 @@ end
 
 -- Server only cares about firing
 -- Don't simulate reloading or clip amount
-function baseWeap:tickPlayer_sv(dt)
-	self:DumpGlobals()
+function baseWeap:tickPlayer_sv(dt)	
+	if settings.debug then
+		self:Debug() end
 
 	local curTime = GetTime()
 
@@ -872,6 +874,10 @@ end
 --=========================================================================
 --	DEBUG FUNCS
 --=========================================================================
+
+function baseWeap:Debug()
+	self:DumpGlobals()
+end
 
 function baseWeap:DumpGlobals()
 	if not self.isLocal then return end

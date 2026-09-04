@@ -157,7 +157,7 @@ function CMelee:CheckHit()
 		elseif pHitWorld ~= 0 then
 			local mat = ""
 			if self.lasHitObj ~= pHitWorld then
-				mat = PlayImpactSFX(pHitWorld, hitPos)
+				mat = PlayImpactSFX(pHitWorld, hitPos, 'm')
 			else
 				mat = GetShapeMaterialAtPos(pHitWorld, hitPos)
 			end
@@ -168,13 +168,13 @@ function CMelee:CheckHit()
 					if mat == "hardmetal" or mat == "metal" or mat == "rock" or mat == "hardmasonry" or mat == "masonry" or mat == "heavymetal" then
 						penalty = penalty + 0.05
 						if self.lasHitObj ~= pHitWorld then
-							PlaySound(self.snds[2], hitPos)
+							--PlaySound(self.snds[2], hitPos)
 						end
 					end
 				end
 				self.strength = math.max(self.strength - penalty, 0)
 
-				MakeHole(hitPos, 0.5*self.strength, 0.25*self.strength, 0.125*self.strength)
+				MakeHole(hitPos, 0.5*self.strength, 0.25*self.strength, 0.1)
 			else
 				MakeHole(hitPos, 0.5, 0.25, 0.125)
 			end
