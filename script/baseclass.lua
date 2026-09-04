@@ -197,7 +197,7 @@ end
 
 function baseWeap:PlayEmptySound()
 	if self.playEmptySound then
-		if not baseWeap.emptySND then baseWeap.emptySND = LoadSound("MOD/snd/empty.ogg") end
+		if not baseWeap.emptySND then baseWeap.emptySND = LoadSound("MOD/snd/base/empty.ogg") end
 		PlaySound(baseWeap.emptySND, GetPlayerTransform(self.owner).pos, 0.5)
 		self.playEmptySound = false
 	end
@@ -741,7 +741,8 @@ function baseWeap:FireBulletsPlayer(shots, pos, spreadRad, range, impulseMult, r
 
 			if server then
 				-- play player impact SFX
-				PlaySound(LoadSound("MOD/snd/bullet_hit0.ogg"), SoundPoint, 2)
+				if not baseWeap.hitSND then baseWeap.hitSND = LoadSound("MOD/snd/base/bullet_hit0.ogg") end
+				PlaySound(baseWeap.hitSND, SoundPoint, 2)
 				
 				-- don't actually hit the player so we can do our own damage and vfx
 				local newrange = pdist - 0.5

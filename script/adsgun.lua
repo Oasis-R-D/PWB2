@@ -129,6 +129,7 @@ function CAdsGun:Reload()
 
 		if self.animator.forceSecondaryActionPose then
 			self:ServerWpnCall("SecondaryAttack", 0, false)
+			client.FOV_set(1)
 		end
 	else
 		PlaySound(self.snds[1], GetPlayerPos(self.owner), 1)

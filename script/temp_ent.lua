@@ -93,6 +93,9 @@ end
 --	Simulation
 --============================================
 
+local shellSFX_brass = 0
+local shellSFX_buck = 0
+
 function HUD_TempEntUpdate_(
     frametime,	-- Simulation time
 	client_time, -- Absolute time on client
@@ -160,16 +163,19 @@ function HUD_TempEntUpdate_(
 						end
 
 						if damp > 0 and betweenLen / frametime > 1 and pTemp.hitSound ~= FSFX_NONE then
-							local sound = ""
-
-							-- TO-DO: precache sounds
 							if hasFlag(pTemp.hitSound, FSFX_BRASS) then
-								sound = "MOD/snd/bounce_brass0.ogg"
-							elseif hasFlag(pTemp.hitSound, FSFX_SHTGN) then
-								sound = "MOD/snd/bounce_shell0.ogg"
-							end
+								if shellSFX_brass == 0 then
+									shellSFX_brass = LoadSound("MOD/snd/base/bounce_brass0.ogg")
+								end
 
-							PlaySound(LoadSound(sound), pTemp.entity.origin, damp / 2)
+								PlaySound(shellSFX_brass, pTemp.entity.origin, damp / 2)
+							elseif hasFlag(pTemp.hitSound, FSFX_SHTGN) then
+								if shellSFX_buck == 0 then
+									shellSFX_buck = LoadSound("MOD/snd/base/bounce_shell0.ogg")
+								end
+
+								PlaySound(shellSFX_buck, pTemp.entity.origin, damp / 2)
+							end
 						end
 
 						-- Reflect velocity

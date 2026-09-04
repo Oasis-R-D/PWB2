@@ -89,9 +89,6 @@ function CTestShotgun:PrimaryAttack(dt)
 
 			client.SRC_PunchAxis(1, 2)
 			client.SRC_PunchAxis(2, GetRandomFloat(-0.5, 0.5))
-
-			-- shell ejection
-			ejectBrass(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_shtgn.xml", FSFX_SHTGN)
 		end
 
 		self:muzzleFlash(mt.pos, 2)
@@ -142,7 +139,6 @@ function CTestShotgun:SecondaryAttack(dt)
 			client.SRC_PunchAxis(2, GetRandomFloat(-0.5, 0.5))
 			
 			-- shell ejection
-			ejectBrass(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_shtgn.xml", FSFX_SHTGN)
 			ejectBrass(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_shtgn.xml", FSFX_SHTGN)
 		end
 
@@ -253,6 +249,9 @@ function CTestShotgun:WeaponIdle()
 					-- reload debounce has timed out
 					if self.isLocal then
 						self.slideTime = 0
+
+						-- shell ejection
+						ejectBrass(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_shtgn.xml", FSFX_SHTGN)
 					end
 
 					local mt = GetToolLocationWorldTransform("muzzle", self.owner)
@@ -277,6 +276,9 @@ function CTestShotgun:tickPlayer_cl(dt)
 
 		if self.isLocal then
 			self.slideTime = 0
+
+			-- shell ejection
+			ejectBrass(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_shtgn.xml", FSFX_SHTGN)
 		end
 
 		self.pumpTime = 0
