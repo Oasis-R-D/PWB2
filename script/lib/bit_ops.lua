@@ -15,6 +15,12 @@ end
 ----------------------------------------------------------------------------------------------
 
 -- WEAPON FLAGS
+-- To apply weapon flags on init using x.flags, use addFlags() to 
+-- add multiple or direct set x.flags to the flag if it's just the 1 flag.
+-- if you are adding flags onto x.flags afterwards, you must use addFlags()
+-- unless you want to overwrite the pre-existing flags.
+FWPN_NONE = 0
+
 FWPN_CLICK_PRIM = leftShift(0) -- Weapon needs clicked to fire, no holding
 FWPN_CLICK_SEC  = leftShift(1) -- Weapon needs clicked to fire, no holding
 FWPN_NOHUD      = leftShift(2) -- Don't draw HUD
@@ -27,6 +33,7 @@ FWPN_NOAUTORELOAD = leftShift(5)    -- Don't automatically start reloading weapo
 FWPN_NOALTACTIONPOSE = leftShift(6) -- Don't automatically do the action animation when holding grab
 
 -- TEMP ENTS
+--[[ UNUSED
 FTENT_NONE = 0
 FTENT_SINEWAVE = leftShift(0)
 FTENT_GRAVITY = leftShift(1)
@@ -49,6 +56,7 @@ FTENT_SPARKSHOWER = leftShift(17)
 FTENT_NOMODEL = leftShift(18)	  -- Doesn't have a model, never try to draw ( it just triggers other things )
 FTENT_CLIENTCUSTOM = leftShift(19) -- Must specify callback.  Callback function is responsible for killing tempent and updating fields ( unless other flags specify how to do things )
 FTENT_BUOYANT = leftShift(20)
+]]
 
 -- TEMP ENT IMPACT SFX
 FSFX_NONE = 0

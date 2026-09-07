@@ -32,8 +32,8 @@ baseWeap.ammoPickupSize		= baseWeap.ammoLoadedMax	-- defaults to full mag
 baseWeap.dmg_world			= 0							-- world damage, 'gun' does around 0.5
 baseWeap.dmg_plyr			= 0							-- 0.0-1.0
 
-baseWeap.flags				= 0	-- weapon flags
-baseWeap.snds				= 0 -- temp value, will be set to the sound array on init
+baseWeap.flags				= addFlags(0, FWPN_NONE)	-- weapon flags
+baseWeap.snds				= 0 						-- temp value, will be set to the sound array on init
 
 baseWeap.recoilPosDecay 	= 0.5 -- multiplier for recoil pos decay. Lower is slower, higher is faster
 baseWeap.recoilAngSpring	= 65  -- bigger number increases the speed at which the angle corrects
