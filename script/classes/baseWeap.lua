@@ -486,7 +486,7 @@ function baseWeap:DrawHUD()
 			UiFont("bold.ttf", 32)
 			UiAlign("center middle")
 			UiTranslate(UiCenter(), UiMiddle() + UiMiddle() * 0.833)
-			if self.inReload == true then
+			if self.inReload then
 				UiText("RELOADING | " .. string.format("%.2f", self.nextFire - GetTime()))
 			else
 				UiText(self.ammoLoaded .. " | " .. self.ammoLoadedMax)

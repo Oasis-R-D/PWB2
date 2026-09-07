@@ -151,17 +151,17 @@ GLOBAL_15DEGREES  = 0.13053
 GLOBAL_20DEGREES  = 0.17365
 
 -- GLOBALS
-#include "script/baseclass.lua"
+#include "script/classes/baseWeap.lua"
 #include "script/include/player.lua"
 
 
 -- WEAPONS
-#include "script/testgun.lua"
-#include "script/adsgun.lua"
-#include "script/testshotgun.lua"
+#include "script/wpns/testgun.lua"
+#include "script/wpns/adsgun.lua"
+#include "script/wpns/testshotgun.lua"
 
 -- MELEE
-#include "script/meleetool.lua"
+#include "script/wpns/meleetool.lua"
 
 -- SPECIAL
 

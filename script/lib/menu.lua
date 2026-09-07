@@ -52,7 +52,7 @@ function client.settingsDraw()
 
 		UiTranslate(-230+270*menuAlpha, UiMiddle())
 		UiAlign("left middle")
-		UiColor(.0, .0, .0, 0.75*menuAlpha)
+		UiColor(.0, .0, .0, 0.75)
 		UiImageBox("ui/common/box-solid-10.png", width, height, 10, 10)
 		UiWindow(width, height)
 		UiAlign("top left")

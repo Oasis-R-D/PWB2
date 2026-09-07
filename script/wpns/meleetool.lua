@@ -49,7 +49,7 @@ CMelee.ammoPickupSize	= 9999 -- defaults to full mag
 CMelee.dmg_world		= 0.4
 CMelee.dmg_plyr			= 0.05 -- 0.0-1.0
 
-CMelee.flags = FWPN_NOALTACTIONPOSE	-- weapon flags
+CMelee.flags = addFlags(0, FWPN_NOALTACTIONPOSE, FWPN_NOHUD) -- weapon flags
 CMelee.snds	 = 0					-- temp value, will be set to the sound array on init
 
 -- override initVars to add new variables
