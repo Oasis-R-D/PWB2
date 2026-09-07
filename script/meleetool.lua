@@ -22,8 +22,8 @@ CMelee = {} -- goes in GLOBAL_WEAPONS
 
 function CMelee:WeaponSounds()
 	return {
-		{"MOD/snd/smg1_fire.ogg", 	"sv", 10}, -- Player hit
-		{"MOD/snd/smg1_fire.ogg", 	"sv", 10}, -- Hard object hit
+		{"smg1_fire.ogg", 	"sv", 10}, -- Player hit
+		{"smg1_fire.ogg", 	"sv", 10}, -- Hard object hit
 	}
 end
 
@@ -127,7 +127,6 @@ function CMelee:CheckHit()
 	if pHit then
 		local hitPos = VecAdd(t.pos, VecScale(dir, pDist))   
 		hitPos = VecAdd(hitPos, VecScale(pNorm, -0.25))
-		self.debugpoint = hitPos
 
 		-- blunt weapons hit something once
 		if self.edgeType == 0 then
@@ -214,8 +213,6 @@ function CMelee:WeaponIdle()
 	end
 
 	if client then return end
-
-	DebugCross(self.debugpoint)
 
 	if self.stopHitDelay ~= -1 and self.stopHitDelay < GetTime() then
 		self:StopSwing()

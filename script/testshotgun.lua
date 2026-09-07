@@ -6,12 +6,12 @@ CTestShotgun = {} -- goes in GLOBAL_WEAPONS
 
 function CTestShotgun:WeaponSounds()
 	return {
-		{"MOD/snd/sbarrel.ogg", 	  "sv", 10},
-		{"MOD/snd/dbarrel.ogg", 	  "sv", 10},
+		{"sbarrel.ogg", 	  "sv", 10},
+		{"dbarrel.ogg", 	  "sv", 10},
 
-		{"MOD/snd/sgcock.ogg", 		  "cl", 10},
-		{"MOD/snd/sgshellin0.ogg",    "cl", 10},
-		{"MOD/snd/sgreloadstart.ogg", "cl", 10},
+		{"sgcock.ogg", 		  "cl", 10},
+		{"sgshellin0.ogg",    "cl", 10},
+		{"sgreloadstart.ogg", "cl", 10},
 	}
 end
 

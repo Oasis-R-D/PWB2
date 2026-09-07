@@ -32,8 +32,7 @@ function client.settingsDraw()
     
     if menuActive and menuAlpha == 0.0 then
         SetValue("menuAlpha", 1.0, "easeout", 0.3)
-    end
-    if not menuActive and menuAlpha == 1.0 then
+    elseif not menuActive and menuAlpha == 1.0 then
         SetValue("menuAlpha", 0.0, "easein", 0.3)
         SetBool("game.ui.hidemods", false)
     end
@@ -56,12 +55,13 @@ function client.settingsDraw()
 		UiColor(.0, .0, .0, 0.75*menuAlpha)
 		UiImageBox("ui/common/box-solid-10.png", width, height, 10, 10)
 		UiWindow(width, height)
-
 		UiAlign("top left")
-		if InputPressed("menu_cancel") or (GetBool("game.cursor.enabled") and not UiIsMouseInRect(UiWidth(), UiHeight()) and InputPressed("lmb")) then
-			menuActive = false
-		end
-		if InputPressed("pause") then
+
+		if InputPressed("menu_cancel") or
+		   InputPressed("pause") or 
+		   (GetBool("game.cursor.enabled") and not UiIsMouseInRect(UiWidth(), UiHeight()) and InputPressed("lmb")) 
+		   then
+
 			menuActive = false
 		end
 
@@ -120,7 +120,9 @@ function client.settingsDraw()
 				},20)
 			end
 		UiPop()
+
         return true
 	end
+
     return false
 end

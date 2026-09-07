@@ -6,9 +6,9 @@ CTestGun = {} -- goes in GLOBAL_WEAPONS
 
 function CTestGun:WeaponSounds()
 	return {
-		{"MOD/snd/smg1_fire.ogg", 	"sv", 10},
-		{"MOD/snd/smg1_reload.ogg", "cl", 10},
-		{"MOD/snd/smg1_reload.ogg", "cl", 10, true}
+		{"smg1_fire.ogg", 	"sv", 10},
+		{"smg1_reload.ogg", "cl", 10},
+		{"smg1_reload.ogg", "cl", 10, true}
 	}
 end
 

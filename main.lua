@@ -53,7 +53,7 @@ demoWeap = {} -- goes in GLOBAL_WEAPONS
 function demoWeap:WeaponSounds()
 	return {
 --  		   SOUND		     load to	 dist	   [loop]
-		{"MOD/snd/sfx.ogg",  "sv",      10     false}
+		{"sfx.ogg",  "sv",      10     false}
 	}
 end
 

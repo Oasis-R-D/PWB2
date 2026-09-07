@@ -168,10 +168,11 @@ end
 
 -- sound data for PrecacheSFX(), override per weapon
 -- loop is optional and doesn't need included.
+-- files must be in MOD/snd/ or a subdir in there
 function baseWeap:WeaponSounds()
 	return {
 --  		   SOUND		  load to	 dist	[loop]
-		{"MOD/snd/SOUND.ogg", "sv|cl", 	  10,	false}
+		{"SOUND.ogg", "sv|cl", 	  10,	false}
 	} 
 end
 
@@ -192,13 +193,14 @@ end
 function baseWeap:Deploy()   		 		  	end -- called when weapon is equipped
 function baseWeap:Holster()			  		   	end -- called when weapon is unequipped
 
-function baseWeap:PrimaryAttack(dt)   		   	end
-function baseWeap:SecondaryAttack(dt) 		   	end
+function baseWeap:PrimaryAttack(dt)   		   	end -- called when firing conditions are met
+function baseWeap:SecondaryAttack(dt) 		   	end -- called when secondary firing conditions are met
+
 function baseWeap:Reload()            		   	end -- called when reload is started
 function baseWeap:WeaponIdle()		  		   	end -- called when no buttons are pressed
 
 function baseWeap:CustomAnimate(dt)	  		   	end -- called every frame, use for adding custom
-										 	       	-- weapon movement, see PWB1  slide/pump anims
+										 	       	-- weapon movement, such as PWB1 slide/pump anims
 
 -- Override these if the weapon has extra conditions needed for firing
 -- I.E. Weapon uses multiple rounds in the mag per fire
@@ -215,11 +217,10 @@ function baseWeap:tickPlayer_cl(dt)
 		self:Debug() end
 	
 	self:Animate(dt)
-
-	self:callToolAnimator(dt)
 	
 	local curTime = GetTime()
-
+	self.ammoTotal = GetToolAmmo(self.toolID, self.owner)
+	
 	if self.isLocal then
 		for index, sound in pairs(self.followingSNDS) do
 			if (sound[2] - curTime) > dt then
@@ -246,7 +247,6 @@ function baseWeap:tickPlayer_cl(dt)
 
 	if not self.holstered then
 		if GetPlayerGrabBody(self.owner) ~= 0 or GetPlayerVehicle(self.owner) ~= 0 then
-			-- player is grabbing object
 			self:BaseHolster()
 			fireKeyDown, altfireKeyDown = false, false
 		end
@@ -255,7 +255,7 @@ function baseWeap:tickPlayer_cl(dt)
 		self:BaseDeploy(curTime)
 	end
 
-	self.ammoTotal = GetToolAmmo(self.toolID, self.owner)
+	
 
 	if self.inReload and self.nextFire <= curTime then
 		-- complete the reload.
@@ -264,7 +264,7 @@ function baseWeap:tickPlayer_cl(dt)
 		self.inReload = false
     end
 
-	local empty_prim = ((self.ammoLoaded == 0 and self.ammoTotal == 0) or (self.ammoLoadedMax == WEAPON_NOCLIP and 0 == self.ammoTotal)) or self:SV_DontFireCond()
+	local empty_prim = (self.ammoLoaded == 0 or (self.ammoLoadedMax == WEAPON_NOCLIP and 0 == self.ammoTotal)) or self:SV_DontFireCond()
 	if not fireKeyDown or altfireKeyDown or empty_prim or self.ammoLoaded == 0 then
 		self.lastFireTime = 0.0
 
@@ -272,7 +272,7 @@ function baseWeap:tickPlayer_cl(dt)
 			self.inPrimary = false
 
 			-- update server ASAP! Otherwise will cause desync if you press both at the same time
-			if (not hasFlag(self.flags, FWPN_SV_CALLONCE) and not hasFlag(self.flags, FWPN_CLICK_PRIM)) or hasFlag(self.flags, FWPN_SV_CALLONCESEC) then
+			if not hasFlags_OR(self.flags, FWPN_SV_CALLONCE, FWPN_CLICK_PRIM) or hasFlag(self.flags, FWPN_SV_CALLONCESEC) then
 				self:ServerWpnCall("SV_StopFire")
 			end
 		end
@@ -288,7 +288,7 @@ function baseWeap:tickPlayer_cl(dt)
 
 		if not altfireKeyDown or empty_sec then
 			self.inSecondary = false
-			if not hasFlag(self.flags, FWPN_SV_CALLONCESEC) and not hasFlag(self.flags, FWPN_CLICK_SEC) then
+			if not hasFlags_OR(self.flags, FWPN_SV_CALLONCESEC, FWPN_CLICK_SEC) then
 				self:ServerWpnCall("SV_StopAltFire")
 			end
 		end
@@ -330,6 +330,7 @@ function baseWeap:tickPlayer_sv(dt)
 		self:Debug() end
 
 	local curTime = GetTime()
+	self.ammoTotal = GetToolAmmo(self.toolID, self.owner)
 
 	for index, sound in pairs(self.followingSNDS) do
 		if (sound[2] - curTime) > dt then
@@ -342,15 +343,12 @@ function baseWeap:tickPlayer_sv(dt)
 
 	if not self.holstered then
 		if GetPlayerGrabBody(self.owner) ~= 0 or GetPlayerVehicle(self.owner) ~= 0 then
-			-- player is grabbing object
 			self:BaseHolster()
 		end
 	elseif GetPlayerGrabBody(self.owner) == 0 and GetPlayerVehicle(self.owner) == 0 then
 		-- deploying weapon
 		self:BaseDeploy(curTime)
 	end
-
-	self.ammoTotal = GetToolAmmo(self.toolID, self.owner)
 
 	-- enforce order
 	if self.inSecondary then
@@ -376,9 +374,9 @@ function baseWeap:BasePrimaryAttack(dt, empty)
 	if empty then
 		self.firedOnEmpty = true
 	elseif self.isLocal then
-		if self.inPrimary == false and (self.ammoLoaded > 0 or (self.ammoLoadedMax == WEAPON_NOCLIP and self.ammoTotal > 0)) then
+		if self.inPrimary == false then
 			self.inPrimary = true
-			if not hasFlag(self.flags, FWPN_SV_CALLONCE) and not hasFlag(self.flags, FWPN_CLICK_PRIM) then
+			if not hasFlag(self.flags, FWPN_SV_CALLONCE) then
 				self:ServerWpnCall("SV_StartFire")
 			end
 		end
@@ -393,14 +391,14 @@ function baseWeap:BaseSecondaryAttack(dt, empty)
 	elseif self.isLocal then
 		if self.inSecondary == false then
 			self.inSecondary = true
-			if not hasFlag(self.flags, FWPN_SV_CALLONCESEC) and not hasFlag(self.flags, FWPN_CLICK_SEC) then
+			if not hasFlag(self.flags, FWPN_SV_CALLONCESEC) then
 				self:ServerWpnCall("SV_StartAltFire")
 			end
 		end
 	end
-
-	-- hold gun straight
+	
 	if not hasFlag(self.flags, FWPN_NOALTACTIONPOSE) then
+		-- hold gun straight
 		self.animator.timeSinceFire = 0.0
 	end
 
@@ -409,7 +407,7 @@ end
 
 function baseWeap:BaseDeploy(curTime)
 	-- no rapid firing
-	self.nextFire 	  = math.max(self.nextFire, curTime + 0.25)
+	self.nextFire 	  = math.max(self.nextFire, curTime + 0.33)
 	self.nextAltFire  = math.max(self.nextAltFire, self.nextFire)
 	self.lastFireTime = 0.0
 
@@ -487,7 +485,7 @@ function baseWeap:DrawHUD()
 		UiPush()
 			UiFont("bold.ttf", 32)
 			UiAlign("center middle")
-			UiTranslate(UiCenter(), UiMiddle() + (UiMiddle() * 0.833))
+			UiTranslate(UiCenter(), UiMiddle() + UiMiddle() * 0.833)
 			if self.inReload == true then
 				UiText("RELOADING | " .. string.format("%.2f", self.nextFire - GetTime()))
 			else
@@ -500,7 +498,7 @@ function baseWeap:DrawHUD()
 		UiPush()
 			UiFont("bold.ttf", 32)
 			UiAlign("center middle")
-			UiTranslate(UiCenter(), UiMiddle() + (UiMiddle() * 0.766))
+			UiTranslate(UiCenter(), UiMiddle() + UiMiddle() * 0.766)
 			if self.ammoAltLoadedMax ~= WEAPON_NOCLIP then
 				UiText(self.ammoAltTotal .. " | " .. self.ammoAltLoadedMax)
 			else
@@ -523,15 +521,23 @@ function baseWeap:Animate(dt)
 	if self.isLocal then
 		self:ApplyWeaponPos(dt)
 
+		if VecLength(self.recoilAng) <= 0.000001 and VecLength(self.recoilAngVel) <= 0.000001 then
+			self.recoilAng 	  = Vec(0,0,0)
+			self.recoilAngVel = Vec(0,0,0)
+		else
+			self:DecayRecoilAng(dt)
+		end
+		
 		self.animator.offsetTransform.rot = QuatEuler(self.recoilAng[1], self.recoilAng[2], self.recoilAng[3])
-		self:decayAngRecoil(dt)
 	else
 		self.animator.offsetTransform.pos = self.recoilPos
 	end
-
-	self:decayPosRecoil(dt)
+	
+	self:DecayRecoilPos(dt)
 
 	self:CustomAnimate(dt)
+	
+	self:callToolAnimator(dt)
 end
 
 function baseWeap:RecoilPosPunch(punchPos)
@@ -543,33 +549,31 @@ function baseWeap:RecoilAngPunch(punchAngles, mult)
 	self.recoilAngVel = VecAdd(self.recoilAngVel, VecScale(punchAngles, mult))
 end
 
-function baseWeap:decayPosRecoil(dt)
+function baseWeap:DecayRecoilPos(dt)
 	local len = VecLength(self.recoilPos)
-	if len == 0 then return end
+	if len == 0 then
+		self.recoilPos = Vec(0,0,0)
+		return 
+	end
 	len = len - ((2 + len * self.recoilPosDecay) * dt)
 	len = math.max(len, 0)
 	self.recoilPos = VecScale(VecNormalize(self.recoilPos), len)
 end
 
-function baseWeap:decayAngRecoil(dt)
-	if VecLength(self.recoilAng) > 0.0001 or VecLength(self.recoilAngVel) > 0.0001 then
-		self.recoilAng = VecAdd(self.recoilAng, VecScale(self.recoilAngVel, dt))
-		local damping = math.max(1 - (self.recoilAngDamp * dt), 0)
+function baseWeap:DecayRecoilAng(dt)
+	self.recoilAng = VecAdd(self.recoilAng, VecScale(self.recoilAngVel, dt))
+	local damping = math.max(1 - (self.recoilAngDamp * dt), 0)
 
-		self.recoilAngVel = VecScale(self.recoilAngVel, damping)
-		
-		-- torsional spring
-		local springForceMagnitude = math.min(self.recoilAngSpring * dt, 2.0)
-		self.recoilAngVel = VecSub(self.recoilAngVel, VecScale(self.recoilAng, springForceMagnitude))
+	self.recoilAngVel = VecScale(self.recoilAngVel, damping)
+	
+	-- torsional spring
+	local springForceMagnitude = math.min(self.recoilAngSpring * dt, 2.0)
+	self.recoilAngVel = VecSub(self.recoilAngVel, VecScale(self.recoilAng, springForceMagnitude))
 
-		-- don't wrap around
-		self.recoilAng[1] = clamp(self.recoilAng[1], -89,  89 )
-		self.recoilAng[2] = clamp(self.recoilAng[2], -179, 179)
-		self.recoilAng[3] = clamp(self.recoilAng[3], -89,  89 )
-	else
-		self.recoilAng 	  = Vec(0,0,0)
-		self.recoilAngVel = Vec(0,0,0)
-	end
+	-- don't wrap around
+	self.recoilAng[1] = clamp(self.recoilAng[1], -89,  89 )
+	self.recoilAng[2] = clamp(self.recoilAng[2], -179, 179)
+	self.recoilAng[3] = clamp(self.recoilAng[3], -89,  89 )
 end
 
 function baseWeap:RecoilAngReset(tolerance)
@@ -839,6 +843,9 @@ end
 
 function baseWeap:Debug()
 	self:DumpGlobals()
+	if self.debugpoint then
+		DebugCross(self.debugpoint)
+	end
 end
 
 function baseWeap:DumpGlobals()
@@ -912,16 +919,16 @@ function baseWeap:PrecacheSFX()
 		if server and sounddata[2] == "sv" then
             svSounds = svSounds + 1
 			if sounddata[4] and sounddata[4] == true then
-                precachedSounds[svSounds] = LoadLoop(sounddata[1], sounddata[3])
+                precachedSounds[svSounds] = LoadLoop("MOD/snd/" .. sounddata[1], sounddata[3])
             else
-                precachedSounds[svSounds] = LoadSound(sounddata[1], sounddata[3])
+                precachedSounds[svSounds] = LoadSound("MOD/snd/" .. sounddata[1], sounddata[3])
             end
 		elseif client and sounddata[2] == "cl" then
             clSounds = clSounds + 1
             if sounddata[4] and sounddata[4] == true then
-                precachedSounds[clSounds] = LoadLoop(sounddata[1], sounddata[3])
+                precachedSounds[clSounds] = LoadLoop("MOD/snd/" .. sounddata[1], sounddata[3])
             else
-                precachedSounds[clSounds] = LoadSound(sounddata[1], sounddata[3])
+                precachedSounds[clSounds] = LoadSound("MOD/snd/" .. sounddata[1], sounddata[3])
             end
 		end
 	end
