@@ -2,7 +2,7 @@
 -- 	 weapon function defaults. Override functions here in child classes to make new guns!
 -- 							  (see main.lua for more info)
 --
---	do NOT modify these functions directly in this file unless you know what you're doing!
+-- override the functions in this file instead of overwriting unless you know what you're doing!
 --
 --				   for making melee weapons, see code in 'meleetool.lua'
 --============================================================================================
@@ -146,26 +146,6 @@ function baseWeap:init_tool()
 	SetToolAmmoPickupAmount(self.toolID, self.ammoPickupSize)
 end
 
--- to add a new weapon just do WPNPTR = baseWeap:new(CHILD, owner) where CHILD is {}
-function baseWeap:new(obj, owner)
-    owner = owner or -1
-
-    -- make new table
-    local instance = {}
-    if obj then
-		-- copy values from used class
-        for k, v in pairs(obj) do
-            instance[k] = v
-        end
-    end
-
-    setmetatable(instance, self)
-    self.__index = self
-
-    instance:initVars(owner)
-    return instance
-end
-
 --=========================================================================
 -- Weapon SFX / VFX
 --=========================================================================
@@ -183,8 +163,7 @@ function baseWeap:muzzleFlash(pos, size, color)
 	-- Create the flashSPR variable to hold the sprite
 	if not baseWeap.flashSPR then baseWeap.flashSPR = LoadSprite("gfx/glare.png") end
 
-	local spriteSize = size * 0.4
-	DrawSprite(baseWeap.flashSPR, t, spriteSize, spriteSize, color[1], color[2], color[3], 1.0, true, true, true)
+	DrawSprite(baseWeap.flashSPR, t, size, size, color[1], color[2], color[3], 1.0, true, true, true)
 end
 
 -- sound data for PrecacheSFX(), override per weapon
@@ -204,41 +183,10 @@ function baseWeap:PlayEmptySound()
 	end
 end
 
--- Uses sound loops to have a sound that follows the player
--- length should be the duration of the sound
--- (feel free to clip off some decimals so it won't overshoot)
-function baseWeap:PlayFollowingSound(loop, length)
-	self.followingSNDS[#self.followingSNDS + 1] = {loop, (GetTime() + length)}
-end
-
-function baseWeap:PrecacheSFX()
-	local precachedSounds = {}
-	local svSounds, clSounds = 0, 0
-
-	for i, sounddata in ipairs(self:WeaponSounds()) do
-		if server and sounddata[2] == "sv" then
-            svSounds = svSounds + 1
-			if sounddata[4] and sounddata[4] == true then
-                precachedSounds[svSounds] = LoadLoop(sounddata[1], sounddata[3])
-            else
-                precachedSounds[svSounds] = LoadSound(sounddata[1], sounddata[3])
-            end
-		elseif client and sounddata[2] == "cl" then
-            clSounds = clSounds + 1
-            if sounddata[4] and sounddata[4] == true then
-                precachedSounds[clSounds] = LoadLoop(sounddata[1], sounddata[3])
-            else
-                precachedSounds[clSounds] = LoadSound(sounddata[1], sounddata[3])
-            end
-		end
-	end
-
-	self.snds = precachedSounds
-end
-
 --=========================================================================
 -- Weapon interactions
 -- These should be overriden per weapon
+-- and are intentionally left blank here
 --=========================================================================
 
 function baseWeap:Deploy()   		 		  	end -- called when weapon is equipped
@@ -255,16 +203,12 @@ function baseWeap:CustomAnimate(dt)	  		   	end -- called every frame, use for a
 -- Override these if the weapon has extra conditions needed for firing
 -- I.E. Weapon uses multiple rounds in the mag per fire
 -- These are ran on client only but if they're true, server isn't called												
-function baseWeap:SV_FireEmptyCond() 	return false end
-function baseWeap:SV_FireAltEmptyCond() return false end
+function baseWeap:SV_DontFireCond() 	return false end
+function baseWeap:SV_DontFireAltCond() return false end
 
 --=========================================================================
 -- 	Input handling and HUD
 --=========================================================================
-
-function baseWeap:callToolAnimator(dt)
-	tickToolAnimator(self.animator, dt, nil, self.owner)
-end
 
 function baseWeap:tickPlayer_cl(dt)
 	if settings.debug then
@@ -303,12 +247,12 @@ function baseWeap:tickPlayer_cl(dt)
 	if not self.holstered then
 		if GetPlayerGrabBody(self.owner) ~= 0 or GetPlayerVehicle(self.owner) ~= 0 then
 			-- player is grabbing object
-			self:DefaultHolster()
+			self:BaseHolster()
 			fireKeyDown, altfireKeyDown = false, false
 		end
 	elseif GetPlayerGrabBody(self.owner) == 0 and GetPlayerVehicle(self.owner) == 0 then
 		-- deploying weapon
-		self:DefaultDeploy(curTime)
+		self:BaseDeploy(curTime)
 	end
 
 	self.ammoTotal = GetToolAmmo(self.toolID, self.owner)
@@ -320,7 +264,7 @@ function baseWeap:tickPlayer_cl(dt)
 		self.inReload = false
     end
 
-	local empty_prim = ((self.ammoLoaded == 0 and self.ammoTotal == 0) or (self.ammoLoadedMax == WEAPON_NOCLIP and 0 == self.ammoTotal)) or self:SV_FireEmptyCond()
+	local empty_prim = ((self.ammoLoaded == 0 and self.ammoTotal == 0) or (self.ammoLoadedMax == WEAPON_NOCLIP and 0 == self.ammoTotal)) or self:SV_DontFireCond()
 	if not fireKeyDown or altfireKeyDown or empty_prim or self.ammoLoaded == 0 then
 		self.lastFireTime = 0.0
 
@@ -335,7 +279,7 @@ function baseWeap:tickPlayer_cl(dt)
 	end
 
 	-- TO-DO: this probably breaks if FWPN_SV_CALLONCE is true and you press both at once
-	local empty_sec = false or self:SV_FireAltEmptyCond() --(self.ammoAltLoadedMax ~= WEAPON_NOCLIP and self.ammoAltTotal == 0) or (self.ammoAltLoadedMax == WEAPON_NOCLIP and empty_prim)
+	local empty_sec = false or self:SV_DontFireAltCond() --(self.ammoAltLoadedMax ~= WEAPON_NOCLIP and self.ammoAltTotal == 0) or (self.ammoAltLoadedMax == WEAPON_NOCLIP and empty_prim)
 	if self.isLocal and self.inSecondary == true then
 		-- enforce order
 		self.inPrimary = false
@@ -351,9 +295,9 @@ function baseWeap:tickPlayer_cl(dt)
 	end
 	
 	if altfireKeyDown and self:CanAttack(self.nextAltFire, curTime) then
-		self:DefaultSecondaryAttack(dt, empty_sec)
+		self:BaseSecondaryAttack(dt, empty_sec)
 	elseif fireKeyDown and self:CanAttack(self.nextFire, curTime) then
-		self:DefaultPrimaryAttack(dt, empty_prim)
+		self:BasePrimaryAttack(dt, empty_prim)
 	elseif InputDown("r", self.owner) and self.ammoLoadedMax ~= WEAPON_NOCLIP and not self.inReload and self:CanAttack(math.max(self.nextFire, self.nextAltFire), curTime) then
 		-- reload when reload is pressed, or if no buttons are down and weapon is empty.
 		self:Reload()
@@ -399,11 +343,11 @@ function baseWeap:tickPlayer_sv(dt)
 	if not self.holstered then
 		if GetPlayerGrabBody(self.owner) ~= 0 or GetPlayerVehicle(self.owner) ~= 0 then
 			-- player is grabbing object
-			self:DefaultHolster()
+			self:BaseHolster()
 		end
 	elseif GetPlayerGrabBody(self.owner) == 0 and GetPlayerVehicle(self.owner) == 0 then
 		-- deploying weapon
-		self:DefaultDeploy(curTime)
+		self:BaseDeploy(curTime)
 	end
 
 	self.ammoTotal = GetToolAmmo(self.toolID, self.owner)
@@ -428,7 +372,7 @@ function baseWeap:tickPlayer_sv(dt)
 	end
 end
 
-function baseWeap:DefaultPrimaryAttack(dt, empty)
+function baseWeap:BasePrimaryAttack(dt, empty)
 	if empty then
 		self.firedOnEmpty = true
 	elseif self.isLocal then
@@ -443,7 +387,7 @@ function baseWeap:DefaultPrimaryAttack(dt, empty)
 	self:PrimaryAttack(dt)
 end
 
-function baseWeap:DefaultSecondaryAttack(dt, empty)
+function baseWeap:BaseSecondaryAttack(dt, empty)
 	if empty then
 		self.firedOnEmpty = true
 	elseif self.isLocal then
@@ -463,7 +407,7 @@ function baseWeap:DefaultSecondaryAttack(dt, empty)
 	self:SecondaryAttack(dt)
 end
 
-function baseWeap:DefaultDeploy(curTime)
+function baseWeap:BaseDeploy(curTime)
 	-- no rapid firing
 	self.nextFire 	  = math.max(self.nextFire, curTime + 0.25)
 	self.nextAltFire  = math.max(self.nextAltFire, self.nextFire)
@@ -472,9 +416,6 @@ function baseWeap:DefaultDeploy(curTime)
 	self.holstered 	  = false
 
 	if client then
-		-- cancel reloads
-		self.inReload = false
-
 		-- Reset old recoil and do some movement
 		self.recoilPos = Vec(0,0,0)
 		if self.isLocal then
@@ -488,12 +429,14 @@ function baseWeap:DefaultDeploy(curTime)
 	self:Deploy()
 end
 
-function baseWeap:DefaultHolster()
+function baseWeap:BaseHolster()
 	if client then
+		-- cancel reloads
 		self.inReload = false
 	end
 
 	if server or self.isLocal then
+		-- Reset following sounds
 		for index, sound in pairs(self.followingSNDS) do
 			SetSoundLoopProgress(sound[1])
 		end
@@ -569,12 +512,16 @@ end
 
 --=========================================================================
 -- 	WEAPON MODEL ANIMATIONS
---	Controls recoil and idle movement
 --=========================================================================
+
+-- Override to modify inputs
+function baseWeap:callToolAnimator(dt)
+	tickToolAnimator(self.animator, dt, nil, self.owner)
+end
 
 function baseWeap:Animate(dt)
 	if self.isLocal then
-		self:ApplyWeaponMovement(dt)
+		self:ApplyWeaponPos(dt)
 
 		self.animator.offsetTransform.rot = QuatEuler(self.recoilAng[1], self.recoilAng[2], self.recoilAng[3])
 		self:decayAngRecoil(dt)
@@ -654,7 +601,7 @@ function baseWeap:RecoilPosReset(tolerance)
 	self.recoilPos = Vec(0,0,0)
 end
 
-function baseWeap:ApplyWeaponMovement(dt)
+function baseWeap:ApplyWeaponPos(dt)
 	local idlePos = Vec(
 		 math.sin(self.idleCycleTime*0.5) + math.cos(self.idleCycleTime*0.25),
 		-math.sin(self.idleCycleTime*0.5) + math.cos(self.idleCycleTime*0.25),
@@ -709,16 +656,12 @@ end
 --	UTIL FUNCS
 --=========================================================================
 
--- hook the Shoot func to add new stuff
 function baseWeap:FireBulletsPlayer(shots, pos, spreadRad, range, impulseMult, radius)
-	impulseMult = impulseMult or 1
 	radius = radius or 0
 
 	for i=1, shots do
 		local posUse, dir = GetPlayerAimInfoSpread(pos, spreadRad, range, self.owner, i)
 
-		if server then QueryShootRope(posUse, dir, range) end
-		
 		-- figure out whether we need to run player or world hit code
 		local bHit, pdist, pShape, playerhit = QueryShot(posUse, dir, range, 0, self.owner)
 
@@ -735,22 +678,22 @@ function baseWeap:FireBulletsPlayer(shots, pos, spreadRad, range, impulseMult, r
 			end
 		end
 
-		-- knock back objects some more
-		if bHit and server then
-			ApplyBodyImpulse(GetShapeBody(pShape), VecAdd(posUse, VecScale(dir, pdist)), VecScale(dir, 800 * impulseMult))
-		end
+		if server then
+			QueryShootRope(posUse, dir, range)
 
-		local hitAnimator = GetBodyAnimator(GetShapeBody(pShape))
+			-- knock back objects some more
+			if bHit and impulseMult then
+				ApplyBodyImpulse(GetShapeBody(pShape), VecAdd(posUse, VecScale(dir, pdist)), VecScale(dir, impulseMult))
+			end
 
-		if playerhit == 0 and hitAnimator == 0 then
-			if server then
+			local hitAnimator = GetBodyAnimator(GetShapeBody(pShape))
+
+			if playerhit == 0 and hitAnimator == 0 then
 				-- use normal shooting for world
 				Shoot(posUse, dir, "bullet", self.dmg_world, range, self.owner)
-			end
-		elseif self.dmg_plyr then
-			local SoundPoint = VecAdd(posUse, VecScale(dir, pdist))
+			elseif self.dmg_plyr then
+				local SoundPoint = VecAdd(posUse, VecScale(dir, pdist))
 
-			if server then
 				-- play player impact SFX
 				if not baseWeap.hitSND then baseWeap.hitSND = LoadSound("MOD/snd/base/bullet_hit0.ogg") end
 				PlaySound(baseWeap.hitSND, SoundPoint, 2)
@@ -758,34 +701,43 @@ function baseWeap:FireBulletsPlayer(shots, pos, spreadRad, range, impulseMult, r
 				-- don't actually hit the player so we can do our own damage and vfx
 				local newrange = pdist - 0.5
 				if newrange > 0 then Shoot(posUse, dir, "bullet", 0.0, newrange, self.owner) end
-			end
 
-			if playerhit ~= 0 then
-				-- apply hitgroups
-				QueryRequire("player")
-				QueryInclude("player")
-				QueryRejectPlayer(self.owner)
-				local _, _, _, bodyPart = QueryRaycast(posUse, dir, pdist + 0.25)
-				
-				local dmg = self.dmg_plyr
-
-				local hitPart = GetTagValue(GetShapeBody(bodyPart), "bone")
-				if hitPart == "head" or hitPart == "neck" then
-					dmg = self.dmg_plyr * GLOBAL_HEADSHOTMULT
-				end
-
-				if client then
-					client.BloodParticles(SoundPoint, dir, dmg, playerhit)
-				else
-					server.BloodDecal(SoundPoint, dir, self.dmg_plyr, nil, hitAnimator)
+				if playerhit ~= 0 then
+					-- apply hitgroups
+					QueryRequire("player")
+					QueryInclude("player")
+					QueryRejectPlayer(self.owner)
+					local _, _, _, bodyPart = QueryRaycast(posUse, dir, pdist + 0.25)
+					
+					-- Apply per bodypart damagage multiplier
+					local dmg = self:DamageMultiplier(bodyPart, self.dmg_plyr)
 
 					-- Deal damage
 					ApplyPlayerDamage(playerhit, dmg, self.toolName, self.owner)
 				end
-			elseif client then
-				client.BloodParticles(SoundPoint, dir, self.dmg_plyr, playerhit)
-			else
+				
 				server.BloodDecal(SoundPoint, dir, self.dmg_plyr, nil, hitAnimator)
+			end
+		else -- client
+			if bHit and self.dmg_plyr then
+				local SoundPoint = VecAdd(posUse, VecScale(dir, pdist))
+
+				local hitAnimator = GetBodyAnimator(GetShapeBody(pShape))
+
+				if playerhit ~= 0 then
+					-- apply hitgroups
+					QueryRequire("player")
+					QueryInclude("player")
+					QueryRejectPlayer(self.owner)
+					local _, _, _, bodyPart = QueryRaycast(posUse, dir, pdist + 0.25)
+					
+					-- Apply per bodypart damagage multiplier
+					local dmg = self:DamageMultiplier(bodyPart, self.dmg_plyr)
+
+					client.BloodParticles(SoundPoint, dir, dmg, playerhit)
+				elseif hitAnimator ~= 0 then
+					client.BloodParticles(SoundPoint, dir, self.dmg_plyr, playerhit)
+				end
 			end
 		end
 	end
@@ -793,6 +745,16 @@ function baseWeap:FireBulletsPlayer(shots, pos, spreadRad, range, impulseMult, r
 	-- Reset seed AFTER using it on both server and client
 	-- Can be unreliable at high latency
 	if server then shared.seed = GetRandomInt(0,10000) end
+end
+
+-- Apply per bodypart damagage multiplier
+function baseWeap:DamageMultiplier(bodyPart, dmg)
+	local hitPart = GetTagValue(GetShapeBody(bodyPart), "bone")
+	if hitPart == "head" or hitPart == "neck" then
+		dmg = self.dmg_plyr * GLOBAL_HEADSHOTMULT
+	end
+
+	return dmg
 end
 
 function baseWeap:DepleteAmmo(ammoReduced, clipReduced)
@@ -906,4 +868,63 @@ function baseWeap:DumpGlobals()
 
 		DebugWatch(prefix .. "timeWeaponIdle", 	self.timeWeaponIdle)
 	end
+end
+
+--=========================================================================
+--	BACKEND FUNCS
+--  These are used by the weapon code for very specific purposes 
+--  and shouldn't (under normal circumstanced) be overriden.
+--=========================================================================
+
+-- This function constructs the weapon classes
+-- to add a new weapon just do WPNPTR = baseWeap:new(CHILD, owner) where CHILD is {}
+function baseWeap:new(obj, owner)
+    owner = owner or -1
+
+    -- make new table
+    local instance = {}
+    if obj then
+		-- copy values from used class
+        for k, v in pairs(obj) do
+            instance[k] = v
+        end
+    end
+
+    setmetatable(instance, self)
+    self.__index = self
+
+    instance:initVars(owner)
+    return instance
+end
+
+-- Uses sound loops to have a sound that follows the player
+-- length should be the duration of the sound
+-- (feel free to clip off some decimals so it won't overshoot)
+function baseWeap:PlayFollowingSound(loop, length)
+	self.followingSNDS[#self.followingSNDS + 1] = {loop, (GetTime() + length)}
+end
+
+function baseWeap:PrecacheSFX()
+	local precachedSounds = {}
+	local svSounds, clSounds = 0, 0
+
+	for i, sounddata in ipairs(self:WeaponSounds()) do
+		if server and sounddata[2] == "sv" then
+            svSounds = svSounds + 1
+			if sounddata[4] and sounddata[4] == true then
+                precachedSounds[svSounds] = LoadLoop(sounddata[1], sounddata[3])
+            else
+                precachedSounds[svSounds] = LoadSound(sounddata[1], sounddata[3])
+            end
+		elseif client and sounddata[2] == "cl" then
+            clSounds = clSounds + 1
+            if sounddata[4] and sounddata[4] == true then
+                precachedSounds[clSounds] = LoadLoop(sounddata[1], sounddata[3])
+            else
+                precachedSounds[clSounds] = LoadSound(sounddata[1], sounddata[3])
+            end
+		end
+	end
+
+	self.snds = precachedSounds
 end

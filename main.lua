@@ -220,7 +220,7 @@ function server.tick(dt)
          if tool == wpns[i].toolID then
             wpns[i]:tickPlayer_sv(dt)
          elseif wpns[i].holstered == false then
-            wpns[i]:DefaultHolster()
+            wpns[i]:BaseHolster()
          end
       end
    end
@@ -262,7 +262,7 @@ function client.tick(dt)
          if tool == wpns[i].toolID then
             wpns[i]:tickPlayer_cl(dt)
          elseif wpns[i].holstered == false then
-            wpns[i]:DefaultHolster()
+            wpns[i]:BaseHolster()
          end
       end
    end

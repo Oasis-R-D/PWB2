@@ -28,8 +28,7 @@ function CTestShotgun:muzzleFlash(pos, size, color)
 	-- Create the flashSPR variable to hold the sprite
 	if not CTestGun.flashSPR then CTestGun.flashSPR = LoadSprite("gfx/flare_0.png") end
 
-	local spriteSize = size * 0.4
-	DrawSprite(CTestGun.flashSPR, t, spriteSize, spriteSize, color[1], color[2], color[3], 1.0, true, true, true)
+	DrawSprite(CTestGun.flashSPR, t, size, size, color[1], color[2], color[3], 1.0, true, true, true)
 end
 
 --=========================================================================
@@ -96,7 +95,7 @@ function CTestShotgun:PrimaryAttack(dt)
 			client.PUNCH_Axis(2, GetRandomFloat(-0.5, 0.5))
 		end
 
-		self:muzzleFlash(mt.pos, 2)
+		self:muzzleFlash(mt.pos, 0.8)
 
 		self.pumpTime = GetTime() + 0.5
 
@@ -146,7 +145,7 @@ function CTestShotgun:SecondaryAttack(dt)
 			ENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_shtgn.xml", FSFX_SHTGN)
 		end
 
-		self:muzzleFlash(mt.pos, 3, Vec(1.33, 1, 1))
+		self:muzzleFlash(mt.pos, 1.2, Vec(1.33, 1, 1))
 
 		self.pumpTime = GetTime() + 0.95
 

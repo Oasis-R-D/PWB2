@@ -25,8 +25,7 @@ function CAdsGun:muzzleFlash(pos, size, color)
 	-- Create the flashSPR variable to hold the sprite
 	if not CAdsGun.flashSPR then CAdsGun.flashSPR = LoadSprite("gfx/flare_0.png") end
 
-	local spriteSize = size * 0.4
-	DrawSprite(CAdsGun.flashSPR, t, spriteSize, spriteSize, color[1], color[2], color[3], 1.0, true, true, true)
+	DrawSprite(CAdsGun.flashSPR, t, size, size, color[1], color[2], color[3], 1.0, true, true, true)
 end
 
 --=========================================================================
@@ -113,7 +112,7 @@ function CAdsGun:PrimaryAttack(dt)
 			self:RecoilPosPunch(Vec(GetRandomFloat(-0.05, 0.05), GetRandomFloat(0.0, 0.025), GetRandomFloat(0.05, 0.1)))
 		end
 
-		self:muzzleFlash(mt.pos, 1)
+		self:muzzleFlash(mt.pos, 0.4)
 	else
 		PlayFireSound(self.snds[1], mt.pos, 300)
 	end

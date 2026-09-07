@@ -79,7 +79,7 @@ function CTestGun:PrimaryAttack(dt)
 			ENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
 		end
 
-		self:muzzleFlash(mt.pos, 2)
+		self:muzzleFlash(mt.pos, 0.8)
 	else
 		PlayFireSound(self.snds[1], mt.pos, 300)
 	end
@@ -130,7 +130,7 @@ function CTestGun:SecondaryAttack(dt)
 			ENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
 		end
 
-		self:muzzleFlash(mt.pos, 2)
+		self:muzzleFlash(mt.pos, 0.8)
 	else
 		PlayFireSound(self.snds[1], mt.pos, 300)
 	end
