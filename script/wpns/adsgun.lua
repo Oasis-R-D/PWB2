@@ -1,6 +1,38 @@
 CAdsGun = {} -- goes in GLOBAL_WEAPONS
 
 --=========================================================================
+-- Define the weapon and it's variables
+--=========================================================================
+
+-- Static values for this specific weapon
+-- These don't need redefined in a weapon if a var is just the default value
+CAdsGun.model				= "MOD/models/xml/grease.xml"-- path to the XML model file
+CAdsGun.casingOrg			= Vec(0.01, 0.12, -0.15)	 -- where casings are ejected
+
+CAdsGun.toolID 				= "testads"		 -- used by the engine. lowercase and no spaces
+CAdsGun.toolName 			= "PWB2 ADS" -- shown in killfeed
+CAdsGun.toolSlot			= 3
+
+CAdsGun.ammoLoadedMax 		= 30					-- max clip 	 	-- -1 for no clip (pulls from reserve)
+CAdsGun.ammoAltLoadedMax	= 0 					-- max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
+CAdsGun.ammoAltItemID		= 0 					-- wpnID of item to drain ammo for when altfiring
+CAdsGun.ammoPickupSize		= CAdsGun.ammoLoadedMax	-- defaults to full mag
+CAdsGun.dmg_world			= 0.5					-- Size of hole in meters
+CAdsGun.dmg_plyr			= 0.16					-- 0.0-1.0
+
+CAdsGun.flags				= addFlags(0, FWPN_SV_CALLONCE_SEC, FWPN_CLICK_SEC) -- weapon flags
+CAdsGun.snds				= 0	-- Prechached SFX list, set on INIT
+
+-- override initVars to add new variables
+function CAdsGun:initVars(owner)
+	baseWeap.initVars(self, owner)
+
+	if server then
+		self.ads = false
+	end
+end
+
+--=========================================================================
 -- Define the weapon's SFX / VFX
 --=========================================================================
 
@@ -26,38 +58,6 @@ function CAdsGun:muzzleFlash(pos, size, color)
 	if not CAdsGun.flashSPR then CAdsGun.flashSPR = LoadSprite("gfx/flare_0.png") end
 
 	DrawSprite(CAdsGun.flashSPR, t, size, size, color[1], color[2], color[3], 1.0, true, true, true)
-end
-
---=========================================================================
--- Define the weapon and it's variables
---=========================================================================
-
--- Static values for this specific weapon
--- These don't need redefined in a weapon if a var is just the default value
-CAdsGun.model				= "MOD/models/xml/grease.xml"-- path to the XML model file
-CAdsGun.casingOrg			= Vec(0.01, 0.12, -0.15)	 -- where casings are ejected
-
-CAdsGun.toolID 				= "adsgun"		  -- used by the engine. lowercase and no spaces
-CAdsGun.toolName 			= "PWB2 Ads Gun" -- shown in killfeed
-CAdsGun.toolSlot			= 3
-
-CAdsGun.ammoLoadedMax 		= 30					-- max clip 	 	-- -1 for no clip (pulls from reserve)
-CAdsGun.ammoAltLoadedMax	= 0 					-- max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
-CAdsGun.ammoAltItemID		= 0 					-- wpnID of item to drain ammo for when altfiring
-CAdsGun.ammoPickupSize		= CAdsGun.ammoLoadedMax	-- defaults to full mag
-CAdsGun.dmg_world			= 0.5
-CAdsGun.dmg_plyr			= 0.16					-- 0.0-1.0
-
-CAdsGun.flags				= addFlags(0, FWPN_SV_CALLONCESEC, FWPN_CLICK_SEC) -- weapon flags
-CAdsGun.snds				= 0												   -- temp value, will be set to the sound array on init
-
--- override initVars to add new variables
-function CAdsGun:initVars(owner)
-	baseWeap.initVars(self, owner)
-
-	if server then
-		self.ads = false
-	end
 end
 
 --=========================================================================

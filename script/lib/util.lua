@@ -72,7 +72,7 @@ function PlayImpactSFX(shape, pos, mag)
 
 	if playMat ~= "" then
 		PlaySound(LoadSound(playMat .. "/break-" .. mag .. "0.ogg"), pos)
-		PlaySound(LoadSound(playMat .. "/hit-" .. mag .. "0.ogg"), pos)
+		PlaySound(LoadSound(playMat .. "/hit-" 	 .. mag .. "0.ogg"), pos)
 	end
 
 	--DebugPrint("mat: " .. material)
@@ -94,13 +94,16 @@ function GetPlayerAimInfoSpread(pos, spreadRad, range, p, add)
 	-- Get Spread (Based on code from Novena)
 	if spreadRad > 0 then
 		local cosAngle = math.cos(spreadRad)
+		
 		SetRandomSeed(shared.seed + add)
 		local z = 1 - GetRandomFloat(0,1)*(1 - cosAngle)
+
 		SetRandomSeed(shared.seed + (2+add))
 		local phi = GetRandomFloat(0,1)*math.pi*2
-		local r = math.sqrt(1 - z*z)
-		local x = r * math.cos(phi)
-		local y = r * math.sin(phi)
+		
+		local r   = math.sqrt(1 - z*z)
+		local x   = r * math.cos(phi)
+		local y   = r * math.sin(phi)
 		local vec = Vec(x, y, z)
 
 		if dir[3] > 0.9999 then

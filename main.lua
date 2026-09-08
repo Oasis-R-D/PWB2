@@ -47,20 +47,6 @@ NEW TOOL ANIMATOR FEATURES:
 demoWeap = {} -- goes in GLOBAL_WEAPONS
 
 --=========================================================================
--- Define the weapon's SFX / VFX
---=========================================================================
-
-function demoWeap:WeaponSounds()
-	return {
---  		   SOUND		     load to	 dist	   [loop]
-		{"sfx.ogg",  "sv",      10     false}
-	}
-end
-
--- overrided functions from the Weapon SFX / VFX section go here
-   (muzzle flash, empty sound ect.)
-
---=========================================================================
 -- Define the weapon and it's variables
 --=========================================================================
 
@@ -76,11 +62,11 @@ demoWeap.toolSlot			   = 3
 demoWeap.ammoLoadedMax 	   = 45						    -- max clip 	 	-- -1 for no clip (pulls from reserve)
 demoWeap.ammoAltLoadedMax	= -1 						    -- max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
 demoWeap.ammoPickupSize	   = demoWeap.ammoLoadedMax -- defaults to full mag
-demoWeap.dmg_world			= 0.4                    -- world damage, 'gun' does around 0.5
+demoWeap.dmg_world			= 0.4                    -- Size of hole in meters
 demoWeap.dmg_plyr			   = 0.05						 -- 0.0-1.0
 
-demoWeap.flags				   = 0 -- weapon flags
-demoWeap.snds				   = 0 -- temp value, will be set to the sound array on init
+demoWeap.flags				   = addFlags(0, FWPN_NONE) -- weapon flags
+demoWeap.snds				   = 0                      -- Prechached SFX list, set on INIT
 
 baseWeap.recoilPosDecay 	= 0.25 -- multiplier for recoil pos decay. Lower is slower, higher is faster
 baseWeap.recoilAngSpring	= 65	 -- bigger number increases the speed at which the angle corrects
@@ -100,10 +86,25 @@ function demoWeap:initVars(owner)
 	baseWeap.initVars(self, owner)
 end
 
+--=========================================================================
+-- Define the weapon's SFX / VFX
+--=========================================================================
+
+function demoWeap:WeaponSounds()
+	return {
+--  		SOUND		load to	  dist   [loop]
+		{"sfx.ogg",  "sv",      10     true}
+	}
+end
+
+-- overrided functions from the Weapon SFX / VFX section go here
+   (muzzle flash, empty sound ect.)
+
+==============================================================================================
 ==============================================================================================
 -- TO-DO
 ==============================================================================================
-   -  alt fire can use another tools ammo
+   -  alt fire can use another tools ammo (to add ammo pickups)
 
    -  making the gun fire in the muzzle dir could be intersting (would need to make the model
       muzzle dynamically face the target spot though)
@@ -135,7 +136,7 @@ GLOBAL_HEADSHOTMULT = 2.0
 
 -- max tempents the client can simulate at once
 -- this probably won't be reached normally
-GLOBAL_MAX_TEMPENTS = 1200
+GLOBAL_MAX_TEMPENTS = 500
 
 GLOBAL_1DEGREE    = 0.00873
 GLOBAL_2DEGREES   = 0.01745

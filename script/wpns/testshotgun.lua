@@ -1,6 +1,44 @@
 CTestShotgun = {} -- goes in GLOBAL_WEAPONS
 
 --=========================================================================
+-- Define the weapon and it's variables
+--=========================================================================
+
+-- Static values for this specific weapon
+-- These don't need redefined in a weapon if a var is just the default value
+CTestShotgun.model				= "MOD/models/xml/shotgun.xml" -- path to the XML model file
+CTestShotgun.casingOrg			= Vec(0.02, 0.05, 0.033)	   -- where casings are ejected
+
+CTestShotgun.toolID 			= "testsg"  	 -- used by the engine. lowercase and no spaces
+CTestShotgun.toolName 			= "PWB2 Shotgun" -- shown in killfeed
+CTestShotgun.toolSlot			= 3
+
+CTestShotgun.ammoLoadedMax 		= 8							-- max clip 	 	-- -1 for no clip (pulls from reserve)
+CTestShotgun.ammoAltLoadedMax	= 0 						-- max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
+CTestShotgun.ammoPickupSize		= CTestShotgun.ammoLoadedMax-- defaults to full mag
+CTestShotgun.dmg_world			= 0.35						-- Size of hole in meters
+CTestShotgun.dmg_plyr			= 0.1						-- 0.0-1.0
+
+CTestShotgun.flags				= addFlags(0, FWPN_SV_CALLONCE_PRIM,
+											  FWPN_SV_CALLONCE_SEC, 
+											  FWPN_CLICK_PRIM, 
+											  FWPN_CLICK_SEC) -- weapon flags
+CTestShotgun.snds				= 0 -- Prechached SFX list, set on INIT
+
+-- override initVars to add new variables
+function CTestShotgun:initVars(owner)
+	baseWeap.initVars(self, owner)
+
+	if client and self.isLocal then
+		self.body = 0
+		self.slide = 0
+		self.slideTransform = Transform()
+
+		self.slideTime = nil
+	end
+end
+
+--=========================================================================
 -- Define the weapon's SFX / VFX
 --=========================================================================
 
@@ -29,41 +67,6 @@ function CTestShotgun:muzzleFlash(pos, size, color)
 	if not CTestGun.flashSPR then CTestGun.flashSPR = LoadSprite("gfx/flare_0.png") end
 
 	DrawSprite(CTestGun.flashSPR, t, size, size, color[1], color[2], color[3], 1.0, true, true, true)
-end
-
---=========================================================================
--- Define the weapon and it's variables
---=========================================================================
-
--- Static values for this specific weapon
--- These don't need redefined in a weapon if a var is just the default value
-CTestShotgun.model				= "MOD/models/xml/shotgun.xml" -- path to the XML model file
-CTestShotgun.casingOrg			= Vec(0.02, 0.05, 0.033)	   -- where casings are ejected
-
-CTestShotgun.toolID 			= "testshotgun"  -- used by the engine. lowercase and no spaces
-CTestShotgun.toolName 			= "PWB2 ShotGun" -- shown in killfeed
-CTestShotgun.toolSlot			= 3
-
-CTestShotgun.ammoLoadedMax 		= 8							-- max clip 	 	-- -1 for no clip (pulls from reserve)
-CTestShotgun.ammoAltLoadedMax	= 0 						-- max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
-CTestShotgun.ammoPickupSize		= CTestShotgun.ammoLoadedMax-- defaults to full mag
-CTestShotgun.dmg_world			= 0.35
-CTestShotgun.dmg_plyr			= 0.1						-- 0.0-1.0
-
-CTestShotgun.flags				= addFlags(0, FWPN_SV_CALLONCESEC, FWPN_SV_CALLONCESEC, FWPN_CLICK_PRIM, FWPN_CLICK_SEC) -- weapon flags
-CTestShotgun.snds				= 0 -- temp value, will be set to the sound array on init
-
--- override initVars to add new variables
-function CTestShotgun:initVars(owner)
-	baseWeap.initVars(self, owner)
-
-	if client and self.isLocal then
-		self.body = 0
-		self.slide = 0
-		self.slideTransform = Transform()
-
-		self.slideTime = nil
-	end
 end
 
 --=========================================================================

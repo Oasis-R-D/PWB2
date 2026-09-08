@@ -1,18 +1,6 @@
 CTestGun = {} -- goes in GLOBAL_WEAPONS
 
 --=========================================================================
--- Define the weapon's SFX / VFX
---=========================================================================
-
-function CTestGun:WeaponSounds()
-	return {
-		{"smg1_fire.ogg", 	"sv", 10},
-		{"smg1_reload.ogg", "cl", 10},
-		{"smg1_reload.ogg", "cl", 10, true}
-	}
-end
-
---=========================================================================
 -- Define the weapon and it's variables
 --=========================================================================
 
@@ -22,17 +10,17 @@ CTestGun.model				= "MOD/models/xml/smg1.xml" -- path to the XML model file
 CTestGun.casingOrg			= Vec(0.02, 0.15, -0.15)	-- where casings are ejected
 
 CTestGun.toolID 			= "testgun"	  -- used by the engine. lowercase and no spaces
-CTestGun.toolName 			= "PWB2 Test Gun" -- shown in killfeed
+CTestGun.toolName 			= "PWB2 Gun" -- shown in killfeed
 CTestGun.toolSlot			= 3
 
-CTestGun.ammoLoadedMax 	= 45					 -- max clip 	 	-- -1 for no clip (pulls from reserve)
-CTestGun.ammoAltLoadedMax	= 0 				 -- max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
-CTestGun.ammoPickupSize	= CTestGun.ammoLoadedMax -- defaults to full mag
-CTestGun.dmg_world			= 0.4
-CTestGun.dmg_plyr			= 0.05				 -- 0.0-1.0
+CTestGun.ammoLoadedMax 		= 45					 -- max clip 	 	-- -1 for no clip (pulls from reserve)
+CTestGun.ammoAltLoadedMax	= 0 				 	 -- max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
+CTestGun.ammoPickupSize		= CTestGun.ammoLoadedMax -- defaults to full mag
+CTestGun.dmg_world			= 0.4				     -- Size of hole in meters
+CTestGun.dmg_plyr			= 0.05				 	 -- 0.0-1.0
 
 CTestGun.flags				= addFlags(0, FWPN_NONE) -- weapon flags
-CTestGun.snds				= 0	-- temp value, will be set to the sound array on init
+CTestGun.snds				= 0	-- Prechached SFX list, set on INIT
 
 -- override initVars to add new variables
 function CTestGun:initVars(owner)
@@ -41,6 +29,18 @@ function CTestGun:initVars(owner)
 	end
 
 	baseWeap.initVars(self, owner)
+end
+
+--=========================================================================
+-- Define the weapon's SFX / VFX
+--=========================================================================
+
+function CTestGun:WeaponSounds()
+	return {
+		{"smg1_fire.ogg", 	"sv", 10},
+		{"smg1_reload.ogg", "cl", 10},
+		{"smg1_reload.ogg", "cl", 10, true}
+	}
 end
 
 --=========================================================================

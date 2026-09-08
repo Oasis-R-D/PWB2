@@ -29,11 +29,11 @@ baseWeap.toolSlot			= 0
 baseWeap.ammoLoadedMax 		= 0							-- max clip 	 	-- -1 for no clip (pulls from reserve)
 baseWeap.ammoAltLoadedMax	= 0 						-- max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
 baseWeap.ammoPickupSize		= baseWeap.ammoLoadedMax	-- defaults to full mag
-baseWeap.dmg_world			= 0							-- world damage, 'gun' does around 0.5
+baseWeap.dmg_world			= 0							-- Size of hole in meters
 baseWeap.dmg_plyr			= 0							-- 0.0-1.0
 
 baseWeap.flags				= addFlags(0, FWPN_NONE)	-- weapon flags
-baseWeap.snds				= 0 						-- temp value, will be set to the sound array on init
+baseWeap.snds				= 0 						-- Prechached SFX list, set on INIT
 
 baseWeap.recoilPosDecay 	= 0.5 -- multiplier for recoil pos decay. Lower is slower, higher is faster
 baseWeap.recoilAngSpring	= 65  -- bigger number increases the speed at which the angle corrects
@@ -272,13 +272,13 @@ function baseWeap:tickPlayer_cl(dt)
 			self.inPrimary = false
 
 			-- update server ASAP! Otherwise will cause desync if you press both at the same time
-			if not hasFlags_OR(self.flags, FWPN_SV_CALLONCE, FWPN_CLICK_PRIM) or hasFlag(self.flags, FWPN_SV_CALLONCESEC) then
+			if not hasFlags_OR(self.flags, FWPN_SV_CALLONCE_PRIM, FWPN_CLICK_PRIM) or hasFlag(self.flags, FWPN_SV_CALLONCE_SEC) then
 				self:ServerWpnCall("SV_StopFire")
 			end
 		end
 	end
 
-	-- TO-DO: this probably breaks if FWPN_SV_CALLONCE is true and you press both at once
+	-- TO-DO: this probably breaks if FWPN_SV_CALLONCE_PRIM is true and you press both at once
 	local empty_sec = false or self:SV_DontFireAltCond() --(self.ammoAltLoadedMax ~= WEAPON_NOCLIP and self.ammoAltTotal == 0) or (self.ammoAltLoadedMax == WEAPON_NOCLIP and empty_prim)
 	if self.isLocal and self.inSecondary == true then
 		-- enforce order
@@ -288,7 +288,7 @@ function baseWeap:tickPlayer_cl(dt)
 
 		if not altfireKeyDown or empty_sec then
 			self.inSecondary = false
-			if not hasFlags_OR(self.flags, FWPN_SV_CALLONCESEC, FWPN_CLICK_SEC) then
+			if not hasFlags_OR(self.flags, FWPN_SV_CALLONCE_SEC, FWPN_CLICK_SEC) then
 				self:ServerWpnCall("SV_StopAltFire")
 			end
 		end
@@ -376,7 +376,7 @@ function baseWeap:BasePrimaryAttack(dt, empty)
 	elseif self.isLocal then
 		if self.inPrimary == false then
 			self.inPrimary = true
-			if not hasFlag(self.flags, FWPN_SV_CALLONCE) then
+			if not hasFlag(self.flags, FWPN_SV_CALLONCE_PRIM) then
 				self:ServerWpnCall("SV_StartFire")
 			end
 		end
@@ -391,7 +391,7 @@ function baseWeap:BaseSecondaryAttack(dt, empty)
 	elseif self.isLocal then
 		if self.inSecondary == false then
 			self.inSecondary = true
-			if not hasFlag(self.flags, FWPN_SV_CALLONCESEC) then
+			if not hasFlag(self.flags, FWPN_SV_CALLONCE_SEC) then
 				self:ServerWpnCall("SV_StartAltFire")
 			end
 		end
