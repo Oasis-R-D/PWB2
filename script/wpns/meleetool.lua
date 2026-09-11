@@ -75,7 +75,7 @@ end
 -- Define the weapon's SFX / VFX
 --=========================================================================
 
-function CMelee:WeaponSounds()
+function CMelee:Sounds()
 	return {
 		{"smg1_fire.ogg", 	"sv", 10}, -- Player hit
 		{"smg1_fire.ogg", 	"sv", 10}, -- Hard object hit

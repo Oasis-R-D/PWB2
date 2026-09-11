@@ -35,7 +35,7 @@ end
 -- Define the weapon's SFX / VFX
 --=========================================================================
 
-function CTestGun:WeaponSounds()
+function CTestGun:Sounds()
 	return {
 		{"smg1_fire.ogg", 	"sv", 10},
 		{"smg1_reload.ogg", "cl", 10},

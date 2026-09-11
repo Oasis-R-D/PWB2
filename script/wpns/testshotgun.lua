@@ -42,7 +42,7 @@ end
 -- Define the weapon's SFX / VFX
 --=========================================================================
 
-function CTestShotgun:WeaponSounds()
+function CTestShotgun:Sounds()
 	return {
 		{"sbarrel.ogg", 	  "sv", 10},
 		{"dbarrel.ogg", 	  "sv", 10},

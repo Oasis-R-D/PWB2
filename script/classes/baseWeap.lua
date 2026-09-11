@@ -169,7 +169,7 @@ end
 -- sound data for PrecacheSFX(), override per weapon
 -- loop is optional and doesn't need included.
 -- files must be in MOD/snd/ or a subdir in there
-function baseWeap:WeaponSounds()
+function baseWeap:Sounds()
 	return {
 --  		   SOUND		  load to	 dist	[loop]
 		{"SOUND.ogg", "sv|cl", 	  10,	false}
@@ -254,8 +254,6 @@ function baseWeap:tickPlayer_cl(dt)
 		-- deploying weapon
 		self:BaseDeploy(curTime)
 	end
-
-	
 
 	if self.inReload and self.nextFire <= curTime then
 		-- complete the reload.
@@ -416,6 +414,7 @@ function baseWeap:BaseDeploy(curTime)
 	if client then
 		-- Reset old recoil and do some movement
 		self.recoilPos = Vec(0,0,0)
+		
 		if self.isLocal then
 			self:RecoilAngReset()
 			self:RecoilAngPunch(Vec(3, 0.75, 0.66))
@@ -645,6 +644,9 @@ function baseWeap:SV_StopAltFire() self.inSecondary = false end
 -- this works on both client and the server (as long as you call it with the proper args)
 function ReceiveCall(func, owner, slot, ...)
 	local wpn = PLAYER_WEAPONS[owner][slot]
+
+	if not wpn then return end
+
 	wpn[func](wpn, ...)
 end
 
@@ -763,10 +765,9 @@ end
 
 function baseWeap:DepleteAmmo(ammoReduced, clipReduced)
 	if server then
-		ammoReduced = ammoReduced or 1
 		local ammo = GetToolAmmo(self.toolID, self.owner)
-
 		if ammo < 9999 then
+			ammoReduced = ammoReduced or 1
 			SetToolAmmo(self.toolID, ammo-ammoReduced, self.owner)
 		end
 	elseif clipReduced then
@@ -913,22 +914,22 @@ end
 
 function baseWeap:PrecacheSFX()
 	local precachedSounds = {}
-	local svSounds, clSounds = 0, 0
+	local soundsLoaded = 0
 
-	for i, sounddata in ipairs(self:WeaponSounds()) do
+	for i, sounddata in ipairs(self:Sounds()) do
 		if server and sounddata[2] == "sv" then
-            svSounds = svSounds + 1
+            soundsLoaded = soundsLoaded + 1
 			if sounddata[4] and sounddata[4] == true then
-                precachedSounds[svSounds] = LoadLoop("MOD/snd/" .. sounddata[1], sounddata[3])
+                precachedSounds[soundsLoaded] = LoadLoop("MOD/snd/" .. sounddata[1], sounddata[3])
             else
-                precachedSounds[svSounds] = LoadSound("MOD/snd/" .. sounddata[1], sounddata[3])
+                precachedSounds[soundsLoaded] = LoadSound("MOD/snd/" .. sounddata[1], sounddata[3])
             end
 		elseif client and sounddata[2] == "cl" then
-            clSounds = clSounds + 1
+            soundsLoaded = soundsLoaded + 1
             if sounddata[4] and sounddata[4] == true then
-                precachedSounds[clSounds] = LoadLoop("MOD/snd/" .. sounddata[1], sounddata[3])
+                precachedSounds[soundsLoaded] = LoadLoop("MOD/snd/" .. sounddata[1], sounddata[3])
             else
-                precachedSounds[clSounds] = LoadSound("MOD/snd/" .. sounddata[1], sounddata[3])
+                precachedSounds[soundsLoaded] = LoadSound("MOD/snd/" .. sounddata[1], sounddata[3])
             end
 		end
 	end

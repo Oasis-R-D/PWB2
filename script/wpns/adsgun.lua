@@ -36,7 +36,7 @@ end
 -- Define the weapon's SFX / VFX
 --=========================================================================
 
-function CAdsGun:WeaponSounds()
+function CAdsGun:Sounds()
 	return {
 		{"smg1_fire.ogg", "sv", 10},
 		{"smg1_reload.ogg", "cl", 10},
