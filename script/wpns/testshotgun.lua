@@ -7,7 +7,7 @@ CTestShotgun = {} -- goes in GLOBAL_WEAPONS
 -- Static values for this specific weapon
 -- These don't need redefined in a weapon if a var is just the default value
 CTestShotgun.model				= "MOD/models/xml/shotgun.xml" -- path to the XML model file
-CTestShotgun.casingOrg			= Vec(0.02, 0.05, 0.033)	   -- where casings are ejected
+CTestShotgun.casingOrg			= Vec(0.02, 0.08, 0.022)	   -- where casings are ejected
 
 CTestShotgun.toolID 			= "testsg"  	 -- used by the engine. lowercase and no spaces
 CTestShotgun.toolName 			= "PWB2 Shotgun" -- shown in killfeed
