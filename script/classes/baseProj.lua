@@ -44,23 +44,18 @@ end
 -- at the end otherwise if preferred
 -----------------------------------------------------------
 function baseEnt:initVars(owner)
-    self.origin     = Vec()
-    self.angle      = Vec()
-
-    self.prevOrigin = Vec()
-
     -- which player owns this instance
-	self.owner	    = owner
+	self.owner	     = owner
 
-    self.nextThink  = false
-    self.think = function() end
+    self.nextThink   = false
+    self.think = function() end -- pointer to think func
+
+    self.touch = function() end -- pointer to touch func
+    self.lastTouched = -1    -- Last touched object, makes sure touch is only called for a impact once
 
     -- Physical representation
-    self.model      = false  -- 3D model (if applicable)
-    self.sprite     = false  -- Sprite model (if applicable)
-    self.physical   = true   -- Use Teardown physics instead of Temp-Ent physics
-
-    self.lastTouched = -1    -- Last touched object, makes sure touch is only called for a impact once
+    self.model       = false -- 3D model (if applicable)
+    self.sprite      = false -- Sprite model (if applicable)             
 end
 
 function baseEnt:PrecacheSFX()
@@ -105,10 +100,18 @@ function baseEnt:ClientEntCall(receivers, func, ...)
 end
 
 function baseEnt:RunPhysics(dt)
+    local vel = GetBodyVelocity(self.model)
+    local didHit, dist, shape, playerId, playerDamageFactor, normal = QueryShot(GetBodyTransform(self.model).pos, direction, maxDist, 0, self.owner)
+    if not didHit or shape == self.lastTouched or playerId == self.lastTouched then
+        return
+    end
+
+    self.lastTouched = playerId ~= 0 and playerId or shape
+    self:touch()
 end
 
 function baseEnt:Tick(dt)
-    local t = GetTIme()
+    local t = GetTime()
 
     if self.nextThink < t then
         self:think() -- should work!

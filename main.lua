@@ -181,7 +181,7 @@ GLOBAL_WEAPONS = {
 }
 
 -- only calculate this once
-GLOBAL_WEAPONS_AMNT = #GLOBAL_WEAPONS 
+GLOBAL_WEAPONS_AMNT = #GLOBAL_WEAPONS
 
 -- pointers to each player's weapons
 PLAYER_WEAPONS = {}
@@ -228,7 +228,7 @@ function server.tick(dt)
 end
 
 function server.update(dt)
-   checkDeathReset()
+   CheckDeathReset()
 end
 
 -- Sets up weapon classes, precaches SFX and haptics
@@ -276,7 +276,7 @@ function client.tick(dt)
       menuActive = true
       SetBool("game.ui.hidemods", true)
    end
-   
+
    if menuActive and menuAlpha == 0.0 then
       SetValue("menuAlpha", 1.0, "easeout", 0.3)
    end
@@ -288,7 +288,7 @@ end
 
 -- Global VFX
 function client.update(dt)
-   checkDeathReset()
+   CheckDeathReset()
 
    client.PUNCHBASIC_Apply(dt)
 

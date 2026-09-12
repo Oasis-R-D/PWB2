@@ -70,7 +70,6 @@ function CMelee:callToolAnimator(dt)
 	tickToolAnimator(self.animator, dt, nil, self.owner, self.swingNumb, self.swingNumb, true)
 end
 
-
 --=========================================================================
 -- Define the weapon's SFX / VFX
 --=========================================================================

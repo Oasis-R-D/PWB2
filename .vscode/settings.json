@@ -1,4 +1,7 @@
 {
     "TeardownIntellisense.enableIntellisense": true,
-    "TeardownIntellisense.showPrompt": false
+    "TeardownIntellisense.showPrompt": false,
+    "Lua.diagnostics.globals": [
+        "include"
+    ]
 }

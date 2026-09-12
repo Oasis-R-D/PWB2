@@ -2,12 +2,12 @@
 
 settings = {}
 
-function settingUPD(key, value)
+function SettingUPD(key, value)
     SetBool("savegame.mod.pwb." .. key, value)
     settings[key] = value
 end
 
-function initBool(key, default)
+function InitBool(key, default)
     local value = default 
     if HasKey("savegame.mod.pwb." .. key) then
         value = GetBool("savegame.mod.pwb." .. key)
@@ -19,9 +19,9 @@ function initBool(key, default)
 end
 
 function client.settingsInit()
-    initBool("shelleject",  true)
-    initBool("dynlights",   true)
-    initBool("debug",       false)
+    InitBool("shelleject",  true)
+    InitBool("dynlights",   true)
+    InitBool("debug",       false)
 end
 
 function client.settingsDraw()
@@ -85,21 +85,21 @@ function client.settingsDraw()
             UiText("Shell ejection", true)
             UiTranslate(0, th)
 			if UiTextButton(settings.shelleject, bw, bh) then
-                settingUPD("shelleject", not settings.shelleject)
+                SettingUPD("shelleject", not settings.shelleject)
 			end
 			UiTranslate(0, bh+sep)
 			
             UiText("Dynamic Lights", true)
             UiTranslate(0, th)
 			if UiTextButton(settings.dynlights, bw, bh) then
-                settingUPD("dynlights", not settings.dynlights)
+                SettingUPD("dynlights", not settings.dynlights)
 			end
 			UiTranslate(0, bh+sep)
 
             UiText("Debug", true)
             UiTranslate(0, th)
 			if UiTextButton(settings.debug, bw, bh) then
-                settingUPD("debug", not settings.debug)
+                SettingUPD("debug", not settings.debug)
 			end
 			UiTranslate(0, bh+sep)
 			UiTranslate(0, 10)

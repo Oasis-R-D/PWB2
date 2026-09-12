@@ -89,7 +89,7 @@ function CTestShotgun:PrimaryAttack(dt)
 		if self.isLocal then
 			self:ServerWpnCall("PrimaryAttack", dt)
 
-			client.VFX_DynLight(self.owner, 40, GetTime() + 0.1, Vec(0.7, 0.5, 0.3), 0, "muzzle")
+			client.VFX_DynLight(self.owner, 30, 0.25, Vec(0.7, 0.5, 0.3), 0, "muzzle")
 
 			self:RecoilAngReset(-15)
 			self:RecoilAngPunch(Vec(GetRandomFloat(2, 3), GetRandomFloat(-0.5, 0.5), GetRandomFloat(-2, 1)))
@@ -136,7 +136,7 @@ function CTestShotgun:SecondaryAttack(dt)
 		if self.isLocal then
 			self:ServerWpnCall("SecondaryAttack", dt)
 
-			client.VFX_DynLight(self.owner, 50, GetTime() + 0.15, Vec(0.7, 0.5, 0.3), 0, "muzzle")
+			client.VFX_DynLight(self.owner, 40, 0.5, Vec(0.7, 0.5, 0.3), 0, "muzzle")
 
 			self:RecoilAngReset(-15)
 			self:RecoilAngPunch(Vec(GetRandomFloat(4, 5), GetRandomFloat(-0.5, 0.5), GetRandomFloat(-5, -1)))

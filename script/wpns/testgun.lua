@@ -50,7 +50,7 @@ end
 function CTestGun:PrimaryAttack(dt)
 	local mt = GetToolLocationWorldTransform("muzzle", self.owner)
 	if not mt then return end
-	
+
 	if client then
 		if self.ammoLoaded <= 0 then
 			self:PlayEmptySound()
@@ -68,10 +68,10 @@ function CTestGun:PrimaryAttack(dt)
 		self:RecoilPosPunch(Vec(0, 0, GetRandomFloat(0.133, 0.166)))
 
 		if self.isLocal then
-			client.VFX_DynLight(self.owner, 25, GetTime() + 0.08, Vec(0.7, 0.5, 0.3), 0, "muzzle")
+			client.VFX_DynLight(self.owner, 15, 0.08, Vec(0.7, 0.5, 0.3), Vec(), "muzzle")
 
 			client.PUNCH_MachineGunKick(1, self.timeFiring, 2)
-			
+
 			self:RecoilAngReset(-15)
 			self:RecoilAngPunch(Vec(GetRandomFloat(0.5, 1), GetRandomFloat(-0.5, 0.5), GetRandomFloat(-1, 1)))
 
@@ -119,10 +119,10 @@ function CTestGun:SecondaryAttack(dt)
 		self:RecoilPosPunch(Vec(0, 0, GetRandomFloat(0.133, 0.166)))
 
 		if self.isLocal then
-			client.VFX_DynLight(self.owner, 45, GetTime() + 0.11, Vec(0.7, 0.5, 0.3), 0, "muzzle")
+			client.VFX_DynLight(self.owner, 30, 0.25, Vec(0.7, 0.5, 0.3), Vec(), "muzzle")
 
 			client.PUNCH_MachineGunKick(1, self.timeFiring, 2)
-			
+
 			self:RecoilAngReset(-15)
 			self:RecoilAngPunch(Vec(GetRandomFloat(0.5, 1), GetRandomFloat(-0.5, 0.5), GetRandomFloat(-1, 1)))
 

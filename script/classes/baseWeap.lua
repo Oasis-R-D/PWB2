@@ -62,7 +62,7 @@ function baseWeap:initVars(owner)
 		-- Use to check if gun should fire
 		-- Use alongside ammoLoaded.
 		self.firedOnEmpty       = false
-		
+
 		-- current magazine amount
 		self.ammoLoaded         = self.ammoLoadedMax 
 
@@ -74,7 +74,7 @@ function baseWeap:initVars(owner)
 		-- True when the gun is allowed to
 		-- play empty sounds. Reset it in Idle()
 		self.playEmptySound		= true
-		
+
 		self.animator        	= ToolAnimator()
 
 		self.recoilPos 			= Vec(0,0,0)
@@ -98,14 +98,14 @@ function baseWeap:initVars(owner)
 		-- used for server networking
 		self.inPrimary 		= false
 		self.inSecondary 	= false
-		
+
 		-- list of currently playing following sounds
 		self.followingSNDS 		= {}
 	end
-	
+
 	-- total ammo
 	self.ammoTotal			= 0 
-	
+
 	-- compare against GetTime()
 	self.nextFire           = 0
 	self.nextAltFire        = 0
@@ -173,7 +173,7 @@ function baseWeap:Sounds()
 	return {
 --  		   SOUND		  load to	 dist	[loop]
 		{"SOUND.ogg", "sv|cl", 	  10,	false}
-	} 
+	}
 end
 
 function baseWeap:PlayEmptySound()
@@ -215,12 +215,12 @@ function baseWeap:SV_DontFireAltCond() return false end
 function baseWeap:tickPlayer_cl(dt)
 	if settings.debug then
 		self:Debug() end
-	
+
 	self:Animate(dt)
-	
+
 	local curTime = GetTime()
 	self.ammoTotal = GetToolAmmo(self.toolID, self.owner)
-	
+
 	if self.isLocal then
 		for index, sound in pairs(self.followingSNDS) do
 			if (sound[2] - curTime) > dt then
@@ -291,7 +291,7 @@ function baseWeap:tickPlayer_cl(dt)
 			end
 		end
 	end
-	
+
 	if altfireKeyDown and self:CanAttack(self.nextAltFire, curTime) then
 		self:BaseSecondaryAttack(dt, empty_sec)
 	elseif fireKeyDown and self:CanAttack(self.nextFire, curTime) then
@@ -323,7 +323,7 @@ end
 
 -- Server only cares about firing
 -- Don't simulate reloading or clip amount
-function baseWeap:tickPlayer_sv(dt)	
+function baseWeap:tickPlayer_sv(dt)
 	if settings.debug then
 		self:Debug() end
 
@@ -357,9 +357,9 @@ function baseWeap:tickPlayer_sv(dt)
     end
 
 	if self.inSecondary == true and self:CanAttack(self.nextAltFire, curTime) then
-		self:SecondaryAttack(dt, false)
+		self:SecondaryAttack(dt)
 	elseif self.inPrimary == true and self:CanAttack(self.nextFire, curTime) then
-		self:PrimaryAttack(dt, false)
+		self:PrimaryAttack(dt)
 	end
 
 	-- used for when you need extra stuff in WeaponIdle
@@ -394,7 +394,7 @@ function baseWeap:BaseSecondaryAttack(dt, empty)
 			end
 		end
 	end
-	
+
 	if not hasFlag(self.flags, FWPN_NOALTACTIONPOSE) then
 		-- hold gun straight
 		self.animator.timeSinceFire = 0.0
@@ -414,11 +414,11 @@ function baseWeap:BaseDeploy(curTime)
 	if client then
 		-- Reset old recoil and do some movement
 		self.recoilPos = Vec(0,0,0)
-		
+
 		if self.isLocal then
 			self:RecoilAngReset()
 			self:RecoilAngPunch(Vec(3, 0.75, 0.66))
-			
+	
 			self:RecoilPosPunch(Vec(0.05, 0.1, -0.05))
 		end
 	end
@@ -439,7 +439,7 @@ function baseWeap:BaseHolster()
 		end
 
 		self.followingSNDS = {}
-		
+
 		self.inPrimary 	  = false
 		self.inSecondary  = false
 	end
@@ -477,6 +477,7 @@ end
 --  HUD DRAWING
 --=========================================================================
 
+-- Draw the weapon's ammo hud
 function baseWeap:DrawHUD()
 	if hasFlag(self.flags, FWPN_NOHUD) then return end
 
@@ -516,6 +517,7 @@ function baseWeap:callToolAnimator(dt)
 	tickToolAnimator(self.animator, dt, nil, self.owner)
 end
 
+-- applies model poses, recoil, idle and angular offsets
 function baseWeap:Animate(dt)
 	if self.isLocal then
 		self:ApplyWeaponPos(dt)
@@ -526,16 +528,16 @@ function baseWeap:Animate(dt)
 		else
 			self:DecayRecoilAng(dt)
 		end
-		
+
 		self.animator.offsetTransform.rot = QuatEuler(self.recoilAng[1], self.recoilAng[2], self.recoilAng[3])
 	else
 		self.animator.offsetTransform.pos = self.recoilPos
 	end
-	
+
 	self:DecayRecoilPos(dt)
 
 	self:CustomAnimate(dt)
-	
+
 	self:callToolAnimator(dt)
 end
 
@@ -564,15 +566,15 @@ function baseWeap:DecayRecoilAng(dt)
 	local damping = math.max(1 - (self.recoilAngDamp * dt), 0)
 
 	self.recoilAngVel = VecScale(self.recoilAngVel, damping)
-	
+
 	-- torsional spring
 	local springForceMagnitude = math.min(self.recoilAngSpring * dt, 2.0)
 	self.recoilAngVel = VecSub(self.recoilAngVel, VecScale(self.recoilAng, springForceMagnitude))
 
 	-- don't wrap around
-	self.recoilAng[1] = clamp(self.recoilAng[1], -89,  89 )
-	self.recoilAng[2] = clamp(self.recoilAng[2], -179, 179)
-	self.recoilAng[3] = clamp(self.recoilAng[3], -89,  89 )
+	self.recoilAng[1] = Clamp(self.recoilAng[1], -89,  89 )
+	self.recoilAng[2] = Clamp(self.recoilAng[2], -179, 179)
+	self.recoilAng[3] = Clamp(self.recoilAng[3], -89,  89 )
 end
 
 function baseWeap:RecoilAngReset(tolerance)
@@ -604,6 +606,7 @@ function baseWeap:RecoilPosReset(tolerance)
 	self.recoilPos = Vec(0,0,0)
 end
 
+-- applies positional recoil, idle cycle and the Y offset
 function baseWeap:ApplyWeaponPos(dt)
 	local idlePos = Vec(
 		 math.sin(self.idleCycleTime*0.5) + math.cos(self.idleCycleTime*0.25),
@@ -614,9 +617,9 @@ function baseWeap:ApplyWeaponPos(dt)
 	self.idleCycleTime = self.idleCycleTime + dt
 
 	if self.timeWeaponIdle > GetTime() then
-		self.idleCycleScale = lerp(self.idleCycleScale, 0.0, dt)
+		self.idleCycleScale = Lerp(self.idleCycleScale, 0.0, dt)
 	else
-		self.idleCycleScale = lerp(self.idleCycleScale, 1.0, dt)
+		self.idleCycleScale = Lerp(self.idleCycleScale, 1.0, dt)
 	end
 
 	idlePos = VecScale(VecSub(VecScale(idlePos, 0.01), Vec(0.01, 0.01, 0)), self.idleCycleScale)
@@ -673,7 +676,7 @@ function baseWeap:FireBulletsPlayer(shots, pos, spreadRad, range, impulseMult, r
 
 		if radius > 0 and playerhit == 0 then
 			QueryRequire("player")
-			HULLbHit, HULLpdist, HULLpShape, HULLplayerhit, _, normal = QueryShot(posUse, dir, range, radius, self.owner)
+			local _, HULLpdist, _, HULLplayerhit, _, normal = QueryShot(posUse, dir, range, radius, self.owner)
 
 			if HULLplayerhit ~= 0 then
 				local hitPoint = VecAdd(posUse, VecAdd(VecScale(dir, HULLpdist), VecScale(normal, -radius)))
@@ -703,7 +706,7 @@ function baseWeap:FireBulletsPlayer(shots, pos, spreadRad, range, impulseMult, r
 				-- play player impact SFX
 				if not baseWeap.hitSND then baseWeap.hitSND = LoadSound("MOD/snd/base/bullet_hit0.ogg") end
 				PlaySound(baseWeap.hitSND, SoundPoint, 2)
-				
+
 				-- don't actually hit the player so we can do our own damage and vfx
 				local newrange = pdist - 0.5
 				if newrange > 0 then Shoot(posUse, dir, "bullet", 0.0, newrange, self.owner) end
@@ -714,15 +717,15 @@ function baseWeap:FireBulletsPlayer(shots, pos, spreadRad, range, impulseMult, r
 					QueryInclude("player")
 					QueryRejectPlayer(self.owner)
 					local _, _, _, bodyPart = QueryRaycast(posUse, dir, pdist + 0.25)
-					
+
 					-- Apply per bodypart damagage multiplier
 					local dmg = self:DamageMultiplier(bodyPart, self.dmg_plyr)
 
 					-- Deal damage
 					ApplyPlayerDamage(playerhit, dmg, self.toolName, self.owner)
 				end
-				
-				server.BloodDecal(SoundPoint, dir, self.dmg_plyr, nil, hitAnimator)
+
+				server.BloodDecal(SoundPoint, dir, self.dmg_plyr, hitAnimator)
 			end
 		else -- client
 			if bHit and self.dmg_plyr then
@@ -736,7 +739,7 @@ function baseWeap:FireBulletsPlayer(shots, pos, spreadRad, range, impulseMult, r
 					QueryInclude("player")
 					QueryRejectPlayer(self.owner)
 					local _, _, _, bodyPart = QueryRaycast(posUse, dir, pdist + 0.25)
-					
+
 					-- Apply per bodypart damagage multiplier
 					local dmg = self:DamageMultiplier(bodyPart, self.dmg_plyr)
 
@@ -855,19 +858,19 @@ function baseWeap:DumpGlobals()
 	local prefix = "SV "
 	if client then prefix = "CL "
 		DebugWatch(prefix .. "inReload", 			self.inReload)
-		
-		DebugWatch(prefix .. "ammoLoaded", 			self.ammoLoaded)
+
+		DebugWatch(prefix .. "ammoLoaded", 		self.ammoLoaded)
 		DebugWatch(prefix .. "ammoAltTotal",		self.ammoAltTotal)
 	end
 
 	DebugWatch(prefix .. "inPrimary", 			self.inPrimary)
 	DebugWatch(prefix .. "inSecondary", 		self.inSecondary)
 
-	DebugWatch(prefix .. "spreadSeed", 			shared.seed)
-	
+	DebugWatch(prefix .. "spreadSeed", 		shared.seed)
+
 	DebugWatch(prefix .. "nextFire",			string.format("%.5f", math.max(0, self.nextFire - GetTime())))
 	DebugWatch(prefix .. "nextAltFire", 		string.format("%.5f", math.max(0, self.nextAltFire - GetTime())))
-	
+
 	DebugWatch(prefix .. "holstered", 			self.holstered)
 
 	if false then

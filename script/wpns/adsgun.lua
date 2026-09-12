@@ -85,7 +85,7 @@ function CAdsGun:PrimaryAttack(dt)
 		end
 
 		if self.isLocal then
-			client.VFX_DynLight(self.owner, 35, GetTime() + 0.1, Vec(0.7, 0.5, 0.3), 0, "muzzle")
+			client.VFX_DynLight(self.owner, 25, 0.1, Vec(0.7, 0.5, 0.3), Vec(), "muzzle")
 
 			local punchVec = Vec()
 			if self.animator.forceSecondaryActionPose then

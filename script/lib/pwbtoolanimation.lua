@@ -1,9 +1,5 @@
-function clamp(value, min, max)
-    return math.max(min, math.min(max, value))
-end
-
 -- Return signed angle between vec0 and vec1 with respect to axis
-function getSignedAngle(vec0, vec1, axis)
+local function getSignedAngle(vec0, vec1, axis)
     local dot0 = VecDot(axis, vec0)
     local dot1 = VecDot(axis, vec1)
 
@@ -11,7 +7,7 @@ function getSignedAngle(vec0, vec1, axis)
     local v1 = VecNormalize(VecSub(vec1, VecScale(axis, dot1)))
 
     local dotv = VecDot(v0, v1)
-    local angle = math.acos(clamp(dotv, -1.0, 1.0))
+    local angle = math.acos(Clamp(dotv, -1.0, 1.0))
 
     local c = VecCross(v0,v1)
     if VecDot(c, axis) < 0.0 then
@@ -21,17 +17,11 @@ function getSignedAngle(vec0, vec1, axis)
     end
 end
 
-function dampVal(rate, dt)
+local function dampVal(rate, dt)
     return 1.0 - 2.0^(-rate * dt)
 end
 
-function debugSphere(position, radius, r,g,b,a)
-    DebugLine(VecSub(position, Vec(0,radius, 0)), VecAdd(position, Vec(0, radius, 0)), r, g, b, a)
-    DebugLine(VecSub(position, Vec(radius, 0, 0)), VecAdd(position, Vec(radius, 0, 0)), r, g, b, a)
-    DebugLine(VecSub(position, Vec(0, 0, radius)), VecAdd(position, Vec(0, 0, radius)), r, g, b, a)
-end
-
-function HandPose()
+local function HandPose()
     local handPose = {}
     handPose.transform = Transform()
     handPose.used = 0.0
@@ -41,7 +31,7 @@ end
 
 function ToolAnimator()
     local anim = {}
-    
+
     -- Contact is tested and if there is an intersection with the world action pose will return faster to the alternative poses
     anim.contact = {}
     anim.contact.center = Vec()
@@ -91,7 +81,7 @@ function tickToolAnimator(toolAnimator, dt, defaultPoseTransform, playerId, swin
 	swingamnts = swingamnts or ""
     swingamntsALT = swingamntsALT or ""
 	noheldaction = noheldaction or false
-	
+
     -- Get current tool and hand pose transforms
     local thirdPerson = not IsPlayerLocal(playerId) or GetBool("game.thirdperson")
 
@@ -99,7 +89,7 @@ function tickToolAnimator(toolAnimator, dt, defaultPoseTransform, playerId, swin
     if thirdPerson then
         prefix = "tp_"
     end
-	
+
     if swingamnts ~= "" then
         if swingamnts > 0 then
             swingamnts = math.random(1, swingamnts)
@@ -118,15 +108,15 @@ function tickToolAnimator(toolAnimator, dt, defaultPoseTransform, playerId, swin
 
     local poseRightHand = HandPose()
     local poseLeftHand = HandPose()
-	
+
 	local pose = nil 
-	
+
 	if toolAnimator.forceSecondaryActionPose == false then
 		pose = getPoseTransform(prefix.."action"..swingamnts, playerId)
 	else
 		pose = getPoseTransform(prefix.."secaction"..swingamntsALT, playerId)
 	end
-	
+
     if defaultPoseTransform ~= nil then
         pose = TransformCopy(defaultPoseTransform)
     end
@@ -134,7 +124,7 @@ function tickToolAnimator(toolAnimator, dt, defaultPoseTransform, playerId, swin
     if pose == nil then
         pose = Transform()
     end
-	
+
 	if toolAnimator.forceSecondaryActionPose == false then
 		getHandPoseTransforms(prefix .. "action"..swingamnts, poseRightHand, poseLeftHand, playerId)
 		mixWithPose(prefix.."action_crouch"..swingamnts, getCrouching(playerId), pose, poseRightHand, poseLeftHand, playerId)
@@ -142,12 +132,12 @@ function tickToolAnimator(toolAnimator, dt, defaultPoseTransform, playerId, swin
 		getHandPoseTransforms(prefix .. "secaction"..swingamntsALT, poseRightHand, poseLeftHand, playerId)
 		mixWithPose(prefix.."secaction_crouch"..swingamntsALT, getCrouching(playerId), pose, poseRightHand, poseLeftHand, playerId)
 	end
-	
+
     toolAnimator.timeSinceFire = toolAnimator.timeSinceFire + dt
     if (InputDown("usetool", playerId) and noheldaction == false) or toolAnimator.forceActionPose or toolAnimator.forceSecondaryActionPose then
         toolAnimator.timeSinceFire = 0.0
     end
-	
+
     local useAimRotation = toolAnimator.useAimRotation
     local poseTimeCondition = toolAnimator.maxActionPoseTime
     if toolAnimator.contact.intersects then
@@ -303,18 +293,18 @@ function getHandPoseTransforms(poseName, rightHand, leftHand, playerId)
     return right ~= nil or left ~= nil
 end
 
-function mixValue(a, b, t)
-    local result = 0.0
-    result = a * (1.0 - t) + b * t
-    return result
-end
-
 function mixInTransform(aInOut, bIn, t)
     aInOut.pos = VecLerp(aInOut.pos, bIn.pos, t)
     aInOut.rot = QuatSlerp(aInOut.rot, bIn.rot, t)
 end
 
 function mixInHand(aInOut, bIn, t)
+    local function mixValue(a, b, t)
+        local result = 0.0
+        result = a * (1.0 - t) + b * t
+        return result
+    end
+
     mixInTransform(aInOut.transform, bIn.transform, t)
     aInOut.used = mixValue(aInOut.used, bIn.used, t)
 end
@@ -336,18 +326,6 @@ function mixWithPose(poseName, alpha, pose, poseRightHand, poseLeftHand, playerI
     end
 
     return false
-end
-
-function getEyeMaxHeight()
-    return 1.7
-end
-
-function getEyeHeight(playerId)
-    return VecDot(VecSub(GetPlayerEyeTransform(playerId).pos, GetPlayerTransform(playerId).pos), GetPlayerUp(playerId))
-end
-
-function getChestHeight(playerId)
-    return 1.2 - (0.6 * getCrouching(playerId))
 end
 
 function getPitch(playerId)
@@ -382,13 +360,13 @@ function getAimRotation(target, pivot)
     local YAW_MAX_DOWN = math.rad(5)
     local PITCH_MAX = math.rad(80.0)
 
-    local pitch = clamp(getSignedAngle(Vec(0.0,0.0,-1.0), d, Vec(1.0,0.0,0.0)), -PITCH_MAX, PITCH_MAX)
+    local pitch = Clamp(getSignedAngle(Vec(0.0,0.0,-1.0), d, Vec(1.0,0.0,0.0)), -PITCH_MAX, PITCH_MAX)
     local yaw = getSignedAngle(Vec(0.0,0.0,-1.0), d, Vec(0.0,1.0,0.0))
 
     if pitch < 0.0 then
-        yaw = clamp(yaw, -YAW_MAX_DOWN, YAW_MAX_DOWN)
+        yaw = Clamp(yaw, -YAW_MAX_DOWN, YAW_MAX_DOWN)
     else
-        yaw = clamp(yaw, -YAW_MAX_UP, YAW_MAX_UP)
+        yaw = Clamp(yaw, -YAW_MAX_UP, YAW_MAX_UP)
     end
 
     local rot = QuatRotateQuat(QuatAxisAngle(Vec(0.0,1.0,0.0), math.deg(yaw)), QuatAxisAngle(Vec(1.0,0.0,0.0), math.deg(pitch)))
@@ -397,7 +375,7 @@ end
 
 function getAimTarget(maxDist, playerId)
     QueryRequire("physical visible")
-    
+
     local ct = GetPlayerCameraTransform(playerId)
 
     local start = ct.pos
@@ -453,15 +431,11 @@ function getToWorldTransform(useToolOverride, playerId)
 
         t.rot = getYawTransform().rot
         local up = GetPlayerUp(playerId)
-        t.pos = VecAdd(t.pos, VecScale(up, getEyeMaxHeight()))        
+        t.pos = VecAdd(t.pos, VecScale(up, 1.7))        
         return t
     else
         return GetPlayerEyeTransform(playerId)
     end
-end
-
-function getPitchTransform(playerId)
-    return Transform(Vec(), QuatAxisAngle(Vec(1,0,0), getPitch(playerId)))
 end
 
 function getYawTransform(playerId)
@@ -470,8 +444,8 @@ end
 
 
 function getCrouching(playerId)
-    local height = getEyeHeight(playerId)
-    return 1.0 - (clamp(height, 0.85, 1.7) - 0.85)/(1.7 - 0.85)
+    local height = VecDot(VecSub(GetPlayerEyeTransform(playerId).pos, GetPlayerTransform(playerId).pos), GetPlayerUp(playerId))
+    return 1.0 - (Clamp(height, 0.85, 1.7) - 0.85)/(1.7 - 0.85)
 end
 
 function getJumping(playerId)
@@ -491,7 +465,7 @@ function getSwimming(playerId)
     local inWater, depth = IsPointInWater(VecAdd(pt.pos, Vec(0,0.2,0)))
 
     if inWater and depth > 0.0 then
-        return clamp(1.0/depth, 0.0, 1.0)
+        return Clamp(1.0/depth, 0.0, 1.0)
     end
 
     return 0.0

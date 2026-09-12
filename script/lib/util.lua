@@ -31,7 +31,7 @@ end
 ----------------------------------------------------------------------------------------------
 
 -- Reset player data on death
-function checkDeathReset()
+function CheckDeathReset()
 	local count = GetEventCount("playerdied")
    	for i=1, count do
 		local p, _, _ = GetEvent("playerdied", i)

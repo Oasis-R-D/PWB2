@@ -7,35 +7,53 @@
 
 local dynLights = {}
 
+-- retreives the f value where Lerp(1-f^dt) will reach "0" after time t
+function GetLerpFactor(t)
+	local ep = 0.00001; -- target %
+	return ep ^ (1.0 / t)
+end
+
+---@param p number Who should this light follow
+---@param intensity number Starting size of the light
+---@param life number How long until the light is gone 
+---@param color TVec Light color (Vec(r,g,b))
+---@param pos TVec Where the light should stay (if no attachment is found)
+---@param attachment string Where the light should attach to the player weapon
 function client.VFX_DynLight(p, intensity, life, color, pos, attachment)
     if settings.dynlights == false then return end
-    
+
     attachment = attachment or false
-    table.insert(dynLights, {p, intensity, life, color, pos, attachment})
+    table.insert(dynLights, {p, intensity, GetLerpFactor(life), color, pos, attachment})
 end
 
 function client.VFX_DynLightDraw(dt)
     for i, light in pairs(dynLights) do
-        local usePos = Vec()
-
         if light[6] ~= false then
-            usePos = GetToolLocationWorldTransform(light[6], light[1])
-            if usePos then
-                usePos = usePos.pos
-                light[7] = usePos
+            local toolTrans = GetToolLocationWorldTransform(light[6], light[1])
+            if toolTrans then
+                light[5] = toolTrans.pos
             else
-                usePos = light[7]
+				light[6] = false
             end
-        else
-            usePos = light[5]
         end
 
-        local timeLeft = light[3] - GetTime()
-        if timeLeft <= 0 then
+		local usePos = VecAdd(light[5], VecScale(GetPlayerVelocity(light[1]), dt))
+		if light[6] == false then
+			usePos = light[5]
+		end
+
+		PointLight(
+			usePos,
+			light[4][1],
+			light[4][2], 
+			light[4][3], 
+			light[2]
+		)
+
+		light[2] = Lerp(light[2] - dt, 0, 1 - light[3] ^ dt)
+		if light[2] <= 0 then
             table.remove(dynLights, i)
-        else
-            PointLight(VecAdd(usePos, VecScale(GetPlayerVelocity(light[1]), dt)), light[4][1], light[4][2], light[4][3], light[2]*(timeLeft/light[3]*light[3]))
-        end
+		end
     end
 end
 
@@ -105,9 +123,9 @@ function client.PUNCH_Decay(dt)
 	vecPunchAngleVel = VecSub(vecPunchAngleVel, VecScale(vecPunchAngle, springForceMagnitude))
 
 	-- don't wrap around
-	vecPunchAngle[1] = clamp(vecPunchAngle[1], -89,  89 )
-	vecPunchAngle[2] = clamp(vecPunchAngle[2], -179, 179)
-	vecPunchAngle[3] = clamp(vecPunchAngle[3], -89,  89 )
+	vecPunchAngle[1] = Clamp(vecPunchAngle[1], -89,  89 )
+	vecPunchAngle[2] = Clamp(vecPunchAngle[2], -179, 179)
+	vecPunchAngle[3] = Clamp(vecPunchAngle[3], -89,  89 )
 end
 
 function client.PUNCH_Axis(axis, punch, mult)
@@ -196,17 +214,19 @@ end
 local FOV_cur = nil
 local FOV_mult = 1
 
+
 function client.FOV_Apply(dt)
 	local baseFOV = GetFloat("options.gfx.fov")
 	if not FOV_cur then FOV_cur = baseFOV end
 
 	local diff = math.abs(FOV_cur - (baseFOV*FOV_mult))
-	local FOV_new = lerp(FOV_cur, baseFOV*FOV_mult, diff * 0.5 * dt + dt)
+	local FOV_new = Lerp(FOV_cur, baseFOV*FOV_mult, diff * 0.5 * dt + dt)
 	FOV_cur = FOV_new
 
 	SetCameraFov(FOV_cur)
 end
 
+-- Smoothly lerps the players FOV to (default setting * multiplier)
 function client.FOV_set(multiplier)
 	FOV_mult = multiplier
 end
@@ -263,7 +283,7 @@ function client.BloodParticles(pos, dir, damage, playerhit)
 
 	for i=0, (impactsize * 40) do
 		size = size + GetRandomFloat(-0.01, 0.005)
-		newPos = VecAdd(pos, GetRandomDirection(0.25))
+		local newPos = VecAdd(pos, GetRandomDirection(0.25))
 		ParticleReset()
 		ParticleGravity(GetRandomFloat(-20, -25))
 		ParticleRadius(size)
@@ -279,7 +299,7 @@ function client.BloodParticles(pos, dir, damage, playerhit)
 	end
 end
 
-function server.BloodDecal(pos, dir, damage, playerhit, ignore)
+function server.BloodDecal(pos, dir, damage, ignore)
 	local count = 1
 	local noise = 0.1
 	if damage < 0.1 then
@@ -299,8 +319,7 @@ function server.BloodDecal(pos, dir, damage, playerhit, ignore)
 	-- Impact for animators
 	PaintRGBA(pos, GetRandomFloat(0.166, 0.3), GetRandomFloat(0.2, 0.3), 0.0, 0.0, 1.0, 0.9)
 
-	for i=0, count do 
-		local newPos = VecAdd(pos, GetRandomDirection(0.2))
+	for i=0, count do
 		local newdir = VecNormalize(VecAdd(VecAdd(dir, GetRandomDirection(noise)), VecScale(GetGravity(), 0.025)))
 
 		if ignore ~= nil then QueryRejectAnimator(ignore) end
@@ -313,7 +332,7 @@ function server.BloodDecal(pos, dir, damage, playerhit, ignore)
 			PaintRGBA(VecAdd(pos, VecScale(newdir, blooddist)), GetRandomFloat(0.166, 0.3), GetRandomFloat(0.166, 0.2), 0.0, 0.0, 1.0, chance)
 		end
 	end
-	
+
 	local newestdir = VecNormalize(VecAdd(dir, VecScale(GetGravity(), 0.025)))
 	if ignore ~= nil then QueryRejectAnimator(ignore) end
 	local bigbloodhit, bigblooddist = QueryRaycast(pos, newestdir, 4)
