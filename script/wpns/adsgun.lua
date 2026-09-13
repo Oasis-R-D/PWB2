@@ -6,8 +6,8 @@ CAdsGun = {} -- goes in GLOBAL_WEAPONS
 
 -- Static values for this specific weapon
 -- These don't need redefined in a weapon if a var is just the default value
-CAdsGun.model				= "MOD/models/xml/grease.xml"-- path to the XML model file
-CAdsGun.casingOrg			= Vec(0.01, 0.12, -0.15)	 -- where casings are ejected
+CAdsGun.model				= "grease.xml"			 -- path to the XML model file
+CAdsGun.casingOrg			= Vec(0.01, 0.12, -0.15) -- where casings are ejected
 
 CAdsGun.toolID 				= "testads"		 -- used by the engine. lowercase and no spaces
 CAdsGun.toolName 			= "PWB2 ADS" -- shown in killfeed
@@ -91,12 +91,12 @@ function CAdsGun:PrimaryAttack(dt)
 			if self.animator.forceSecondaryActionPose then
 				punchVec = Vec(GetRandomFloat(-0.025, 0.025), GetRandomFloat(0.0, 0.0125), GetRandomFloat(0.025, 0.025))
 
-				self:RecoilAngPunch(Vec(GetRandomFloat(0.25, 0.66), GetRandomFloat(-0.4, 0.4), GetRandomFloat(-0.33, 0.33)))
+				self:MDL_PunchAng(Vec(GetRandomFloat(0.25, 0.66), GetRandomFloat(-0.4, 0.4), GetRandomFloat(-0.33, 0.33)))
 			else
 				punchVec = Vec(GetRandomFloat(-0.05, 0.05), GetRandomFloat(0.0, 0.025), GetRandomFloat(0.05, 0.1))
 
-				self:RecoilAngReset(-4)
-				self:RecoilAngPunch(Vec(GetRandomFloat(1, 3), GetRandomFloat(-2, 2), GetRandomFloat(-1, 1)))
+				self:MDL_PunchAngReset(-4)
+				self:MDL_PunchAng(Vec(GetRandomFloat(1, 3), GetRandomFloat(-2, 2), GetRandomFloat(-1, 1)))
 			end
 
 			client.PUNCH_Reset()
@@ -104,12 +104,12 @@ function CAdsGun:PrimaryAttack(dt)
 				client.PUNCH_Axis(i, punchVec[4-i] * 10)
 			end
 
-			self:RecoilPosPunch(punchVec)
+			self:MDL_PunchPos(punchVec)
 
 			-- shell ejection
-			ENT_EjectShell(self.owner, self.casingOrg, Vec(1, -1, 0), "MOD/models/xml/shell/casing_45acp.xml", FSFX_BRASS)
+			TENT_EjectShell(self.owner, self.casingOrg, Vec(1, -1, 0), "MOD/models/xml/shell/casing_45acp.xml", FSFX_BRASS)
 		else
-			self:RecoilPosPunch(Vec(GetRandomFloat(-0.05, 0.05), GetRandomFloat(0.0, 0.025), GetRandomFloat(0.05, 0.1)))
+			self:MDL_PunchPos(Vec(GetRandomFloat(-0.05, 0.05), GetRandomFloat(0.0, 0.025), GetRandomFloat(0.05, 0.1)))
 		end
 
 		self:muzzleFlash(mt.pos, 0.4)
@@ -118,9 +118,11 @@ function CAdsGun:PrimaryAttack(dt)
 	end
 
 	baseWeap.DepleteAmmo(self, 1, 1)
-	
+
 	local inAds = (server and self.ads) or (client and self.animator.forceSecondaryActionPose)
 	self:FireBulletsPlayer(1, GetPlayerEyeTransform(self.owner).pos, inAds and GLOBAL_1DEGREE or GLOBAL_3DEGREES, 100)
+
+	AIM_RecoilAdd(self.owner, Vec(1.33, GetRandomFloat(-2, 2), 0))
 
 	self.nextFire = self:GetNextAttackDelay(0.133)
 end

@@ -22,7 +22,7 @@ CMelee = {} -- goes in GLOBAL_WEAPONS
 
 -- Static values for this specific weapon
 -- These don't need redefined in a weapon if a var is just the default value
-CMelee.model			= "MOD/models/xml/crowbar.xml" -- path to the XML model file
+CMelee.model			= "crowbar.xml" -- path to the XML model file
 
 CMelee.edgeDir			= Vec(0,1,-1)	-- what direction hits will be considered
 CMelee.edgeType			= 1				-- 0: blunt 1: slice (slice hits things multiple times)
@@ -66,7 +66,7 @@ function CMelee:initVars(owner)
 	self.startHitDelay = -1
 end
 
-function CMelee:callToolAnimator(dt)
+function CMelee:MDL_CallAnimator(dt)
 	tickToolAnimator(self.animator, dt, nil, self.owner, self.swingNumb, self.swingNumb, true)
 end
 
@@ -105,6 +105,9 @@ function CMelee:PrimaryAttack(dt)
 
 	self.nextFire = self:GetNextAttackDelay(0.5)
 end
+
+-- OPTIMIZATION: Add this to make sure it doesn't check for alt fire
+function CMelee:SV_DontFireAltCond() return true end
 
 function CMelee:CheckHit()
 	self.hitDelay = GetTime() + 0.01

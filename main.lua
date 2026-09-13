@@ -125,7 +125,7 @@ end
 ----------------------------------------------------------------------------------------------
 
 -- LIBRARYS
-#include "script/lib/menu.lua"
+PWBsetting = {}
 #include "script/lib/pwbtoolanimation.lua"
 #include "script/lib/bit_ops.lua"
 #include "script/lib/vfx.lua"
@@ -159,14 +159,13 @@ GLOBAL_20DEGREES  = 0.17365
 -- WEAPONS
 #include "script/wpns/testgun.lua"
 #include "script/wpns/adsgun.lua"
+#include "script/wpns/patterngun.lua"
 #include "script/wpns/testshotgun.lua"
-
--- MELEE
 #include "script/wpns/meleetool.lua"
 
--- SPECIAL
 
--- ITEMS
+-- UI
+#include "script/lib/menu.lua"
 
 ----------------------------------------------------------------------------------------------
 -- MAIN GLOBALS
@@ -176,6 +175,7 @@ GLOBAL_20DEGREES  = 0.17365
 GLOBAL_WEAPONS = {
    CTestGun,
    CAdsGun,
+   CPattGun,
    CTestShotgun,
    CMelee
 }
@@ -228,6 +228,8 @@ function server.tick(dt)
 end
 
 function server.update(dt)
+   AIM_RecoilTick(dt)
+
    CheckDeathReset()
 end
 
@@ -239,9 +241,6 @@ function client.init()
 
    client.settingsInit()
 end
-
-menuAlpha = 0
-menuActive = false
 
 -- Runs majority of weapon code
 function client.tick(dt)
@@ -272,29 +271,20 @@ function client.tick(dt)
 
    client.FOV_Apply(dt)
 
-   if PauseMenuButton("PWB2 Settings") then
-      menuActive = true
-      SetBool("game.ui.hidemods", true)
-   end
-
-   if menuActive and menuAlpha == 0.0 then
-      SetValue("menuAlpha", 1.0, "easeout", 0.3)
-   end
-   if not menuActive and menuAlpha == 1.0 then
-      SetValue("menuAlpha", 0.0, "easein", 0.3)
-         SetBool("game.ui.hidemods", false)
-   end
+   client.settingsTick()
 end
 
 -- Global VFX
 function client.update(dt)
+   AIM_RecoilTick(dt)
+
    CheckDeathReset()
 
    client.PUNCHBASIC_Apply(dt)
 
    client.VFX_DynLightDraw(dt)
 
-   ENT_UpdateTempents(
+   TENT_Update(
       dt,
 	   GetTime(),
 	   10 -- Gravity

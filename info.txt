@@ -1,6 +1,6 @@
-name = [PWB2] BASE PACK
+name = [PWB2] WEAPON BASE TEST PACK
 author = PackMan09
-description = [noupload]Riveting sequel to PWB
+description = [noupload]A completely revamped version of my weapon base! Contains 5 weapons to show new features
 tags = Tool
 version = 2
 preview_image = preview.png

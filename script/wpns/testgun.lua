@@ -6,8 +6,8 @@ CTestGun = {} -- goes in GLOBAL_WEAPONS
 
 -- Static values for this specific weapon
 -- These don't need redefined in a weapon if a var is just the default value
-CTestGun.model				= "MOD/models/xml/smg1.xml" -- path to the XML model file
-CTestGun.casingOrg			= Vec(0.02, 0.15, -0.15)	-- where casings are ejected
+CTestGun.model				= "smg1.xml" 			 -- path to the XML model file
+CTestGun.casingOrg			= Vec(0.02, 0.15, -0.15) -- where casings are ejected
 
 CTestGun.toolID 			= "testgun"	  -- used by the engine. lowercase and no spaces
 CTestGun.toolName 			= "PWB2 Gun" -- shown in killfeed
@@ -65,18 +65,18 @@ function CTestGun:PrimaryAttack(dt)
 			self.timeFiring = 0
 		end
 
-		self:RecoilPosPunch(Vec(0, 0, GetRandomFloat(0.133, 0.166)))
+		self:MDL_PunchPos(Vec(0, 0, GetRandomFloat(0.133, 0.166)))
 
 		if self.isLocal then
 			client.VFX_DynLight(self.owner, 15, 0.08, Vec(0.7, 0.5, 0.3), Vec(), "muzzle")
 
 			client.PUNCH_MachineGunKick(1, self.timeFiring, 2)
 
-			self:RecoilAngReset(-15)
-			self:RecoilAngPunch(Vec(GetRandomFloat(0.5, 1), GetRandomFloat(-0.5, 0.5), GetRandomFloat(-1, 1)))
+			self:MDL_PunchAngReset(-15)
+			self:MDL_PunchAng(Vec(GetRandomFloat(0.5, 1), GetRandomFloat(-0.5, 0.5), GetRandomFloat(-1, 1)))
 
 			-- shell ejection
-			ENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
+			TENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
 		end
 
 		self:muzzleFlash(mt.pos, 0.8)
@@ -116,18 +116,18 @@ function CTestGun:SecondaryAttack(dt)
 			self.timeFiring = 0
 		end
 
-		self:RecoilPosPunch(Vec(0, 0, GetRandomFloat(0.133, 0.166)))
+		self:MDL_PunchPos(Vec(0, 0, GetRandomFloat(0.133, 0.166)))
 
 		if self.isLocal then
 			client.VFX_DynLight(self.owner, 30, 0.25, Vec(0.7, 0.5, 0.3), Vec(), "muzzle")
 
 			client.PUNCH_MachineGunKick(1, self.timeFiring, 2)
 
-			self:RecoilAngReset(-15)
-			self:RecoilAngPunch(Vec(GetRandomFloat(0.5, 1), GetRandomFloat(-0.5, 0.5), GetRandomFloat(-1, 1)))
+			self:MDL_PunchAngReset(-15)
+			self:MDL_PunchAng(Vec(GetRandomFloat(0.5, 1), GetRandomFloat(-0.5, 0.5), GetRandomFloat(-1, 1)))
 
 			-- shell ejection
-			ENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
+			TENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
 		end
 
 		self:muzzleFlash(mt.pos, 0.8)

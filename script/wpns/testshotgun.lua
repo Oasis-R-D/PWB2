@@ -6,8 +6,8 @@ CTestShotgun = {} -- goes in GLOBAL_WEAPONS
 
 -- Static values for this specific weapon
 -- These don't need redefined in a weapon if a var is just the default value
-CTestShotgun.model				= "MOD/models/xml/shotgun.xml" -- path to the XML model file
-CTestShotgun.casingOrg			= Vec(0.02, 0.08, 0.022)	   -- where casings are ejected
+CTestShotgun.model				= "shotgun.xml" 		 -- path to the XML model file
+CTestShotgun.casingOrg			= Vec(0.02, 0.08, 0.022) -- where casings are ejected
 
 CTestShotgun.toolID 			= "testsg"  	 -- used by the engine. lowercase and no spaces
 CTestShotgun.toolName 			= "PWB2 Shotgun" -- shown in killfeed
@@ -84,15 +84,15 @@ function CTestShotgun:PrimaryAttack(dt)
 			return
 		end
 
-		self:RecoilPosPunch(Vec(0, 0.1, GetRandomFloat(0.15, 0.2)))
+		self:MDL_PunchPos(Vec(0, 0.1, GetRandomFloat(0.15, 0.2)))
 
 		if self.isLocal then
 			self:ServerWpnCall("PrimaryAttack", dt)
 
-			client.VFX_DynLight(self.owner, 30, 0.25, Vec(0.7, 0.5, 0.3), 0, "muzzle")
+			client.VFX_DynLight(self.owner, 30, 0.25, Vec(0.7, 0.5, 0.3), Vec(), "muzzle")
 
-			self:RecoilAngReset(-15)
-			self:RecoilAngPunch(Vec(GetRandomFloat(2, 3), GetRandomFloat(-0.5, 0.5), GetRandomFloat(-2, 1)))
+			self:MDL_PunchAngReset(-15)
+			self:MDL_PunchAng(Vec(GetRandomFloat(2, 3), GetRandomFloat(-0.5, 0.5), GetRandomFloat(-2, 1)))
 
 			client.PUNCH_Axis(1, 2)
 			client.PUNCH_Axis(2, GetRandomFloat(-0.5, 0.5))
@@ -131,21 +131,21 @@ function CTestShotgun:SecondaryAttack(dt)
 			return
 		end
 
-		self:RecoilPosPunch(Vec(0, 0.2, GetRandomFloat(0.2, 0.3)))
+		self:MDL_PunchPos(Vec(0, 0.2, GetRandomFloat(0.2, 0.3)))
 
 		if self.isLocal then
 			self:ServerWpnCall("SecondaryAttack", dt)
 
-			client.VFX_DynLight(self.owner, 40, 0.5, Vec(0.7, 0.5, 0.3), 0, "muzzle")
+			client.VFX_DynLight(self.owner, 40, 0.5, Vec(0.7, 0.5, 0.3), Vec(), "muzzle")
 
-			self:RecoilAngReset(-15)
-			self:RecoilAngPunch(Vec(GetRandomFloat(4, 5), GetRandomFloat(-0.5, 0.5), GetRandomFloat(-5, -1)))
+			self:MDL_PunchAngReset(-15)
+			self:MDL_PunchAng(Vec(GetRandomFloat(4, 5), GetRandomFloat(-0.5, 0.5), GetRandomFloat(-5, -1)))
 
 			client.PUNCH_Axis(1, 5)
 			client.PUNCH_Axis(2, GetRandomFloat(-0.5, 0.5))
 			
 			-- shell ejection
-			ENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_shtgn.xml", FSFX_SHTGN)
+			TENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_shtgn.xml", FSFX_SHTGN)
 		end
 
 		self:muzzleFlash(mt.pos, 1.2, Vec(1.33, 1, 1))
@@ -185,7 +185,7 @@ function CTestShotgun:Reload()
 	-- check to see if we're ready to reload
 	if self.specialReload == 0 then
 		if self.isLocal then 
-			self:RecoilAngPunch(Vec(0, 2, -10))
+			self:MDL_PunchAng(Vec(0, 2, -10))
 			PlaySound(self.snds[3], mt.pos, 300)
 		end
 
@@ -215,12 +215,12 @@ function CTestShotgun:Reload()
 		PlayFireSound(self.snds[2], mt.pos, 300)
 
 		if self.isLocal then
-			self:RecoilAngPunch(Vec(GetRandomFloat(3, 4), GetRandomFloat(0, 1), GetRandomFloat(-6, -2)))
+			self:MDL_PunchAng(Vec(GetRandomFloat(3, 4), GetRandomFloat(0, 1), GetRandomFloat(-6, -2)))
 			client.PUNCH_Axis(3, -0.33)
 			client.PUNCH_Axis(1, -0.33)
 		end
 		
-		self:RecoilPosPunch(Vec(0, 0.1, 0.1))
+		self:MDL_PunchPos(Vec(0, 0.1, 0.1))
 
 		self.timeWeaponIdle = curTime + 0.5
 	else
@@ -256,7 +256,7 @@ function CTestShotgun:WeaponIdle()
 						self.slideTime = 0
 
 						-- shell ejection
-						ENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_shtgn.xml", FSFX_SHTGN)
+						TENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_shtgn.xml", FSFX_SHTGN)
 					end
 
 					local mt = GetToolLocationWorldTransform("muzzle", self.owner)
@@ -283,7 +283,7 @@ function CTestShotgun:tickPlayer_cl(dt)
 			self.slideTime = 0
 
 			-- shell ejection
-			ENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_shtgn.xml", FSFX_SHTGN)
+			TENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_shtgn.xml", FSFX_SHTGN)
 		end
 
 		self.pumpTime = 0
@@ -292,7 +292,7 @@ function CTestShotgun:tickPlayer_cl(dt)
 	baseWeap.tickPlayer_cl(self, dt)
 end
 
-function CTestShotgun:CustomAnimate(dt)
+function CTestShotgun:MDL_CustomAnimate(dt)
 	if not self.isLocal then return end
 
 	--Animate Slide

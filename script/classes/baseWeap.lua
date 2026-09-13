@@ -19,8 +19,8 @@ baseWeap = {}
 -- Weapons can define their own
 -- custom static values if needed.
 -----------------------------------------------------------
-baseWeap.model				= "MOD/models/xml/mdl.xml"	-- path to the XML model file
-baseWeap.casingOrg			= Vec(0,0,0)				-- where casings are ejected
+baseWeap.model				= "mdl.xml"					-- XML model file "MOD/models/xml/"
+baseWeap.casingOrg			= Vec(0,0,0)		   		-- where casings are ejected
 
 baseWeap.toolID 			= "basetool"				-- used by the engine. lowercase and no spaces
 baseWeap.toolName 			= "PWB2 Base Tool"			-- shown in killfeed
@@ -142,12 +142,13 @@ function baseWeap:init_cl(wpnSlot)
 end
 
 function baseWeap:init_tool()
-	RegisterTool(self.toolID, self.toolName, self.model, self.toolSlot)
+	RegisterTool(self.toolID, self.toolName, "MOD/models/xml/" .. self.model, self.toolSlot)
 	SetToolAmmoPickupAmount(self.toolID, self.ammoPickupSize)
 end
 
 --=========================================================================
 -- Weapon SFX / VFX
+-- Override these if you need to have custom VFX or SFX for a weapon
 --=========================================================================
 
 function baseWeap:muzzleFlash(pos, size, color)
@@ -167,8 +168,8 @@ function baseWeap:muzzleFlash(pos, size, color)
 end
 
 -- sound data for PrecacheSFX(), override per weapon
--- loop is optional and doesn't need included.
--- files must be in MOD/snd/ or a subdir in there
+-- loop is optional and doesn't need included
+-- sounds are automatically parsed from MOD/snd
 function baseWeap:Sounds()
 	return {
 --  		   SOUND		  load to	 dist	[loop]
@@ -190,33 +191,33 @@ end
 -- and are intentionally left blank here
 --=========================================================================
 
-function baseWeap:Deploy()   		 		  	end -- called when weapon is equipped
-function baseWeap:Holster()			  		   	end -- called when weapon is unequipped
+function baseWeap:Deploy()   		 		  	end -- called on weapon equipped
+function baseWeap:Holster()			  		   	end -- called on weapon unequipped
 
-function baseWeap:PrimaryAttack(dt)   		   	end -- called when firing conditions are met
-function baseWeap:SecondaryAttack(dt) 		   	end -- called when secondary firing conditions are met
+function baseWeap:PrimaryAttack(dt)   		   	end -- called on firing conditions met
+function baseWeap:SecondaryAttack(dt) 		   	end -- called on secondary firing conditions met (MUST OVERRIDE SV_DontFireAltCond() for it to be called!)
 
-function baseWeap:Reload()            		   	end -- called when reload is started
-function baseWeap:WeaponIdle()		  		   	end -- called when no buttons are pressed
+function baseWeap:Reload()            		   	end -- called on reload start
+function baseWeap:WeaponIdle()		  		   	end -- called when no buttons pressed
 
-function baseWeap:CustomAnimate(dt)	  		   	end -- called every frame, use for adding custom
-										 	       	-- weapon movement, such as PWB1 slide/pump anims
+function baseWeap:MDL_CustomAnimate(dt)	  		end -- called every frame, use for adding custom
+										 	    	-- weapon movement, such as PWB1 slide/pump anims
 
 -- Override these if the weapon has extra conditions needed for firing
 -- I.E. Weapon uses multiple rounds in the mag per fire
 -- These are ran on client only but if they're true, server isn't called												
 function baseWeap:SV_DontFireCond() 	return false end
-function baseWeap:SV_DontFireAltCond() return false end
+function baseWeap:SV_DontFireAltCond()  return true  end -- don't check by default
 
 --=========================================================================
 -- 	Input handling and HUD
 --=========================================================================
 
 function baseWeap:tickPlayer_cl(dt)
-	if settings.debug then
+	if PWBsetting.debug then
 		self:Debug() end
 
-	self:Animate(dt)
+	self:MDL_Animate(dt)
 
 	local curTime = GetTime()
 	self.ammoTotal = GetToolAmmo(self.toolID, self.owner)
@@ -324,7 +325,7 @@ end
 -- Server only cares about firing
 -- Don't simulate reloading or clip amount
 function baseWeap:tickPlayer_sv(dt)
-	if settings.debug then
+	if PWBsetting.debug then
 		self:Debug() end
 
 	local curTime = GetTime()
@@ -416,10 +417,10 @@ function baseWeap:BaseDeploy(curTime)
 		self.recoilPos = Vec(0,0,0)
 
 		if self.isLocal then
-			self:RecoilAngReset()
-			self:RecoilAngPunch(Vec(3, 0.75, 0.66))
+			self:MDL_PunchAngReset()
+			self:MDL_PunchAng(Vec(3, 0.75, 0.66))
 	
-			self:RecoilPosPunch(Vec(0.05, 0.1, -0.05))
+			self:MDL_PunchPos(Vec(0.05, 0.1, -0.05))
 		end
 	end
 
@@ -509,24 +510,24 @@ function baseWeap:DrawHUD()
 end
 
 --=========================================================================
--- 	WEAPON MODEL ANIMATIONS
+-- 	WEAPON MODEL ANIMATIONS (MDL_)
 --=========================================================================
 
 -- Override to modify inputs
-function baseWeap:callToolAnimator(dt)
+function baseWeap:MDL_CallAnimator(dt)
 	tickToolAnimator(self.animator, dt, nil, self.owner)
 end
 
 -- applies model poses, recoil, idle and angular offsets
-function baseWeap:Animate(dt)
+function baseWeap:MDL_Animate(dt)
 	if self.isLocal then
-		self:ApplyWeaponPos(dt)
+		self:MDL_ApplyPos(dt)
 
 		if VecLength(self.recoilAng) <= 0.000001 and VecLength(self.recoilAngVel) <= 0.000001 then
 			self.recoilAng 	  = Vec(0,0,0)
 			self.recoilAngVel = Vec(0,0,0)
 		else
-			self:DecayRecoilAng(dt)
+			self:MDL_DecayPunchAng(dt)
 		end
 
 		self.animator.offsetTransform.rot = QuatEuler(self.recoilAng[1], self.recoilAng[2], self.recoilAng[3])
@@ -534,23 +535,25 @@ function baseWeap:Animate(dt)
 		self.animator.offsetTransform.pos = self.recoilPos
 	end
 
-	self:DecayRecoilPos(dt)
+	self:MDL_DecayPunchPos(dt)
 
-	self:CustomAnimate(dt)
+	self:MDL_CustomAnimate(dt)
 
-	self:callToolAnimator(dt)
+	self:MDL_CallAnimator(dt)
 end
 
-function baseWeap:RecoilPosPunch(punchPos)
+-- MODEL_PUNCHPOS: Positional recoil of the weapon model
+function baseWeap:MDL_PunchPos(punchPos)
 	self.recoilPos = VecAdd(self.recoilPos, punchPos)
 end
 
-function baseWeap:RecoilAngPunch(punchAngles, mult)
+-- MODEL_PUNCHPOS: Angular recoil of the weapon model
+function baseWeap:MDL_PunchAng(punchAngles, mult)
 	mult = mult and mult or 20
 	self.recoilAngVel = VecAdd(self.recoilAngVel, VecScale(punchAngles, mult))
 end
 
-function baseWeap:DecayRecoilPos(dt)
+function baseWeap:MDL_DecayPunchPos(dt)
 	local len = VecLength(self.recoilPos)
 	if len == 0 then
 		self.recoilPos = Vec(0,0,0)
@@ -561,7 +564,7 @@ function baseWeap:DecayRecoilPos(dt)
 	self.recoilPos = VecScale(VecNormalize(self.recoilPos), len)
 end
 
-function baseWeap:DecayRecoilAng(dt)
+function baseWeap:MDL_DecayPunchAng(dt)
 	self.recoilAng = VecAdd(self.recoilAng, VecScale(self.recoilAngVel, dt))
 	local damping = math.max(1 - (self.recoilAngDamp * dt), 0)
 
@@ -577,7 +580,10 @@ function baseWeap:DecayRecoilAng(dt)
 	self.recoilAng[3] = Clamp(self.recoilAng[3], -89,  89 )
 end
 
-function baseWeap:RecoilAngReset(tolerance)
+-- MODEL_PUNCHANGRESET: Resets angular recoil of the weapon model
+-- Positive tolerance: Don't reset if recoil is above this length
+-- Negative tolerance: Don't reset if recoil is below the absolute value of this length
+function baseWeap:MDL_PunchAngReset(tolerance)
 	if tolerance then
 		local check = VecLength(self.recoilAngVel) + VecLength(self.recoilAng)
 
@@ -592,7 +598,10 @@ function baseWeap:RecoilAngReset(tolerance)
 	self.recoilAngVel = Vec(0,0,0)
 end
 
-function baseWeap:RecoilPosReset(tolerance)
+-- MODEL_PUNCHANGRESET: Resets positional recoil of the weapon model
+-- Positive tolerance: Don't reset if recoil is above this length
+-- Negative tolerance: Don't reset if recoil is below the absolute value of this length
+function baseWeap:MDL_PunchPosReset(tolerance)
 	if tolerance then
 		local check = VecLength(self.recoilPos)
 
@@ -606,8 +615,8 @@ function baseWeap:RecoilPosReset(tolerance)
 	self.recoilPos = Vec(0,0,0)
 end
 
--- applies positional recoil, idle cycle and the Y offset
-function baseWeap:ApplyWeaponPos(dt)
+-- MODEL_APPLYPOS: Applies positional recoil, idle cycle and the Y offset
+function baseWeap:MDL_ApplyPos(dt)
 	local idlePos = Vec(
 		 math.sin(self.idleCycleTime*0.5) + math.cos(self.idleCycleTime*0.25),
 		-math.sin(self.idleCycleTime*0.5) + math.cos(self.idleCycleTime*0.25),
@@ -669,7 +678,10 @@ function baseWeap:FireBulletsPlayer(shots, pos, spreadRad, range, impulseMult, r
 	radius = radius or 0
 
 	for i=1, shots do
-		local posUse, dir = GetPlayerAimInfoSpread(pos, spreadRad, range, self.owner, i)
+		local posUse, dir = AIM_GetSpreadedAim(pos, spreadRad, range, self.owner, i)
+
+		-- Apply aim recoil
+		dir = AIM_RecoilApply(self.owner, posUse, dir)
 
 		-- figure out whether we need to run player or world hit code
 		local bHit, pdist, pShape, playerhit = QueryShot(posUse, dir, range, 0, self.owner)
@@ -842,53 +854,13 @@ function baseWeap:IsUseable()
 end
 
 --=========================================================================
---	DEBUG FUNCS
---=========================================================================
-
-function baseWeap:Debug()
-	self:DumpGlobals()
-	if self.debugpoint then
-		DebugCross(self.debugpoint)
-	end
-end
-
-function baseWeap:DumpGlobals()
-	if not self.isLocal then return end
-
-	local prefix = "SV "
-	if client then prefix = "CL "
-		DebugWatch(prefix .. "inReload", 			self.inReload)
-
-		DebugWatch(prefix .. "ammoLoaded", 		self.ammoLoaded)
-		DebugWatch(prefix .. "ammoAltTotal",		self.ammoAltTotal)
-	end
-
-	DebugWatch(prefix .. "inPrimary", 			self.inPrimary)
-	DebugWatch(prefix .. "inSecondary", 		self.inSecondary)
-
-	DebugWatch(prefix .. "spreadSeed", 		shared.seed)
-
-	DebugWatch(prefix .. "nextFire",			string.format("%.5f", math.max(0, self.nextFire - GetTime())))
-	DebugWatch(prefix .. "nextAltFire", 		string.format("%.5f", math.max(0, self.nextAltFire - GetTime())))
-
-	DebugWatch(prefix .. "holstered", 			self.holstered)
-
-	if false then
-		DebugWatch(prefix .. "prevPrimFireTime", 	self.prevPrimFireTime)
-		DebugWatch(prefix .. "lastFireTime", 		self.lastFireTime)
-
-		DebugWatch(prefix .. "timeWeaponIdle", 	self.timeWeaponIdle)
-	end
-end
-
---=========================================================================
 --	BACKEND FUNCS
 --  These are used by the weapon code for very specific purposes 
 --  and shouldn't (under normal circumstanced) be overriden.
 --=========================================================================
 
--- This function constructs the weapon classes
--- to add a new weapon just do WPNPTR = baseWeap:new(CHILD, owner) where CHILD is {}
+-- weapon class constructor
+-- for new weapons do WPNPTR = baseWeap:new(CHILD, owner) where CHILD is {}
 function baseWeap:new(obj, owner)
     owner = owner or -1
 
@@ -938,4 +910,48 @@ function baseWeap:PrecacheSFX()
 	end
 
 	self.snds = precachedSounds
+end
+
+--=========================================================================
+--	DEBUG FUNCS
+--=========================================================================
+
+function baseWeap:Debug()
+	self:DumpGlobals()
+	self:DebugCustom()
+	if self.debugpoint then
+		DebugCross(self.debugpoint)
+	end
+end
+
+-- override for weapon
+function baseWeap:DebugCustom() end
+
+function baseWeap:DumpGlobals()
+	if not self.isLocal then return end
+
+	local prefix = "SV "
+	if client then prefix = "CL "
+		DebugWatch(prefix .. "inReload", 			self.inReload)
+
+		DebugWatch(prefix .. "ammoLoaded", 			self.ammoLoaded)
+		DebugWatch(prefix .. "ammoAltTotal",		self.ammoAltTotal)
+	end
+
+	DebugWatch(prefix .. "inPrimary", 			self.inPrimary)
+	DebugWatch(prefix .. "inSecondary", 		self.inSecondary)
+
+	DebugWatch(prefix .. "spreadSeed", 			shared.seed)
+
+	DebugWatch(prefix .. "nextFire",			string.format("%.5f", math.max(0, self.nextFire - GetTime())))
+	DebugWatch(prefix .. "nextAltFire", 		string.format("%.5f", math.max(0, self.nextAltFire - GetTime())))
+
+	DebugWatch(prefix .. "holstered", 			self.holstered)
+
+	if false then
+		DebugWatch(prefix .. "prevPrimFireTime", 	self.prevPrimFireTime)
+		DebugWatch(prefix .. "lastFireTime", 		self.lastFireTime)
+
+		DebugWatch(prefix .. "timeWeaponIdle", 		self.timeWeaponIdle)
+	end
 end

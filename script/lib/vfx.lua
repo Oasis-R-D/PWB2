@@ -20,7 +20,7 @@ end
 ---@param pos TVec Where the light should stay (if no attachment is found)
 ---@param attachment string Where the light should attach to the player weapon
 function client.VFX_DynLight(p, intensity, life, color, pos, attachment)
-    if settings.dynlights == false then return end
+    if PWBsetting.dynlights == false then return end
 
     attachment = attachment or false
     table.insert(dynLights, {p, intensity, GetLerpFactor(life), color, pos, attachment})
@@ -107,7 +107,7 @@ function client.PUNCH_Apply(dt)
 	end
 
 	client.PUNCH_Decay(dt)
-	
+
 	local t = Transform(Vec(), QuatEuler(vecPunchAngle[1], vecPunchAngle[2], vecPunchAngle[3]))
 	SetPlayerCameraOffsetTransform(t, true)
 end
@@ -117,7 +117,7 @@ function client.PUNCH_Decay(dt)
 	local damping = math.max(1 - (9 * dt), 0)
 
 	vecPunchAngleVel = VecScale(vecPunchAngleVel, damping)
-	
+
 	-- torsional spring
 	local springForceMagnitude = math.min(65 * dt, 2.0)
 	vecPunchAngleVel = VecSub(vecPunchAngleVel, VecScale(vecPunchAngle, springForceMagnitude))
@@ -136,6 +136,10 @@ end
 function client.PUNCH_Vec(punch, mult)
 	mult = mult and mult or 20
 	vecPunchAngleVel = VecAdd(vecPunchAngleVel, VecScale(punch, mult))
+end
+
+function client.PUNCH_VecSetAngle(punch)
+	vecPunchAngle = punch
 end
 
 function client.PUNCH_Reset(tolerance)
@@ -158,7 +162,7 @@ end
 
 function client.PUNCH_MachineGunKick(maxVerticleKickAngle, fireDurationTime, slideLimitTime )
 	local vecScratch = Vec()
-	
+
 	--Find how far into our accuracy degradation we are
 	local duration = fireDurationTime > slideLimitTime and slideLimitTime or fireDurationTime
 	local kickPerc = duration / slideLimitTime

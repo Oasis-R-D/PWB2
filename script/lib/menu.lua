@@ -1,10 +1,11 @@
 #include "ui/ui_extensions.lua"
 
-settings = {}
+MenuAlpha = 0
+MenuActive = false
 
 function SettingUPD(key, value)
     SetBool("savegame.mod.pwb." .. key, value)
-    settings[key] = value
+    PWBsetting[key] = value
 end
 
 function InitBool(key, default)
@@ -15,7 +16,7 @@ function InitBool(key, default)
         SetBool("savegame.mod.pwb." .. key, default)
     end
 
-    settings[key] = value
+    PWBsetting[key] = value
 end
 
 function client.settingsInit()
@@ -24,33 +25,35 @@ function client.settingsInit()
     InitBool("debug",       false)
 end
 
-function client.settingsDraw()
-    if PauseMenuButton("PWB2 Settings") then
-        menuActive = true
-        SetBool("game.ui.hidemods", true)
-    end
-    
-    if menuActive and menuAlpha == 0.0 then
-        SetValue("menuAlpha", 1.0, "easeout", 0.3)
-    elseif not menuActive and menuAlpha == 1.0 then
-        SetValue("menuAlpha", 0.0, "easein", 0.3)
-        SetBool("game.ui.hidemods", false)
+function client.settingsTick()
+	if PauseMenuButton("PWB2 Settings") then
+      	MenuActive = true
+      	SetBool("game.ui.hidemods", true)
     end
 
-    if menuAlpha > 0.0 then
+   	if MenuActive and MenuAlpha == 0.0 then
+      	SetValue("MenuAlpha", 1.0, "easeout", 0.3)
+	elseif not MenuActive and MenuAlpha == 1.0 then
+      	SetValue("MenuAlpha", 0.0, "easein", 0.3)
+        SetBool("game.ui.hidemods", false)
+   	end
+end
+
+function client.settingsDraw()
+    if MenuAlpha > 0.0 then
 		-- we do now want to draw a cursor
 		if LastInputDevice() == UI_DEVICE_GAMEPAD then
 			UiSetCursorState(UI_CURSOR_HIDE_AND_LOCK)	
 		end
-		if menuActive then
+		if MenuActive then
 			UiMakeInteractive()
 			SetBool("game.disablepause", true)
 		end
-		
+
 		local width = 190
 		local height = 500 -- update this when adding more toggles
 
-		UiTranslate(-230+270*menuAlpha, UiMiddle())
+		UiTranslate(-230+270*MenuAlpha, UiMiddle())
 		UiAlign("left middle")
 		UiColor(.0, .0, .0, 0.75)
 		UiImageBox("ui/common/box-solid-10.png", width, height, 10, 10)
@@ -62,7 +65,7 @@ function client.settingsDraw()
 		   (GetBool("game.cursor.enabled") and not UiIsMouseInRect(UiWidth(), UiHeight()) and InputPressed("lmb")) 
 		   then
 
-			menuActive = false
+			MenuActive = false
 		end
 
 		UiPush()
@@ -81,25 +84,25 @@ function client.settingsDraw()
 			UiButtonImageBox("ui/common/box-outline-fill-6.png", 6, 6, 0.96, 0.96, 0.96, 0.8)
 
 			UiButtonHoverColor(1.0,1.0,0.5,1)
-	
+
             UiText("Shell ejection", true)
             UiTranslate(0, th)
-			if UiTextButton(settings.shelleject, bw, bh) then
-                SettingUPD("shelleject", not settings.shelleject)
+			if UiTextButton(PWBsetting.shelleject, bw, bh) then
+                SettingUPD("shelleject", not PWBsetting.shelleject)
 			end
 			UiTranslate(0, bh+sep)
-			
+
             UiText("Dynamic Lights", true)
             UiTranslate(0, th)
-			if UiTextButton(settings.dynlights, bw, bh) then
-                SettingUPD("dynlights", not settings.dynlights)
+			if UiTextButton(PWBsetting.dynlights, bw, bh) then
+                SettingUPD("dynlights", not PWBsetting.dynlights)
 			end
 			UiTranslate(0, bh+sep)
 
             UiText("Debug", true)
             UiTranslate(0, th)
-			if UiTextButton(settings.debug, bw, bh) then
-                SettingUPD("debug", not settings.debug)
+			if UiTextButton(PWBsetting.debug, bw, bh) then
+                SettingUPD("debug", not PWBsetting.debug)
 			end
 			UiTranslate(0, bh+sep)
 			UiTranslate(0, 10)
@@ -108,11 +111,11 @@ function client.settingsDraw()
                 UiColor(0.96, 0.32, 0.32)
                 UiButtonHoverColor(1.0,0.5,0.5,1)
 				if UiTextButton("loc@UI_BUTTON_CLOSE", bw, bh) then
-					menuActive = false
+					MenuActive = false
 				end
 			else
 				Ui:RegularFont(22)
-			
+
 				UiTranslate(0, 16)
 				UiDrawHintsCentered({
 					{ ico = "[[menu:menu_accept;iconsize=42,42]]", txt = "loc@UI_BUTTON_SELECT" },

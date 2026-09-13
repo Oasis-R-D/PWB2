@@ -14,7 +14,7 @@ local function newTempEnt()
 
 		-- floats
 		die = 0,
-		bounceFactor = 0,
+		bounceFactor = 1.0,
 
 
 		-- float
@@ -35,15 +35,8 @@ end
 --	Creation
 --============================================
 
-local function CL_TempEntAlloc(org, model)
-
+local function CL_TempEntAlloc()
 	local tempent = newTempEnt()
-
-	tempent.die = 0
-	tempent.model = Spawn(model, Transform(org))[1]
-	tempent.hitSound = 0
-	tempent.bounceFactor = 1.0
-	tempent.origin = org
 
 	local index = findArrayOpening(pTempEnts)
 	pTempEnts[index] = tempent
@@ -52,8 +45,10 @@ local function CL_TempEntAlloc(org, model)
 end
 
 local function R_TempModel(pos, velocity, angles, life, model, soundtype)
+	local tempent = CL_TempEntAlloc()
 
-	local tempent = CL_TempEntAlloc(pos, model)
+	tempent.model = Spawn(model, Transform(pos))[1]
+	tempent.origin = pos
 
 	tempent.angles = angles
 	tempent.hitSound = soundtype
@@ -69,8 +64,8 @@ end
 ---@param dir TVec Where the shell will be ejected towards
 ---@param model string Path to shell's XML ("MOD/models/xml/shell/x.xml")
 ---@param casingtype number Which shell impact sounds to play (values in bit_ops.lua)
-function ENT_EjectShell(p, org, dir, model, casingtype)
-	if settings.shelleject == false then return end
+function TENT_EjectShell(p, org, dir, model, casingtype)
+	if PWBsetting.shelleject == false then return end
 
 	local transform = GetBodyTransform(GetToolBody(p))
 
@@ -96,7 +91,7 @@ end
 local shellSFX_brass = 0
 local shellSFX_buck = 0
 
-function ENT_UpdateTempents(
+function TENT_Update(
     frametime,	-- Simulation time
 	client_time, -- Absolute time on client
 	cl_gravity)	-- True gravity on client
