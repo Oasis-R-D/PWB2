@@ -138,7 +138,7 @@ function CPattGun:PrimaryAttack(dt)
 			end
 
 			-- shell ejection
-			TENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
+			client.TENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
 		end
 
 		self:muzzleFlash(mt.pos, 0.8)

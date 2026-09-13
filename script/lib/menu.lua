@@ -3,16 +3,16 @@
 MenuAlpha = 0
 MenuActive = false
 
-function client.settingUPD(key, value)
+local function settingUPD(key, value)
     SetBool("savegame.mod.pwb." .. key, value)
-    PWBsetting[key] = value
+    PWB_SETTING[key] = value
 end
 
 function server.settingUPD(key, value)
-    PWBsetting[key] = value
+    PWB_SETTING[key] = value
 end
 
-function InitBool(key, default, onSV)
+local function InitBool(key, default, onSV)
     local value = default 
     if HasKey("savegame.mod.pwb." .. key) then
         value = GetBool("savegame.mod.pwb." .. key)
@@ -20,14 +20,14 @@ function InitBool(key, default, onSV)
         SetBool("savegame.mod.pwb." .. key, default)
     end
 
-    PWBsetting[key] = value
+    PWB_SETTING[key] = value
 
 	if GetLocalPlayer() == 1 and onSV then
 		ServerCall("server.settingUPD", key, value)
 	end
 end
 
-function client.settingsInit()
+function settingsInit()
     InitBool("shelleject",  true,  false)
     InitBool("dynlights",   true,  false)
     InitBool("debug",       false, true)
@@ -95,24 +95,24 @@ function client.settingsDraw()
 
             UiText("Shell ejection", true)
             UiTranslate(0, th)
-			if UiTextButton(PWBsetting.shelleject, bw, bh) then
-                client.settingUPD("shelleject", not PWBsetting.shelleject)
+			if UiTextButton(PWB_SETTING.shelleject, bw, bh) then
+                settingUPD("shelleject", not PWB_SETTING.shelleject)
 			end
 			UiTranslate(0, bh+sep)
 
             UiText("Dynamic Lights", true)
             UiTranslate(0, th)
-			if UiTextButton(PWBsetting.dynlights, bw, bh) then
-                client.settingUPD("dynlights", not PWBsetting.dynlights)
+			if UiTextButton(PWB_SETTING.dynlights, bw, bh) then
+                settingUPD("dynlights", not PWB_SETTING.dynlights)
 			end
 			UiTranslate(0, bh+sep)
 
             UiText("Debug", true)
             UiTranslate(0, th)
-			if UiTextButton(PWBsetting.debug, bw, bh) then
-                client.settingUPD("debug", not PWBsetting.debug)
+			if UiTextButton(PWB_SETTING.debug, bw, bh) then
+                settingUPD("debug", not PWB_SETTING.debug)
 				if GetLocalPlayer() == 1 then
-					ServerCall("server.settingUPD", "debug", PWBsetting.debug)
+					ServerCall("server.settingUPD", "debug", PWB_SETTING.debug)
 				end
 			end
 			UiTranslate(0, bh+sep)

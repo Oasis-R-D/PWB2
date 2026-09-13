@@ -73,6 +73,12 @@ end
 -- Weapon functions
 --=========================================================================
 
+function CTestShotgun:Holster()
+	if client then
+		client.PWB_ANIMATOR[self.owner].leftHand.transform.pos = Vec()
+	end
+end
+
 function CTestShotgun:PrimaryAttack(dt)
 	local mt = GetToolLocationWorldTransform("muzzle", self.owner)
 	if not mt then return end
@@ -145,7 +151,7 @@ function CTestShotgun:SecondaryAttack(dt)
 			client.PUNCH_Axis(2, GetRandomFloat(-0.5, 0.5))
 			
 			-- shell ejection
-			TENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_shtgn.xml", FSFX_SHTGN)
+			client.TENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_shtgn.xml", FSFX_SHTGN)
 		end
 
 		self:muzzleFlash(mt.pos, 1.2, Vec(1.33, 1, 1))
@@ -192,7 +198,7 @@ function CTestShotgun:Reload()
 		if self.ammoLoaded == 0 then self.pumpTime = -1 end
 
 		-- hold gun straight
-		self.animator.timeSinceFire = 0.0
+		client.PWB_ANIMATOR[self.owner].timeSinceFire = 0.0
 
 		self.specialReload = 3
 		self.timeWeaponIdle = curTime + 0.6
@@ -219,7 +225,7 @@ function CTestShotgun:Reload()
 			client.PUNCH_Axis(3, -0.33)
 			client.PUNCH_Axis(1, -0.33)
 		end
-		
+
 		self:MDL_PunchPos(Vec(0, 0.1, 0.1))
 
 		self.timeWeaponIdle = curTime + 0.5
@@ -230,7 +236,7 @@ function CTestShotgun:Reload()
 		self.specialReload = 1
 
 		-- hold gun straight
-		self.animator.timeSinceFire = 0.0
+		client.PWB_ANIMATOR[self.owner].timeSinceFire = 0.0
 	end
 end
 
@@ -256,7 +262,7 @@ function CTestShotgun:WeaponIdle()
 						self.slideTime = 0
 
 						-- shell ejection
-						TENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_shtgn.xml", FSFX_SHTGN)
+						client.TENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_shtgn.xml", FSFX_SHTGN)
 					end
 
 					local mt = GetToolLocationWorldTransform("muzzle", self.owner)
@@ -264,7 +270,7 @@ function CTestShotgun:WeaponIdle()
 					-- play cocking sound
 					PlaySound(self.snds[1], mt.pos, 300)
 				end
-				
+
 				self.specialReload = 0
 				self.timeWeaponIdle = curTime + 1.5
 			end
@@ -283,7 +289,7 @@ function CTestShotgun:tickPlayer_cl(dt)
 			self.slideTime = 0
 
 			-- shell ejection
-			TENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_shtgn.xml", FSFX_SHTGN)
+			client.TENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_shtgn.xml", FSFX_SHTGN)
 		end
 
 		self.pumpTime = 0
@@ -306,7 +312,7 @@ function CTestShotgun:MDL_CustomAnimate(dt)
 	end
 	if self.slide and self.slideTime ~= nil then
 		self.slideTime = self.slideTime + dt
-	
+
 		local UseValue = self.slideTime
 
 		-- don't go over, add a delay between the pump forward!
@@ -325,7 +331,7 @@ function CTestShotgun:MDL_CustomAnimate(dt)
 		else
 			local position = Vec(0, 0, 0.10 * math.sin(4 * math.pi * UseValue))
 			local TOffset = Transform(position)
-			self.animator.leftHand.transform.pos = position
+			client.PWB_ANIMATOR[self.owner].leftHand.transform.pos = position
 
 			local t = TransformToParentTransform(TOffset, self.slideTransform)
 			SetShapeLocalTransform(self.slide, t)

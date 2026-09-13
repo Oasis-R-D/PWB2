@@ -64,18 +64,16 @@ function baseWeap:initVars(owner)
 		self.firedOnEmpty       = false
 
 		-- current magazine amount
-		self.ammoLoaded         = self.ammoLoadedMax 
+		self.ammoLoaded         = self.ammoLoadedMax
 
 		-- total alt ammo
-		self.ammoAltTotal      	= 0 
+		self.ammoAltTotal      	= 0
 
 		self.inReload           = false
 
 		-- True when the gun is allowed to
 		-- play empty sounds. Reset it in Idle()
 		self.playEmptySound		= true
-
-		self.animator        	= ToolAnimator()
 
 		self.recoilPos 			= Vec(0,0,0)
 
@@ -133,12 +131,25 @@ function baseWeap:init_sv(wpnSlot)
 	baseWeap.init_tool(self)
 	baseWeap.PrecacheSFX(self)
 	self.weaponSlot	= wpnSlot
+
+	-- Delete the raw sounds now that they are uneeded
+	FREE(self.init_sv)
+	FREE(self.init_tool)
+	FREE(self.Sounds)
+	FREE(self.PrecacheSFX)
+	FREE(self.tickPlayer_cl)
 end
 
 function baseWeap:init_cl(wpnSlot)
 	-- must be called like this
 	baseWeap.PrecacheSFX(self)
 	self.weaponSlot	= wpnSlot
+
+	-- Delete the raw sounds now that they are uneeded
+	FREE(self.init_cl)
+	FREE(self.Sounds)
+	FREE(self.PrecacheSFX)
+	FREE(self.tickPlayer_sv)
 end
 
 function baseWeap:init_tool()
@@ -214,7 +225,7 @@ function baseWeap:SV_DontFireAltCond()  return true  end -- don't check by defau
 --=========================================================================
 
 function baseWeap:tickPlayer_cl(dt)
-	if PWBsetting.debug then
+	if PWB_SETTING.debug then
 		self:Debug() end
 
 	self:MDL_Animate(dt)
@@ -325,7 +336,7 @@ end
 -- Server only cares about firing
 -- Don't simulate reloading or clip amount
 function baseWeap:tickPlayer_sv(dt)
-	if PWBsetting.debug then
+	if PWB_SETTING.debug then
 		self:Debug() end
 
 	local curTime = GetTime()
@@ -398,7 +409,7 @@ function baseWeap:BaseSecondaryAttack(dt, empty)
 
 	if not hasFlag(self.flags, FWPN_NOALTACTIONPOSE) then
 		-- hold gun straight
-		self.animator.timeSinceFire = 0.0
+		client.PWB_ANIMATOR[self.owner].timeSinceFire = 0.0
 	end
 
 	self:SecondaryAttack(dt)
@@ -416,10 +427,13 @@ function baseWeap:BaseDeploy(curTime)
 		-- Reset old recoil and do some movement
 		self.recoilPos = Vec(0,0,0)
 
+		--  hold straight
+		client.PWB_ANIMATOR[self.owner].timeSinceFire = 0.0
+
 		if self.isLocal then
 			self:MDL_PunchAngReset()
 			self:MDL_PunchAng(Vec(3, 0.75, 0.66))
-	
+
 			self:MDL_PunchPos(Vec(0.05, 0.1, -0.05))
 		end
 	end
@@ -429,7 +443,7 @@ end
 
 function baseWeap:BaseHolster()
 	if client then
-		-- cancel reloads
+		-- Cancel reloads
 		self.inReload = false
 	end
 
@@ -515,7 +529,7 @@ end
 
 -- Override to modify inputs
 function baseWeap:MDL_CallAnimator(dt)
-	tickToolAnimator(self.animator, dt, nil, self.owner)
+	tickToolAnimator(client.PWB_ANIMATOR[self.owner], dt, nil, self.owner)
 end
 
 -- applies model poses, recoil, idle and angular offsets
@@ -530,9 +544,9 @@ function baseWeap:MDL_Animate(dt)
 			self:MDL_DecayPunchAng(dt)
 		end
 
-		self.animator.offsetTransform.rot = QuatEuler(self.recoilAng[1], self.recoilAng[2], self.recoilAng[3])
+		client.PWB_ANIMATOR[self.owner].offsetTransform.rot = QuatEuler(self.recoilAng[1], self.recoilAng[2], self.recoilAng[3])
 	else
-		self.animator.offsetTransform.pos = self.recoilPos
+		client.PWB_ANIMATOR[self.owner].offsetTransform.pos = self.recoilPos
 	end
 
 	self:MDL_DecayPunchPos(dt)
@@ -640,7 +654,7 @@ function baseWeap:MDL_ApplyPos(dt)
 		Vec(0, -0.03 * self.idleCycleScale, 0)
 	)
 
-	self.animator.offsetTransform.pos = VecSub(VecAdd(self.recoilPos, idlePos), shiftedPos)
+	client.PWB_ANIMATOR[self.owner].offsetTransform.pos = VecSub(VecAdd(self.recoilPos, idlePos), shiftedPos)
 end
 
 --=========================================================================
@@ -648,10 +662,12 @@ end
 --	Used to servercall to a player's weapon
 --=========================================================================
 
-function baseWeap:SV_StartFire() self.inPrimary = true end
-function baseWeap:SV_StopFire() self.inPrimary = false end
-function baseWeap:SV_StartAltFire() self.inSecondary = true end
-function baseWeap:SV_StopAltFire() self.inSecondary = false end
+if server then
+	function baseWeap:SV_StartFire() self.inPrimary = true end
+	function baseWeap:SV_StopFire() self.inPrimary = false end
+	function baseWeap:SV_StartAltFire() self.inSecondary = true end
+	function baseWeap:SV_StopAltFire() self.inSecondary = false end
+end
 
 -- this works on both client and the server (as long as you call it with the proper args)
 function ReceiveCall(func, owner, slot, ...)

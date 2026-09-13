@@ -138,14 +138,15 @@ end
 ----------------------------------------------------------------------------------------------
 
 -- LIBRARYS
-PWBsetting = {}
+PWB_SETTING = {}
+client.PWB_ANIMATOR = {}
 #include "script/lib/pwbtoolanimation.lua"
 #include "script/lib/bit_ops.lua"
 #include "script/lib/vfx.lua"
 #include "script/lib/util.lua"
 #include "script/lib/temp_ent.lua"
 
-GLOBAL_HEADSHOTMULT = 2.0
+
 
 -- max tempents the client can simulate at once
 -- this probably won't be reached normally
@@ -164,10 +165,11 @@ GLOBAL_10DEGREES  = 0.08716
 GLOBAL_15DEGREES  = 0.13053
 GLOBAL_20DEGREES  = 0.17365
 
+GLOBAL_HEADSHOTMULT = 2.0
+
 -- GLOBALS
 #include "script/classes/baseWeap.lua"
 #include "script/include/player.lua"
-
 
 -- WEAPONS
 #include "script/wpns/testgun.lua"
@@ -175,7 +177,6 @@ GLOBAL_20DEGREES  = 0.17365
 #include "script/wpns/patterngun.lua"
 #include "script/wpns/testshotgun.lua"
 #include "script/wpns/meleetool.lua"
-
 
 -- UI
 #include "script/lib/menu.lua"
@@ -185,7 +186,7 @@ GLOBAL_20DEGREES  = 0.17365
 ----------------------------------------------------------------------------------------------
 
 -- pointers to each weapon's class
-GLOBAL_WEAPONS = {
+local GLOBAL_WEAPONS = {
    CTestGun,
    CAdsGun,
    CPattGun,
@@ -194,7 +195,7 @@ GLOBAL_WEAPONS = {
 }
 
 -- only calculate this once
-GLOBAL_WEAPONS_AMNT = #GLOBAL_WEAPONS
+local GLOBAL_WEAPONS_AMNT = #GLOBAL_WEAPONS
 
 -- pointers to each player's weapons
 PLAYER_WEAPONS = {}
@@ -212,9 +213,17 @@ function server.init()
    end
 end
 
+-- Doesn't need used
+--function server.tick(dt)
+--end
+
 -- Runs firing code
-function server.tick(dt)
+function server.update(dt)
+   AIM_RecoilTick(dt)
+
    for p in PlayersAdded() do
+		AIM_RecoilSet(p, Vec())
+
       PLAYER_WEAPONS[p] = {}
       for weapon=1, GLOBAL_WEAPONS_AMNT do
          local wpnPlyr = baseWeap:new(GLOBAL_WEAPONS[weapon], p)
@@ -226,6 +235,7 @@ function server.tick(dt)
 
    for p in PlayersRemoved() do
       PLAYER_WEAPONS[p] = nil
+      AIM_RecoilSet(p, nil)
    end
 
    for p, wpns in pairs(PLAYER_WEAPONS) do
@@ -238,37 +248,21 @@ function server.tick(dt)
          end
       end
    end
-end
-
-function server.update(dt)
-   AIM_RecoilTick(dt)
 
    CheckDeathReset()
 end
 
 -- Sets up weapon classes, precaches SFX and haptics
 function client.init()
+   settingsInit()
+
    for weapon=1, GLOBAL_WEAPONS_AMNT do
       baseWeap.init_cl(GLOBAL_WEAPONS[weapon], weapon)
    end
-
-   client.settingsInit()
 end
 
 -- Runs majority of weapon code
 function client.tick(dt)
-   for p in PlayersAdded() do
-      PLAYER_WEAPONS[p] = {}
-      for weapon=1, GLOBAL_WEAPONS_AMNT do
-         local wpnPlyr = baseWeap:new(GLOBAL_WEAPONS[weapon], p)
-		   PLAYER_WEAPONS[p][weapon] = wpnPlyr
-      end
-	end
-
-   for p in PlayersRemoved() do
-      PLAYER_WEAPONS[p] = nil
-   end
-
    for p, wpns in pairs(PLAYER_WEAPONS) do
       local tool = GetPlayerTool(p)
       for i=1, GLOBAL_WEAPONS_AMNT do
@@ -282,25 +276,40 @@ function client.tick(dt)
 
    client.PUNCH_Apply(dt)
 
-   client.FOV_Apply(dt)
-
    client.settingsTick()
 end
 
 -- Global VFX
 function client.update(dt)
-   AIM_RecoilTick(dt)
-
    CheckDeathReset()
 
+   AIM_RecoilTick(dt)
+
+   for p in PlayersAdded() do
+      AIM_RecoilSet(p, Vec())
+      client.PWB_ANIMATOR[p] = ToolAnimator()
+      PLAYER_WEAPONS[p] = {}
+      for weapon=1, GLOBAL_WEAPONS_AMNT do
+         local wpnPlyr = baseWeap:new(GLOBAL_WEAPONS[weapon], p)
+		   PLAYER_WEAPONS[p][weapon] = wpnPlyr
+      end
+	end
+
+   for p in PlayersRemoved() do
+      PLAYER_WEAPONS[p] = nil
+      client.PWB_ANIMATOR[p] = nil
+      AIM_RecoilSet(p, nil)
+   end
+
+   client.FOV_Apply(dt)
    client.PUNCHBASIC_Apply(dt)
 
    client.VFX_DynLightDraw(dt)
 
-   TENT_Update(
+   client.TENT_Update(
       dt,
-	   GetTime(),
-	   10 -- Gravity
+      GetTime(),
+      10 -- Gravity
    )
 end
 

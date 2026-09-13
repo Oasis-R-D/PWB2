@@ -77,7 +77,7 @@ function CTestGun:PrimaryAttack(dt)
 			self:MDL_PunchAng(Vec(GetRandomFloat(0.5, 1), GetRandomFloat(-0.5, 0.5), GetRandomFloat(-1, 1)))
 
 			-- shell ejection
-			TENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
+			client.TENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
 		end
 
 		self:muzzleFlash(mt.pos, 0.8)
@@ -128,7 +128,7 @@ function CTestGun:SecondaryAttack(dt)
 			self:MDL_PunchAng(Vec(GetRandomFloat(0.5, 1), GetRandomFloat(-0.5, 0.5), GetRandomFloat(-1, 1)))
 
 			-- shell ejection
-			TENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
+			client.TENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
 		end
 
 		self:muzzleFlash(mt.pos, 0.8)

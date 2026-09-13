@@ -64,8 +64,8 @@ end
 ---@param dir TVec Where the shell will be ejected towards
 ---@param model string Path to shell's XML ("MOD/models/xml/shell/x.xml")
 ---@param casingtype number Which shell impact sounds to play (values in bit_ops.lua)
-function TENT_EjectShell(p, org, dir, model, casingtype)
-	if PWBsetting.shelleject == false then return end
+function client.TENT_EjectShell(p, org, dir, model, casingtype)
+	if PWB_SETTING.shelleject == false then return end
 
 	local transform = GetBodyTransform(GetToolBody(p))
 
@@ -91,7 +91,7 @@ end
 local shellSFX_brass = 0
 local shellSFX_buck = 0
 
-function TENT_Update(
+function client.TENT_Update(
     frametime,	-- Simulation time
 	client_time, -- Absolute time on client
 	cl_gravity)	-- True gravity on client

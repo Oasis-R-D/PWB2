@@ -21,6 +21,10 @@ function PlayFireSound(snd, pos, vol)
 	PlaySound(snd, pos, 300)
 end
 
+function FREE(obj)
+	obj = nil
+end
+
 ----------------------------------------------------------------------------------------------
 -- Weapon UTILs
 ----------------------------------------------------------------------------------------------
@@ -125,14 +129,6 @@ end
 local playerRecoil = {}
 
 function AIM_RecoilTick(dt)
-	for p in PlayersAdded() do
-		playerRecoil[p] = Vec()
-	end
-
-	for p in PlayersRemoved() do
-		playerRecoil[p] = nil
-	end
-
 	for p in Players() do
 		local len = VecLength(playerRecoil[p])
 		if len > 0 then
@@ -144,7 +140,7 @@ function AIM_RecoilTick(dt)
 end
 
 -- AIM_RECOILGET: Gets the aim direction's rotational offset used in FireBulletsPlayer()
-function AIM_RecoilGet(p)
+local function AIM_RecoilGet(p)
 	local recoil = playerRecoil[p]
 	return QuatEuler(recoil[1], recoil[2], recoil[3])
 end

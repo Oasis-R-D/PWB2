@@ -8,7 +8,7 @@
 local dynLights = {}
 
 -- retreives the f value where Lerp(1-f^dt) will reach "0" after time t
-function GetLerpFactor(t)
+local function GetLerpFactor(t)
 	local ep = 0.00001; -- target %
 	return ep ^ (1.0 / t)
 end
@@ -20,7 +20,7 @@ end
 ---@param pos TVec Where the light should stay (if no attachment is found)
 ---@param attachment string Where the light should attach to the player weapon
 function client.VFX_DynLight(p, intensity, life, color, pos, attachment)
-    if PWBsetting.dynlights == false then return end
+    if PWB_SETTING.dynlights == false then return end
 
     attachment = attachment or false
     table.insert(dynLights, {p, intensity, GetLerpFactor(life), color, pos, attachment})
@@ -217,7 +217,6 @@ end
 
 local FOV_cur = nil
 local FOV_mult = 1
-
 
 function client.FOV_Apply(dt)
 	local baseFOV = GetFloat("options.gfx.fov")

@@ -4,10 +4,10 @@
 -- SHIFTS
 ----------------------------------------------------------------------------------------------
 
-function leftShift(bits) return 2 ^ bits
+local function leftShift(bits) return 2 ^ bits
 end
 
-function rightShift(bits) return math.floor(1 / (2 ^ bits))
+local function rightShift(bits) return math.floor(1 / (2 ^ bits))
 end
 
 ----------------------------------------------------------------------------------------------

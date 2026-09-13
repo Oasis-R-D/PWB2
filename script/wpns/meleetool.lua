@@ -47,10 +47,6 @@ function CMelee:initVars(owner)
 	baseWeap.initVars(self, owner)
 
 	if client then
-		self.animator.maxActionPoseTime = 0.2
-		self.animator.collider.enabled  = true
-		self.animator.collider.radius   = 0.02
-
 		self.swingNumb 					= -1 -- 1-3
 	else
 		self.hitDelay 					= -1
@@ -68,7 +64,7 @@ function CMelee:initVars(owner)
 end
 
 function CMelee:MDL_CallAnimator(dt)
-	tickToolAnimator(self.animator, dt, nil, self.owner, self.swingNumb, self.swingNumb, true)
+	tickToolAnimator(client.PWB_ANIMATOR[self.owner], dt, nil, self.owner, self.swingNumb, self.swingNumb, true)
 end
 
 --=========================================================================
@@ -89,6 +85,21 @@ end
 function CMelee:Holster()
 	if server then
 		self:StopSwing()
+	else
+		-- reset back to defaults
+		client.PWB_ANIMATOR[self.owner].maxActionPoseTime = 5.0
+		client.PWB_ANIMATOR[self.owner].collider.enabled  = false
+		client.PWB_ANIMATOR[self.owner].collider.radius   = 0.01
+	end
+end
+
+function CMelee:Deploy()
+	if client then
+		-- override certain animator settings
+		client.PWB_ANIMATOR[self.owner].maxActionPoseTime = 0.2
+		client.PWB_ANIMATOR[self.owner].collider.enabled  = true
+		client.PWB_ANIMATOR[self.owner].collider.radius   = 0.02
+		client.PWB_ANIMATOR[self.owner].timeSinceFire = 999
 	end
 end
 
@@ -98,8 +109,8 @@ function CMelee:PrimaryAttack(dt)
 	if client then
 		self.swingNumb = self.swingNumb - 1
 		if self.swingNumb == -4 then self.swingNumb = -1 end
-		
-		self.animator.forceSecondaryActionPose = true
+
+		client.PWB_ANIMATOR[self.owner].forceSecondaryActionPose = true
 	elseif self.edgeType ~= 0 then
 		self.strength = GetRandomFloat(0.8, 1)
 	end
@@ -115,7 +126,7 @@ function CMelee:CheckHit()
 
 	local t = GetBodyTransform(GetToolBody(self.owner))
 	local dir = TransformToParentVec(t, self.edgeDir)
-	
+
 	if not self.swingStartPos then 
 		self.swingStartPos = t.pos
 		self.hitDelay = GetTime() + 0.025
@@ -206,8 +217,8 @@ function CMelee:ShouldWeaponIdle() return true end
 function CMelee:WeaponIdle()
 	if self.startHitDelay ~= -1 and self.startHitDelay < GetTime() then
 		if client then
-			self.animator.forceSecondaryActionPose = false
-			self.animator.timeSinceFire = 0.0
+			client.PWB_ANIMATOR[self.owner].forceSecondaryActionPose = false
+			client.PWB_ANIMATOR[self.owner].timeSinceFire = 0.0
 		else
 			self.hitDelay = 0
 			self.stopHitDelay = GetTime() + 0.2

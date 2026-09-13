@@ -51,7 +51,7 @@ function ToolAnimator()
     anim.useAimRotation = false
 
     -- Max time to hold action pose after last "usetool"
-    anim.maxActionPoseTime = 2.0
+    anim.maxActionPoseTime = 5.0
 
     -- The action pose is automatically selected when "usetool" is pressed. To manually select the action pose set forceActionPose to true. 
     anim.forceActionPose = false

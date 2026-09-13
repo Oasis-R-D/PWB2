@@ -67,7 +67,7 @@ end
 
 function CAdsGun:Holster()
 	if client then
-		self.animator.forceSecondaryActionPose = false
+		client.PWB_ANIMATOR[self.owner].forceSecondaryActionPose = false
 		if self.isLocal then client.FOV_set(1) end
 	else
 		self.ads = false
@@ -89,7 +89,7 @@ function CAdsGun:PrimaryAttack(dt)
 			client.VFX_DynLight(self.owner, 25, 0.1, Vec(0.7, 0.5, 0.3), Vec(), "muzzle")
 
 			local punchVec = Vec()
-			if self.animator.forceSecondaryActionPose then
+			if client.PWB_ANIMATOR[self.owner].forceSecondaryActionPose then
 				punchVec = Vec(GetRandomFloat(-0.025, 0.025), GetRandomFloat(0.0, 0.0125), GetRandomFloat(0.025, 0.025))
 
 				self:MDL_PunchAng(Vec(GetRandomFloat(0.25, 0.66), GetRandomFloat(-0.4, 0.4), GetRandomFloat(-0.33, 0.33)))
@@ -108,7 +108,7 @@ function CAdsGun:PrimaryAttack(dt)
 			self:MDL_PunchPos(punchVec)
 
 			-- shell ejection
-			TENT_EjectShell(self.owner, self.casingOrg, Vec(1, -1, 0), "MOD/models/xml/shell/casing_45acp.xml", FSFX_BRASS)
+			client.TENT_EjectShell(self.owner, self.casingOrg, Vec(1, -1, 0), "MOD/models/xml/shell/casing_45acp.xml", FSFX_BRASS)
 		else
 			self:MDL_PunchPos(Vec(GetRandomFloat(-0.05, 0.05), GetRandomFloat(0.0, 0.025), GetRandomFloat(0.05, 0.1)))
 		end
@@ -120,7 +120,7 @@ function CAdsGun:PrimaryAttack(dt)
 
 	baseWeap.DepleteAmmo(self, 1, 1)
 
-	local inAds = (server and self.ads) or (client and self.animator.forceSecondaryActionPose)
+	local inAds = (server and self.ads) or (client and client.PWB_ANIMATOR[self.owner].forceSecondaryActionPose)
 	self:FireBulletsPlayer(1, GetPlayerEyeTransform(self.owner).pos, inAds and GLOBAL_1DEGREE or GLOBAL_3DEGREES, 100)
 
 	AIM_RecoilAdd(self.owner, Vec(1.33, GetRandomFloat(-2, 2), 0))
@@ -134,7 +134,7 @@ function CAdsGun:Reload()
 	if self.isLocal then
 		self:PlayFollowingSound(self.snds[2], 1.258)
 
-		if self.animator.forceSecondaryActionPose then
+		if client.PWB_ANIMATOR[self.owner].forceSecondaryActionPose then
 			self:ServerWpnCall("SecondaryAttack", 0, false)
 			client.FOV_set(1)
 		end
@@ -142,13 +142,13 @@ function CAdsGun:Reload()
 		PlaySound(self.snds[1], GetPlayerPos(self.owner), 1)
 	end
 	
-	self.animator.forceSecondaryActionPose = false
+	client.PWB_ANIMATOR[self.owner].forceSecondaryActionPose = false
 end
 
 function CAdsGun:SecondaryAttack(dt, ads)
 	if client then
-		ads = not self.animator.forceSecondaryActionPose
-		self.animator.forceSecondaryActionPose = ads
+		ads = not client.PWB_ANIMATOR[self.owner].forceSecondaryActionPose
+		client.PWB_ANIMATOR[self.owner].forceSecondaryActionPose = ads
 		
 		if self.isLocal then
 			self:ServerWpnCall("SecondaryAttack", dt, ads)
@@ -168,7 +168,7 @@ end
 
 function CAdsGun:tickPlayer_cl(dt)
 	if self.isLocal then
-		if self.animator.forceSecondaryActionPose then
+		if client.PWB_ANIMATOR[self.owner].forceSecondaryActionPose then
 			self.idleCycleScale = 0.05
 		end
 	end
