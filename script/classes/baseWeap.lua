@@ -650,7 +650,7 @@ function baseWeap:MDL_ApplyPos(dt)
 	-- add a nice shifting effect
 	local b = GetToolBody()
 	local shiftedPos = TransformToLocalVec(
-		GetBodyTransform(b), 
+		GetBodyTransform(b),
 		Vec(0, -0.03 * self.idleCycleScale, 0)
 	)
 
@@ -690,6 +690,63 @@ end
 --	UTIL FUNCS
 --=========================================================================
 
+local function matPenetratable(mat)
+	return mat == "foliage" or mat == "glass" or mat == "plastic" or mat == "plaster"
+end
+
+function baseWeap:RecursiveBulletPenetration(shootPos, hitPos, dir, alottedDist, maxDist, iterations)
+	iterations = iterations + 1
+
+	QueryRequire("large physical")
+	local bHit, pdist, pShape, playerhit = QueryShot(hitPos, dir, clamp(maxDist-alottedDist, 0.5, 999), 0, self.owner)
+	alottedDist = alottedDist + pdist
+
+	local hitAnimator = GetBodyAnimator(GetShapeBody(pShape))
+	local hitLocation = VecAdd(hitPos, VecScale(dir, pdist))
+	if playerhit == 0 and hitAnimator == 0 then
+		if bHit and iterations < 5 then
+			if alottedDist >= maxDist then
+				Shoot(shootPos, dir, "bullet", 0.0, maxDist, self.owner)
+			elseif not matPenetratable(GetShapeMaterialAtPos(pShape, hitLocation)) or HasTag(GetShapeBody(pShape), "unbreakable") then
+				Shoot(shootPos, dir, "bullet", self.dmg_world, alottedDist+1, self.owner)
+			else
+				local damage = self.dmg_world > 0.4 and self.dmg_world or 0.4
+				MakeHole(hitLocation, damage, 0, 0)
+				MakeHole(VecAdd(hitLocation, VecScale(dir, damage)), damage, 0, 0)
+				self:RecursiveBulletPenetration(shootPos, hitLocation, dir, alottedDist, maxDist, iterations)
+			end
+		elseif maxDist-alottedDist > 0.25 and iterations < 16 then
+			self:RecursiveBulletPenetration(shootPos, hitLocation, dir, alottedDist, maxDist, iterations)
+		else
+			Shoot(shootPos, dir, "bullet", 0.0, maxDist, self.owner)
+		end
+	elseif self.dmg_plyr then
+		-- play player impact SFX
+		if not baseWeap.hitSND then baseWeap.hitSND = LoadSound("MOD/snd/base/bullet_hit0.ogg") end
+		PlaySound(baseWeap.hitSND, hitLocation, 2)
+
+		-- don't actually hit the player so we can do our own damage and vfx
+		local newrange = alottedDist - 0.5
+		if newrange > 0 then Shoot(shootPos, dir, "bullet", 0.0, newrange, self.owner) end
+
+		if playerhit ~= 0 then
+			-- apply hitgroups
+			QueryRequire("player")
+			QueryInclude("player")
+			QueryRejectPlayer(self.owner)
+			local _, _, _, bodyPart = QueryRaycast(hitPos, dir, pdist + 0.25)
+
+			-- Apply per bodypart damagage multiplier
+			local dmg = self:DamageMultiplier(bodyPart, self.dmg_plyr)
+
+			-- Deal damage
+			ApplyPlayerDamage(playerhit, dmg, self.toolName, self.owner)
+		end
+
+		server.BloodDecal(hitLocation, dir, self.dmg_plyr, hitAnimator)
+	end
+end
+
 function baseWeap:FireBulletsPlayer(shots, pos, spreadRad, range, impulseMult, radius)
 	radius = radius or 0
 
@@ -697,7 +754,7 @@ function baseWeap:FireBulletsPlayer(shots, pos, spreadRad, range, impulseMult, r
 		local posUse, dir = AIM_GetSpreadedAim(pos, spreadRad, range, self.owner, i)
 
 		-- Apply aim recoil
-		dir = AIM_RecoilApply(self.owner, posUse, dir)
+		if spreadRad ~= -1 then dir = AIM_RecoilApply(self.owner, posUse, dir) end
 
 		-- figure out whether we need to run player or world hit code
 		local bHit, pdist, pShape, playerhit = QueryShot(posUse, dir, range, 0, self.owner)
@@ -729,7 +786,8 @@ function baseWeap:FireBulletsPlayer(shots, pos, spreadRad, range, impulseMult, r
 
 			if playerhit == 0 and hitAnimator == 0 then
 				-- use normal shooting for world
-				Shoot(posUse, dir, "bullet", self.dmg_world, range, self.owner)
+				self:RecursiveBulletPenetration(posUse, hitLocation, dir, pdist, range, 1)
+				--Shoot(posUse, dir, "bullet", self.dmg_world, range, self.owner)
 			elseif self.dmg_plyr then
 				-- play player impact SFX
 				if not baseWeap.hitSND then baseWeap.hitSND = LoadSound("MOD/snd/base/bullet_hit0.ogg") end
