@@ -3,12 +3,16 @@
 MenuAlpha = 0
 MenuActive = false
 
-function SettingUPD(key, value)
+function client.settingUPD(key, value)
     SetBool("savegame.mod.pwb." .. key, value)
     PWBsetting[key] = value
 end
 
-function InitBool(key, default)
+function server.settingUPD(key, value)
+    PWBsetting[key] = value
+end
+
+function InitBool(key, default, onSV)
     local value = default 
     if HasKey("savegame.mod.pwb." .. key) then
         value = GetBool("savegame.mod.pwb." .. key)
@@ -17,12 +21,16 @@ function InitBool(key, default)
     end
 
     PWBsetting[key] = value
+
+	if GetLocalPlayer() == 1 and onSV then
+		ServerCall("server.settingUPD", key, value)
+	end
 end
 
 function client.settingsInit()
-    InitBool("shelleject",  true)
-    InitBool("dynlights",   true)
-    InitBool("debug",       false)
+    InitBool("shelleject",  true,  false)
+    InitBool("dynlights",   true,  false)
+    InitBool("debug",       false, true)
 end
 
 function client.settingsTick()
@@ -88,21 +96,24 @@ function client.settingsDraw()
             UiText("Shell ejection", true)
             UiTranslate(0, th)
 			if UiTextButton(PWBsetting.shelleject, bw, bh) then
-                SettingUPD("shelleject", not PWBsetting.shelleject)
+                client.settingUPD("shelleject", not PWBsetting.shelleject)
 			end
 			UiTranslate(0, bh+sep)
 
             UiText("Dynamic Lights", true)
             UiTranslate(0, th)
 			if UiTextButton(PWBsetting.dynlights, bw, bh) then
-                SettingUPD("dynlights", not PWBsetting.dynlights)
+                client.settingUPD("dynlights", not PWBsetting.dynlights)
 			end
 			UiTranslate(0, bh+sep)
 
             UiText("Debug", true)
             UiTranslate(0, th)
 			if UiTextButton(PWBsetting.debug, bw, bh) then
-                SettingUPD("debug", not PWBsetting.debug)
+                client.settingUPD("debug", not PWBsetting.debug)
+				if GetLocalPlayer() == 1 then
+					ServerCall("server.settingUPD", "debug", PWBsetting.debug)
+				end
 			end
 			UiTranslate(0, bh+sep)
 			UiTranslate(0, 10)

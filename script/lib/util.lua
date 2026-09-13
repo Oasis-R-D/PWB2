@@ -10,11 +10,6 @@ function findArrayOpening(array)
     return i
 end
 
--- Returns true if the server is MP
-function isMP()
-	return GetMaxPlayers() > 1
-end
-
 function server.SpawnFireHook(pos, chance)
 	if math.random(0, 100) <= chance then
 		SpawnFire(pos)

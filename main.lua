@@ -8,7 +8,8 @@ in GLOBAL_WEAPONS (make sure to '#include' it's lua file also).
 weapon systems are built to function like the weapon systems from Half-Life: 1 / Counter Strike
 and can fully support weapons from both with (near) minimal adaptation.
 
-Weapon HUD order is set by the order they are listed in the GLOBAL_WEAPONS table
+Weapon HUD order is set by the order they are listed in the GLOBAL_WEAPONS table.
+You can however rummage through the registry if you really need a weapon in a specifc spot.
 
 ----------------------------------------------------------------------------------------------
 -- USAGE
@@ -25,7 +26,7 @@ if you need help with PWB2 or it's utilization of object oriented programming, m
 
    https://www.lua.org/pil/16.html
 
-NEW TOOL ANIMATOR FEATURES:
+-- NEW TOOL ANIMATOR FEATURES: --
 - PWB tickToolAnimator():
   tickToolAnimator(toolAnimator, dt, defaultPoseTransform, playerId, swingamnts, swingamntsALT, noheldaction)
 
@@ -37,6 +38,12 @@ NEW TOOL ANIMATOR FEATURES:
   (using this with a weapon that has multiple actions using the above system may lead to undefined behavior)
 
 - fp/tp_secaction and swingamntsALT: a secondary action position, can only activated with the forceSecondaryActionPose bool
+
+-- COMPATIBILITY: --
+PWB2 has a few ways of communicating with other mods, this section contains all events and exposed information.
+
+Weapon firing event arguments: ("pwb_shot", fire pos, hit location, hit shape, hit player, dmg_world, dmg_plyr)
+Player settings can be found at "savegame.mod.pwb.[HERE]" in the registry.
 
 ==============================================================================================
 ==============================================================================================
@@ -52,38 +59,44 @@ demoWeap = {} -- goes in GLOBAL_WEAPONS
 
 -- Static values for this specific weapon
 -- These don't need redefined in a weapon if a var is just the default value
-demoWeap.model				   = "MOD/models/xml/mdl.xml" -- path to the XML model file
-demoWeap.casingOrg         = Vec(0,0,0)               -- where casings are ejected
+demoWeap.model		 = "mdl.xml"  -- XML model file, parses from "MOD/models/xml/"
+demoWeap.casingOrg = Vec(0,0,0) -- Where casings are ejected
 
-demoWeap.toolID 			   = "demoWeap"	 -- used by the engine. lowercase and no spaces
-demoWeap.toolName 			= "PWB2 Weapon" -- shown in killfeed
-demoWeap.toolSlot			   = 3
+demoWeap.toolID 	= "demoWeap"	 -- used by the engine. Lowercase and no spaces
+demoWeap.toolName = "PWB2 Weapon" -- Shown in killfeed
+demoWeap.toolSlot = 3
 
-demoWeap.ammoLoadedMax 	   = 45						    -- max clip 	 	-- -1 for no clip (pulls from reserve)
-demoWeap.ammoAltLoadedMax	= -1 						    -- max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
-demoWeap.ammoPickupSize	   = demoWeap.ammoLoadedMax -- defaults to full mag
-demoWeap.dmg_world			= 0.4                    -- Size of hole in meters
-demoWeap.dmg_plyr			   = 0.05						 -- 0.0-1.0
+demoWeap.ammoLoadedMax 	  = 45						   -- Max clip 	 	-- -1 for no clip (pulls from reserve)
+demoWeap.ammoAltLoadedMax = -1 						   -- Max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
+demoWeap.ammoPickupSize	  = demoWeap.ammoLoadedMax -- Mefaults to full mag
+demoWeap.dmg_world		  = 0.4                    -- Size of hole in meters
+demoWeap.dmg_plyr			  = 0.05						   -- 0.0-1.0
 
-demoWeap.flags				   = addFlags(0, FWPN_NONE) -- weapon flags
-demoWeap.snds				   = 0                      -- Prechached SFX list, set on INIT
+demoWeap.flags = addFlags(0, FWPN_NONE) -- Weapon flags
+demoWeap.snds	= 0 -- Prechached SFX list, set on INIT
 
-baseWeap.recoilPosDecay 	= 0.25 -- multiplier for recoil pos decay. Lower is slower, higher is faster
-baseWeap.recoilAngSpring	= 65	 -- bigger number increases the speed at which the angle corrects
-baseWeap.recoilAngDamp		= 9	 -- bigger number makes the response more damped, smaller is less damped
-									       -- currently the system will overshoot, with larger damping values it won't
+baseWeap.recoilPosDecay  = 0.25 -- multiplier for recoil pos decay. Lower is slower, higher is faster
+baseWeap.recoilAngSpring = 65	  -- bigger number increases the speed at which the angle corrects
+baseWeap.recoilAngDamp	 = 9	  -- bigger number makes the response more damped, smaller is less damped
+									     -- currently the system will overshoot, with larger damping values it won't
 
 -- override initVars to add new variables
 function demoWeap:initVars(owner)
+   baseWeap.initVars(self, owner)
+
 	if client then
 		self.clientvar = 0
+
+      -- base initVars must be ran before to use self.isLocal
+      -- otherwise do IsPlayerLocal(owner)
+      if self.isLocal then 
+         self.localVar = "truely false"
+      end
    else
       self.servervar = 69
 	end
 
    self.sharedvar = 1 -- not synced between SV+CL, exists on both
-
-	baseWeap.initVars(self, owner)
 end
 
 --=========================================================================

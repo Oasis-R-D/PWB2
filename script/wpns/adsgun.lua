@@ -6,22 +6,23 @@ CAdsGun = {} -- goes in GLOBAL_WEAPONS
 
 -- Static values for this specific weapon
 -- These don't need redefined in a weapon if a var is just the default value
-CAdsGun.model				= "grease.xml"			 -- path to the XML model file
-CAdsGun.casingOrg			= Vec(0.01, 0.12, -0.15) -- where casings are ejected
 
-CAdsGun.toolID 				= "testads"		 -- used by the engine. lowercase and no spaces
-CAdsGun.toolName 			= "PWB2 ADS" -- shown in killfeed
-CAdsGun.toolSlot			= 3
+CAdsGun.model	  = "grease.xml"		   -- Path to the XML model file
+CAdsGun.casingOrg = Vec(0.01, 0.12, -0.15) -- Where casings are ejected
 
-CAdsGun.ammoLoadedMax 		= 30					-- max clip 	 	-- -1 for no clip (pulls from reserve)
-CAdsGun.ammoAltLoadedMax	= 0 					-- max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
-CAdsGun.ammoAltItemID		= 0 					-- wpnID of item to drain ammo for when altfiring
-CAdsGun.ammoPickupSize		= CAdsGun.ammoLoadedMax	-- defaults to full mag
-CAdsGun.dmg_world			= 0.5					-- Size of hole in meters
-CAdsGun.dmg_plyr			= 0.16					-- 0.0-1.0
+CAdsGun.toolID 	 = "testads"  -- Used by the engine. Lowercase and no spaces
+CAdsGun.toolName = "PWB2 ADS" -- Shown in killfeed
+CAdsGun.toolSlot = 3
 
-CAdsGun.flags				= addFlags(0, FWPN_SV_CALLONCE_SEC, FWPN_CLICK_SEC) -- weapon flags
-CAdsGun.snds				= 0	-- Prechached SFX list, set on INIT
+CAdsGun.ammoLoadedMax 	 = 30					 -- Max clip 	 	-- -1 for no clip (pulls from reserve)
+CAdsGun.ammoAltLoadedMax = 0 					 -- Max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
+CAdsGun.ammoAltItemID	 = 0 					 -- WpnID of item to drain ammo for when altfiring
+CAdsGun.ammoPickupSize	 = CAdsGun.ammoLoadedMax -- Defaults to full mag
+CAdsGun.dmg_world		 = 0.5					 -- Size of hole in meters
+CAdsGun.dmg_plyr		 = 0.16					 -- 0.0-1.0
+
+CAdsGun.flags= addFlags(0, FWPN_SV_CALLONCE_SEC, FWPN_CLICK_SEC) -- Weapon flags
+CAdsGun.snds = 0 -- Prechached SFX list, set on INIT 
 
 -- override initVars to add new variables
 function CAdsGun:initVars(owner)
@@ -38,7 +39,7 @@ end
 
 function CAdsGun:Sounds()
 	return {
-		{"smg1_fire.ogg", "sv", 10},
+		{"smg1_fire.ogg",   "sv", 10},
 		{"smg1_reload.ogg", "cl", 10},
 		{"smg1_reload.ogg", "cl", 10, true}
 	}

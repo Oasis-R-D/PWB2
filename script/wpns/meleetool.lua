@@ -22,21 +22,22 @@ CMelee = {} -- goes in GLOBAL_WEAPONS
 
 -- Static values for this specific weapon
 -- These don't need redefined in a weapon if a var is just the default value
-CMelee.model			= "crowbar.xml" -- path to the XML model file
 
-CMelee.edgeDir			= Vec(0,1,-1)	-- what direction hits will be considered
-CMelee.edgeType			= 1				-- 0: blunt 1: slice (slice hits things multiple times)
-CMelee.hitDist			= 1.33			-- how far from the edge to check hits
-CMelee.knockbackMult    = 500			-- object impulse multiplier, rec: 1000 for blunt, 50 for slice
+CMelee.model = "crowbar.xml" -- Path to the XML model file
 
-CMelee.toolID 			= "testmelee"	  	-- used by the engine. lowercase and no spaces
-CMelee.toolName 		= "PWB2 Melee" -- shown in killfeed
-CMelee.toolSlot			= 1
+CMelee.edgeDir		 = Vec(0,1,-1) -- What direction hits will be considered
+CMelee.edgeType		 = 1		   -- 0: blunt 1: slice (slice hits things multiple times)
+CMelee.hitDist		 = 1.33		   -- How far from the edge to check hits
+CMelee.knockbackMult = 500		   -- Object impulse multiplier, rec: 1000 for blunt, 50 for slice
 
-CMelee.ammoLoadedMax 	= -1   -- max clip 	 	-- -1 for no clip (pulls from reserve)
-CMelee.ammoPickupSize	= 9999 -- defaults to full mag
-CMelee.dmg_world		= 0.4  -- Size of hole in meters
-CMelee.dmg_plyr			= 0.05 -- 0.0-1.0
+CMelee.toolID 	= "testmelee"  -- Used by the engine. Lowercase and no spaces
+CMelee.toolName = "PWB2 Melee" -- Shown in killfeed
+CMelee.toolSlot	= 1
+
+CMelee.ammoLoadedMax  = -1   -- Max clip 	 -- -1 for no clip (pulls from reserve)
+CMelee.ammoPickupSize = 9999 -- Defaults to full mag
+CMelee.dmg_world	  = 0.4  -- Size of hole in meters
+CMelee.dmg_plyr		  = 0.05 -- 0.0-1.0
 
 CMelee.flags = addFlags(0, FWPN_NOALTACTIONPOSE, FWPN_NOHUD) -- weapon flags
 CMelee.snds	 = 0 -- Prechached SFX list, set on INIT
@@ -76,8 +77,8 @@ end
 
 function CMelee:Sounds()
 	return {
-		{"smg1_fire.ogg", 	"sv", 10}, -- Player hit
-		{"smg1_fire.ogg", 	"sv", 10}, -- Hard object hit
+		{"smg1_fire.ogg", "sv", 10}, -- Player hit
+		{"smg1_fire.ogg", "sv", 10}, -- Hard object hit
 	}
 end
 

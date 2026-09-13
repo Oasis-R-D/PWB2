@@ -6,21 +6,22 @@ CPattGun = {} -- goes in GLOBAL_WEAPONS
 
 -- Static values for this specific weapon
 -- These don't need redefined in a weapon if a var is just the default value
-CPattGun.model				= "smg1.xml" 			 -- path to the XML model file
-CPattGun.casingOrg			= Vec(0.02, 0.15, -0.15) -- where casings are ejected
 
-CPattGun.toolID 			= "pattgun"	  -- used by the engine. lowercase and no spaces
-CPattGun.toolName 			= "PWB2 Patterned" -- shown in killfeed
-CPattGun.toolSlot			= 3
+CPattGun.model	   = "smg1.xml" 			-- Path to the XML model file
+CPattGun.casingOrg = Vec(0.02, 0.15, -0.15) -- Where casings are ejected
 
-CPattGun.ammoLoadedMax 		= 30					 -- max clip 	 	-- -1 for no clip (pulls from reserve)
-CPattGun.ammoAltLoadedMax	= 0 				 	 -- max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
-CPattGun.ammoPickupSize		= CPattGun.ammoLoadedMax -- defaults to full mag
-CPattGun.dmg_world			= 0.4				     -- Size of hole in meters
-CPattGun.dmg_plyr			= 0.31				 	 -- 0.0-1.0
+CPattGun.toolID   = "pattgun"	  		 -- Used by the engine. Lowercase and no spaces
+CPattGun.toolName = "PWB2 CounterStrike" -- Shown in killfeed
+CPattGun.toolSlot = 3
 
-CPattGun.flags				= addFlags(0, FWPN_NONE) -- weapon flags
-CPattGun.snds				= 0	-- Prechached SFX list, set on INIT
+CPattGun.ammoLoadedMax 	  = 30					   -- Max clip 	 	-- -1 for no clip (pulls from reserve)
+CPattGun.ammoAltLoadedMax = 0 				 	   -- Max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
+CPattGun.ammoPickupSize	  = CPattGun.ammoLoadedMax -- Defaults to full mag
+CPattGun.dmg_world		  = 0.1				       -- Size of hole in meters
+CPattGun.dmg_plyr		  = 0.31				   -- 0.0-1.0
+
+CPattGun.flags = addFlags(0, FWPN_NONE) -- Weapon flags
+CPattGun.snds  = 0 -- Prechached SFX list, set on INIT
 
 -- override initVars to add new variables
 function CPattGun:initVars(owner)
@@ -30,9 +31,6 @@ function CPattGun:initVars(owner)
 
 	-- Which shot is this? (used because server doesn't have clip)
 	self.shot = 1
-
-	-- Which shot is this total (doesn't reset after not firing for a while)
-	self.shotActual = 1
 
 	baseWeap.initVars(self, owner)
 end
@@ -152,29 +150,27 @@ function CPattGun:PrimaryAttack(dt)
 	self:FireBulletsPlayer(1, GetPlayerEyeTransform(self.owner).pos, self:GetAccuracy(), 100)
 
 	AIM_RecoilSet(self.owner, SprayPattern[self.shot])
-	self:IncrementShot()
+	self.shot = self.shot + 1
 
 	baseWeap.DepleteAmmo(self, 1, 1)
 
 	self.nextFire = self:GetNextAttackDelay(0.09009)
 end
 
+function CPattGun:ResetShots()
+	self.shot = 1
+end
+
 function CPattGun:Reload()
 	if not self:DefaultReload(3.1) then return end
 
+	self:ResetShots()
+
 	if self.isLocal then
+		self:ServerWpnCall("ResetShots")
 		self:PlayFollowingSound(self.snds[2], 1.258)
 	else
 		PlaySound(self.snds[1], GetPlayerPos(self.owner), 1)
-	end
-end
-
-function CPattGun:IncrementShot()
-	self.shot = self.shot + 1
-	self.shotActual = self.shotActual + 1
-	if self.shotActual > self.ammoLoadedMax then
-		self.shotActual = 1
-		self.shot = 1
 	end
 end
 
@@ -190,13 +186,12 @@ function CPattGun:WeaponIdle()
 end
 
 function CPattGun:DebugCustom()
-	if not self.isLocal then return end
+	if client and not self.isLocal then return end
 
 	local prefix = "SV "
 	if client then prefix = "CL "
 	end
 
 	DebugWatch(prefix .. "shot", 			self.shot)
-	DebugWatch(prefix .. "shotActual", 		self.shotActual)
 	DebugWatch(prefix .. "GetAccuracy", 	self:GetAccuracy())
 end

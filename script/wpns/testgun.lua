@@ -6,21 +6,22 @@ CTestGun = {} -- goes in GLOBAL_WEAPONS
 
 -- Static values for this specific weapon
 -- These don't need redefined in a weapon if a var is just the default value
-CTestGun.model				= "smg1.xml" 			 -- path to the XML model file
-CTestGun.casingOrg			= Vec(0.02, 0.15, -0.15) -- where casings are ejected
 
-CTestGun.toolID 			= "testgun"	  -- used by the engine. lowercase and no spaces
-CTestGun.toolName 			= "PWB2 Gun" -- shown in killfeed
-CTestGun.toolSlot			= 3
+CTestGun.model	   = "smg1.xml" 			-- Path to the XML model file
+CTestGun.casingOrg = Vec(0.02, 0.15, -0.15) -- Where casings are ejected
 
-CTestGun.ammoLoadedMax 		= 45					 -- max clip 	 	-- -1 for no clip (pulls from reserve)
-CTestGun.ammoAltLoadedMax	= 0 				 	 -- max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
-CTestGun.ammoPickupSize		= CTestGun.ammoLoadedMax -- defaults to full mag
-CTestGun.dmg_world			= 0.4				     -- Size of hole in meters
-CTestGun.dmg_plyr			= 0.05				 	 -- 0.0-1.0
+CTestGun.toolID   = "testgun"  -- Used by the engine. Lowercase and no spaces
+CTestGun.toolName = "PWB2 Gun" -- Shown in killfeed
+CTestGun.toolSlot = 3
 
-CTestGun.flags				= addFlags(0, FWPN_NONE) -- weapon flags
-CTestGun.snds				= 0	-- Prechached SFX list, set on INIT
+CTestGun.ammoLoadedMax 	  = 45					   -- Max clip 	 	-- -1 for no clip (pulls from reserve)
+CTestGun.ammoAltLoadedMax = 0 				 	   -- Max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
+CTestGun.ammoPickupSize	  = CTestGun.ammoLoadedMax -- Defaults to full mag
+CTestGun.dmg_world		  = 0.4				       -- Size of hole in meters
+CTestGun.dmg_plyr		  = 0.05				   -- 0.0-1.0
+
+CTestGun.flags = addFlags(0, FWPN_NONE) -- Weapon flags
+CTestGun.snds  = 0 -- Prechached SFX list, set on INIT
 
 -- override initVars to add new variables
 function CTestGun:initVars(owner)

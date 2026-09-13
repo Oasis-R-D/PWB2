@@ -19,26 +19,26 @@ baseWeap = {}
 -- Weapons can define their own
 -- custom static values if needed.
 -----------------------------------------------------------
-baseWeap.model				= "mdl.xml"					-- XML model file "MOD/models/xml/"
-baseWeap.casingOrg			= Vec(0,0,0)		   		-- where casings are ejected
+baseWeap.model	   = "mdl.xml"  -- XML model file, parses from "MOD/models/xml/"
+baseWeap.casingOrg = Vec(0,0,0) -- Where casings are ejected  
 
-baseWeap.toolID 			= "basetool"				-- used by the engine. lowercase and no spaces
-baseWeap.toolName 			= "PWB2 Base Tool"			-- shown in killfeed
-baseWeap.toolSlot			= 0
+baseWeap.toolID   = "basetool"		 -- Used by the engine. Lowercase and no spaces
+baseWeap.toolName = "PWB2 Base Tool" -- shown in killfeed
+baseWeap.toolSlot = 0
 
-baseWeap.ammoLoadedMax 		= 0							-- max clip 	 	-- -1 for no clip (pulls from reserve)
-baseWeap.ammoAltLoadedMax	= 0 						-- max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
-baseWeap.ammoPickupSize		= baseWeap.ammoLoadedMax	-- defaults to full mag
-baseWeap.dmg_world			= 0							-- Size of hole in meters
-baseWeap.dmg_plyr			= 0							-- 0.0-1.0
+baseWeap.ammoLoadedMax 	  = 0						-- Max clip 	 	-- -1 for no clip (pulls from reserve)
+baseWeap.ammoAltLoadedMax = 0 						-- Max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
+baseWeap.ammoPickupSize	  = baseWeap.ammoLoadedMax	-- Defaults to full mag
+baseWeap.dmg_world		  = 0						-- Size of hole in meters
+baseWeap.dmg_plyr		  = 0						-- 0.0-1.0  
 
-baseWeap.flags				= addFlags(0, FWPN_NONE)	-- weapon flags
-baseWeap.snds				= 0 						-- Prechached SFX list, set on INIT
+baseWeap.flags = addFlags(0, FWPN_NONE)	-- Weapon flags
+baseWeap.snds  = 0 -- Prechached SFX list, set on INIT
 
-baseWeap.recoilPosDecay 	= 0.5 -- multiplier for recoil pos decay. Lower is slower, higher is faster
-baseWeap.recoilAngSpring	= 65  -- bigger number increases the speed at which the angle corrects
-baseWeap.recoilAngDamp		= 9	  -- bigger number makes the response more damped, smaller is less damped
-								  -- currently the system will overshoot, with larger damping values it won't
+baseWeap.recoilPosDecay  = 0.5 -- multiplier for recoil pos decay. Lower is slower, higher is faster
+baseWeap.recoilAngSpring = 65  -- bigger number increases the speed at which the angle corrects
+baseWeap.recoilAngDamp	 = 9   -- bigger number makes the response more damped, smaller is less damped
+							   -- currently the system will overshoot, with larger damping values it won't
 
 local WEAPON_NOCLIP = -1
 
@@ -699,6 +699,8 @@ function baseWeap:FireBulletsPlayer(shots, pos, spreadRad, range, impulseMult, r
 			end
 		end
 
+		local hitLocation = VecAdd(posUse, VecScale(dir, pdist))
+
 		if server then
 			QueryShootRope(posUse, dir, range)
 
@@ -713,11 +715,9 @@ function baseWeap:FireBulletsPlayer(shots, pos, spreadRad, range, impulseMult, r
 				-- use normal shooting for world
 				Shoot(posUse, dir, "bullet", self.dmg_world, range, self.owner)
 			elseif self.dmg_plyr then
-				local SoundPoint = VecAdd(posUse, VecScale(dir, pdist))
-
 				-- play player impact SFX
 				if not baseWeap.hitSND then baseWeap.hitSND = LoadSound("MOD/snd/base/bullet_hit0.ogg") end
-				PlaySound(baseWeap.hitSND, SoundPoint, 2)
+				PlaySound(baseWeap.hitSND, hitLocation, 2)
 
 				-- don't actually hit the player so we can do our own damage and vfx
 				local newrange = pdist - 0.5
@@ -737,12 +737,10 @@ function baseWeap:FireBulletsPlayer(shots, pos, spreadRad, range, impulseMult, r
 					ApplyPlayerDamage(playerhit, dmg, self.toolName, self.owner)
 				end
 
-				server.BloodDecal(SoundPoint, dir, self.dmg_plyr, hitAnimator)
+				server.BloodDecal(hitLocation, dir, self.dmg_plyr, hitAnimator)
 			end
 		else -- client
 			if bHit and self.dmg_plyr then
-				local SoundPoint = VecAdd(posUse, VecScale(dir, pdist))
-
 				local hitAnimator = GetBodyAnimator(GetShapeBody(pShape))
 
 				if playerhit ~= 0 then
@@ -755,12 +753,14 @@ function baseWeap:FireBulletsPlayer(shots, pos, spreadRad, range, impulseMult, r
 					-- Apply per bodypart damagage multiplier
 					local dmg = self:DamageMultiplier(bodyPart, self.dmg_plyr)
 
-					client.BloodParticles(SoundPoint, dir, dmg, playerhit)
+					client.BloodParticles(hitLocation, dir, dmg, playerhit)
 				elseif hitAnimator ~= 0 then
-					client.BloodParticles(SoundPoint, dir, self.dmg_plyr, playerhit)
+					client.BloodParticles(hitLocation, dir, self.dmg_plyr, playerhit)
 				end
 			end
 		end
+
+		PostEvent("pwb_shot", posUse, hitLocation, pShape, pPlayer, self.dmg_world, self.dmg_plyr)
 	end
 
 	-- Reset seed AFTER using it on both server and client
@@ -928,8 +928,8 @@ end
 function baseWeap:DebugCustom() end
 
 function baseWeap:DumpGlobals()
-	if not self.isLocal then return end
-
+	if client and not self.isLocal then return end
+	if server and IsMultiplayer() then return end
 	local prefix = "SV "
 	if client then prefix = "CL "
 		DebugWatch(prefix .. "inReload", 			self.inReload)

@@ -26,10 +26,10 @@ FWPN_CLICK_SEC  = leftShift(1) -- Weapon needs clicked to fire, no holding
 FWPN_NOHUD      = leftShift(2) -- Don't draw HUD
 
 FWPN_SV_CALLONCE_PRIM = leftShift(3) -- Does 1 servercall every fire instead of 1 on start and stop
-FWPN_SV_CALLONCE_SEC  = leftShift(4) -- Same as above but for secondary fire
-                                    -- Use these if the weapons fire rate is really slow or has flag FWPN_NEEDSCLICKED
+FWPN_SV_CALLONCE_SEC  = leftShift(4) -- Does 1 servercall every secondary fire instead of 1 on start and stop
+                                     -- Use these if the weapons fire rate is really slow or has flag FWPN_NEEDSCLICKED
 
-FWPN_NOAUTORELOAD    = leftShift(5)    -- Don't automatically start reloading weapon on empty
+FWPN_NOAUTORELOAD    = leftShift(5) -- Don't automatically start reloading weapon on empty
 FWPN_NOALTACTIONPOSE = leftShift(6) -- Don't automatically do the action animation when holding grab
 
 -- TEMP ENTS
@@ -47,13 +47,13 @@ FTENT_SPRANIMATE = leftShift(8)
 FTENT_HITSOUND = leftShift(9)
 FTENT_SPIRAL = leftShift(10)
 FTENT_SPRCYCLE = leftShift(11)
-FTENT_COLLIDEALL = leftShift(12)		-- will collide with world and slideboxes
-FTENT_PERSIST = leftShift(13)		-- tent is not removed when unable to draw
-FTENT_COLLIDEKILL = leftShift(14)	-- tent is removed upon collision with anything
+FTENT_COLLIDEALL = leftShift(12)	 -- will collide with world and slideboxes
+FTENT_PERSIST = leftShift(13)		 -- tent is not removed when unable to draw
+FTENT_COLLIDEKILL = leftShift(14)	 -- tent is removed upon collision with anything
 FTENT_PLYRATTACHMENT = leftShift(15) -- tent is attached to a player (owner)
 FTENT_SPRANIMATELOOP = leftShift(16) -- animating sprite doesn't die when last frame is displayed
 FTENT_SPARKSHOWER = leftShift(17)
-FTENT_NOMODEL = leftShift(18)	  -- Doesn't have a model, never try to draw ( it just triggers other things )
+FTENT_NOMODEL = leftShift(18)	   -- Doesn't have a model, never try to draw ( it just triggers other things )
 FTENT_CLIENTCUSTOM = leftShift(19) -- Must specify callback.  Callback function is responsible for killing tempent and updating fields ( unless other flags specify how to do things )
 FTENT_BUOYANT = leftShift(20)
 ]]
@@ -74,7 +74,7 @@ end
 
 function hasFlags_OR(var, ...)
 	local flag_count = select("#", ...)
-    
+
     for i = 1, flag_count do
         local flag = select(i, ...)
         if hasFlag(var, flag) then return true end
@@ -85,7 +85,7 @@ end
 
 function hasFlags_AND(var, ...)
 	local flag_count = select("#", ...)
-    
+
     for i = 1, flag_count do
         local flag = select(i, ...)
         if not hasFlag(var, flag) then return false end
@@ -102,7 +102,7 @@ end
 
 function addFlags(var, ...)
 	local flag_count = select("#", ...)
-    
+
     for i = 1, flag_count do
         local flag = select(i, ...)
         var = addFlag(var, flag)
@@ -119,7 +119,7 @@ end
 
 function clearFlags(var, ...)
 	local flag_count = select("#", ...)
-    
+
     for i = 1, flag_count do
         local flag = select(i, ...)
         var = clearFlag(var, flag)
