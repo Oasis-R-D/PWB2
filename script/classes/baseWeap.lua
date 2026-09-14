@@ -713,6 +713,13 @@ function baseWeap:RecursiveBulletPenetration(shootPos, hitPos, dir, alottedDist,
 				local damage = self.dmg_world > 0.4 and self.dmg_world or 0.4
 				MakeHole(hitLocation, damage, 0, 0)
 				MakeHole(VecAdd(hitLocation, VecScale(dir, damage)), damage, 0, 0)
+
+				-- TO-DO: this is incredibly hacky
+				QueryRequire("small")
+				QueryRejectShape(pShape)
+				local _, _, _, hitshape = QueryClosestPoint(hitLocation, damage)
+				Delete(hitshape)
+
 				self:RecursiveBulletPenetration(shootPos, hitLocation, dir, alottedDist, maxDist, iterations)
 			end
 		elseif maxDist-alottedDist > 0.25 and iterations < 16 then
@@ -786,8 +793,11 @@ function baseWeap:FireBulletsPlayer(shots, pos, spreadRad, range, impulseMult, r
 
 			if playerhit == 0 and hitAnimator == 0 then
 				-- use normal shooting for world
-				self:RecursiveBulletPenetration(posUse, hitLocation, dir, pdist, range, 1)
-				--Shoot(posUse, dir, "bullet", self.dmg_world, range, self.owner)
+				if PWB_SETTING.penetration then
+					self:RecursiveBulletPenetration(posUse, hitLocation, dir, pdist, range, 1)
+				else
+					Shoot(posUse, dir, "bullet", self.dmg_world, range, self.owner)
+				end
 			elseif self.dmg_plyr then
 				-- play player impact SFX
 				if not baseWeap.hitSND then baseWeap.hitSND = LoadSound("MOD/snd/base/bullet_hit0.ogg") end

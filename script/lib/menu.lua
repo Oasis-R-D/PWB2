@@ -10,6 +10,7 @@ end
 
 function server.settingUPD(key, value)
     PWB_SETTING[key] = value
+	DebugPrint("server setting " .. key .. " set to " .. value)
 end
 
 local function InitBool(key, default, onSV)
@@ -30,6 +31,7 @@ end
 function settingsInit()
     InitBool("shelleject",  true,  false)
     InitBool("dynlights",   true,  false)
+	InitBool("penetration", true,  true)
     InitBool("debug",       false, true)
 end
 
@@ -59,7 +61,7 @@ function client.settingsDraw()
 		end
 
 		local width = 190
-		local height = 500 -- update this when adding more toggles
+		local height = 550 -- update this when adding more toggles
 
 		UiTranslate(-230+270*MenuAlpha, UiMiddle())
 		UiAlign("left middle")
@@ -113,6 +115,16 @@ function client.settingsDraw()
                 settingUPD("debug", not PWB_SETTING.debug)
 				if GetLocalPlayer() == 1 then
 					ServerCall("server.settingUPD", "debug", PWB_SETTING.debug)
+				end
+			end
+			UiTranslate(0, bh+sep)
+
+			UiText("Penetration (host)", true)
+            UiTranslate(0, th)
+			if UiTextButton(PWB_SETTING.penetration, bw, bh) then
+                settingUPD("penetration", not PWB_SETTING.penetration)
+				if GetLocalPlayer() == 1 then
+					ServerCall("server.settingUPD", "penetration", PWB_SETTING.penetration)
 				end
 			end
 			UiTranslate(0, bh+sep)
