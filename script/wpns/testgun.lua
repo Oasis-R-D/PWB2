@@ -138,7 +138,8 @@ function CTestGun:SecondaryAttack(dt)
 
 	baseWeap.DepleteAmmo(self, 4, 4)
 
-	self:FireBulletsPlayer(4, GetPlayerEyeTransform(self.owner).pos, GLOBAL_5DEGREES, 100)
+	self:FireProjectilePlayer(1, GetPlayerEyeTransform(self.owner).pos, GLOBAL_5DEGREES)
+	--self:FireBulletsPlayer(4, GetPlayerEyeTransform(self.owner).pos, GLOBAL_5DEGREES, 100)
 
 	-- Use get time because GetNextAttackDelay breaks here
 	self.nextFire = GetTime() + 0.5
@@ -157,4 +158,84 @@ end
 
 function CTestGun:WeaponIdle()
 	self.playEmptySound = true
+end
+
+CTestGun.projectiles = {}
+
+function ProjectileVars(mdl, pos, dir)
+	return {
+		totalDist = 0,
+		model = mdl,
+		curPos = VecCopy(pos),
+		oldPos = VecCopy(pos),
+		curDir = VecCopy(dir),
+	}
+end
+
+function CTestGun:FireProjectilePlayer(shots, pos, spreadRad)
+	for i=1, shots do
+		local posUse, dir = AIM_GetSpreadedAim(pos, spreadRad, 80, self.owner, i)
+
+		-- Apply aim recoil
+		if spreadRad ~= -1 then dir = AIM_RecoilApply(self.owner, posUse, dir) end
+
+		table.insert(
+			self.projectiles, 
+			ProjectileVars(
+				client and Spawn("MOD/prefab/crossbow_bolt.xml", Transform(pos))[1] --[[body]] or 0,
+				posUse, 
+				dir
+			)
+		)
+
+		PostEvent("pwb_shot_m203", posUse, dir, self.dmg_world, self.dmg_plyr)
+	end
+end
+
+function CTestGun:Update(dt)
+	if #self.projectiles == 0 then return end -- no crossbow bolts
+	
+	for index, data in pairs(self.projectiles) do
+		if data.totalDist > 80 then -- make 500 if using HL2 speed
+			Delete(data.model)
+			table.remove(self.projectiles, index)
+		else
+			QueryRequire("large visible physical")
+			QueryRejectBody(data.model)
+			local hit, dist, shape, hitPlayer, _, normal = QueryShot(data.curPos, data.curDir, PROJ_VELOCITY * dt, 0.0, data.owner)
+
+			data.curPos = VecAdd(data.curPos, VecScale(data.curDir, dist))
+			data.curPos = VecAdd(data.curPos, VecScale(GetGravity(), dt))
+
+			data.totalDist = data.totalDist + dist
+
+			if client then
+				SetBodyTransform(data.model, Transform(data.curPos, QuatLookAt(data.oldPos, data.curPos)))
+			end
+
+			data.oldPos = VecCopy(data.curPos)
+
+			-- damage, vfx
+			if hit then
+				-- get mat type BEFORE we break it
+				local pos = VecSub(data.curPos, VecScale(normal, 0.05))
+				local matType = GetShapeMaterialAtPos(shape, pos)
+
+				if server then
+					ApplyBodyImpulse(GetShapeBody(shape), data.curPos, VecScale(data.curDir, 800 * 4))
+					MakeHole(data.curPos, 0.75, 0.4, 0.25)
+				end
+
+				if matType ~= "glass" or HasTag(GetShapeBody(shape), "unbreakable") == true then
+					if client then
+						Delete(data.model)
+					else
+						Explosion(data.curPos, 2)
+					end
+					
+					table.remove(CrossbowBolts, index)
+				end
+			end
+		end
+	end
 end
