@@ -29,19 +29,6 @@ end
 -- Weapon UTILs
 ----------------------------------------------------------------------------------------------
 
--- Reset player data on death
-function CheckDeathReset()
-	local count = GetEventCount("playerdied")
-   	for i=1, count do
-		local p, _, _ = GetEvent("playerdied", i)
-
-		local wpns = PLAYER_WEAPONS[p]
-		for j=1, #wpns do
-			wpns[j]:initVars(p) -- this SHOULD reset weapons on death
-		end
-   	end
-end
-
 function GetShapeMaterialAtPos(shape, pos)
 	local _, point = GetShapeClosestPoint(shape, pos)
 

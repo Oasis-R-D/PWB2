@@ -206,6 +206,19 @@ PLAYER_WEAPONS = {}
 --============================================================================================
 --============================================================================================
 
+-- Reset player data on death
+function CheckDeathReset()
+	local count = GetEventCount("playerdied")
+   	for i=1, count do
+		local p, _, _ = GetEvent("playerdied", i)
+
+		local wpns = PLAYER_WEAPONS[p]
+		for j=1, GLOBAL_WEAPONS_AMNT do
+			wpns[j]:initVars(p) -- this SHOULD reset weapons on death
+		end
+   end
+end
+
 -- Sets up weapon classes, pickup amounts, precaches SFX
 function server.init()
    for weapon=1, GLOBAL_WEAPONS_AMNT do
@@ -214,8 +227,18 @@ function server.init()
 end
 
 -- Doesn't need used
---function server.tick(dt)
---end
+function server.tick(dt)
+   for p in PlayersRemoved() do
+      PLAYER_WEAPONS[p] = nil
+      AIM_RecoilSet(p, nil)
+   end
+
+   for _, wpns in pairs(PLAYER_WEAPONS) do
+      for i=1, GLOBAL_WEAPONS_AMNT do
+         wpns[i]:Tick(dt)
+      end
+   end
+end
 
 -- Runs firing code
 function server.update(dt)
@@ -233,10 +256,7 @@ function server.update(dt)
       end
 	end
 
-   for p in PlayersRemoved() do
-      PLAYER_WEAPONS[p] = nil
-      AIM_RecoilSet(p, nil)
-   end
+   CheckDeathReset()
 
    for p, wpns in pairs(PLAYER_WEAPONS) do
       local tool = GetPlayerTool(p)
@@ -246,10 +266,10 @@ function server.update(dt)
          elseif wpns[i].holstered == false then
             wpns[i]:BaseHolster()
          end
+
+         wpns[i]:Update(dt)
       end
    end
-
-   CheckDeathReset()
 end
 
 -- Sets up weapon classes, precaches SFX and haptics
@@ -271,6 +291,8 @@ function client.tick(dt)
          elseif wpns[i].holstered == false then
             wpns[i]:BaseHolster()
          end
+
+         wpns[i]:Tick(dt)
       end
    end
 
@@ -281,8 +303,6 @@ end
 
 -- Global VFX
 function client.update(dt)
-   CheckDeathReset()
-
    AIM_RecoilTick(dt)
 
    for p in PlayersAdded() do
@@ -299,6 +319,14 @@ function client.update(dt)
       PLAYER_WEAPONS[p] = nil
       client.PWB_ANIMATOR[p] = nil
       AIM_RecoilSet(p, nil)
+   end
+
+   CheckDeathReset()
+
+   for _, wpns in pairs(PLAYER_WEAPONS) do
+      for i=1, GLOBAL_WEAPONS_AMNT do
+         wpns[i]:Update(dt)
+      end
    end
 
    client.FOV_Apply(dt)

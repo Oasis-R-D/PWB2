@@ -48,6 +48,10 @@ local WEAPON_NOCLIP = -1
 -- add 'baseWeap.initVars(self, owner)'
 -- at the beginning if overriding vars
 -- at the end otherwise if preferred
+
+-- This is called on player death to reset vars,
+-- Check if a variable already exists before setting
+-- if you don't want it reset.
 -----------------------------------------------------------
 function baseWeap:initVars(owner)
 	if client then
@@ -98,11 +102,11 @@ function baseWeap:initVars(owner)
 		self.inSecondary 	= false
 
 		-- list of currently playing following sounds
-		self.followingSNDS 		= {}
+		self.followingSNDS 	= {}
 	end
 
 	-- total ammo
-	self.ammoTotal			= 0 
+	self.ammoTotal			= 0
 
 	-- compare against GetTime()
 	self.nextFire           = 0
@@ -219,6 +223,18 @@ function baseWeap:MDL_CustomAnimate(dt)	  		end -- called every frame, use for a
 -- These are ran on client only but if they're true, server isn't called												
 function baseWeap:SV_DontFireCond() 	return false end
 function baseWeap:SV_DontFireAltCond()  return true  end -- don't check by default
+
+--=========================================================================
+-- Always ran shared update/tick func
+-- Should be overriden per weapon
+-- and is intentionally left blank here
+
+-- Useful for adding custom projectiles
+--=========================================================================
+
+function baseWeap:Update(dt) end
+
+function baseWeap:Tick(dt) end
 
 --=========================================================================
 -- 	Input handling and HUD
