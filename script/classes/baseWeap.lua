@@ -71,7 +71,7 @@ function baseWeap:initVars(owner)
 		self.ammoLoaded         = self.ammoLoadedMax
 
 		-- total alt ammo
-		self.ammoAltTotal      	= 0
+		self.ammoAltTotal      	= self.ammoAltLoadedMax
 
 		self.inReload           = false
 
@@ -305,7 +305,7 @@ function baseWeap:tickPlayer_cl(dt)
 	end
 
 	-- TO-DO: this probably breaks if FWPN_SV_CALLONCE_PRIM is true and you press both at once
-	local empty_sec = false or self:SV_DontFireAltCond() --(self.ammoAltLoadedMax ~= WEAPON_NOCLIP and self.ammoAltTotal == 0) or (self.ammoAltLoadedMax == WEAPON_NOCLIP and empty_prim)
+	local empty_sec = false or self:SV_DontFireAltCond() or (self.ammoAltLoadedMax ~= WEAPON_NOCLIP and self.ammoAltTotal == 0) or (self.ammoAltLoadedMax == WEAPON_NOCLIP and empty_prim)
 	if self.isLocal and self.inSecondary == true then
 		-- enforce order
 		self.inPrimary = false

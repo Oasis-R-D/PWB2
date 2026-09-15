@@ -47,7 +47,7 @@ end
 local function R_TempModel(pos, velocity, angles, life, model, soundtype)
 	local tempent = CL_TempEntAlloc()
 
-	tempent.model = Spawn(model, Transform(pos))[1]
+	tempent.model = Spawn(model, Transform(pos, QuatEuler(angles[1], angles[2], angles[3])))[1]
 	tempent.origin = pos
 
 	tempent.angles = angles

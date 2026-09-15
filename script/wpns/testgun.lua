@@ -15,7 +15,7 @@ CTestGun.toolName = "PWB2 Gun" -- Shown in killfeed
 CTestGun.toolSlot = 3
 
 CTestGun.ammoLoadedMax 	  = 45					   -- Max clip 	 	-- -1 for no clip (pulls from reserve)
-CTestGun.ammoAltLoadedMax = 0 				 	   -- Max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
+CTestGun.ammoAltLoadedMax = 3 				 	   -- Max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
 CTestGun.ammoPickupSize	  = CTestGun.ammoLoadedMax -- Defaults to full mag
 CTestGun.dmg_world		  = 0.4				       -- Size of hole in meters
 CTestGun.dmg_plyr		  = 0.05				   -- 0.0-1.0
@@ -93,10 +93,8 @@ function CTestGun:PrimaryAttack(dt)
 	self.nextAltFire = GetTime() + 0.075
 end
 
-function CTestGun:SV_DontFireAltCond()
-	if self.ammoLoaded <= 2 then return true end
-
-	return false
+function CTestGun:SV_DontFireAltCond(dt)
+	return self.ammoAltTotal <= 0
 end
 
 function CTestGun:SecondaryAttack(dt)
@@ -104,17 +102,11 @@ function CTestGun:SecondaryAttack(dt)
 	if not mt then return end
 
 	if client then
-		if self.ammoLoaded <= 3 then
+		if self.ammoAltTotal <= 0 then
 			self:PlayEmptySound()
 			self.nextFire = GetTime() + 0.15
 			self.nextAltFire = self.nextFire
 			return
-		end
-
-		if GetTime() - self.lastFireTime < 0.1 then
-			self.timeFiring = self.timeFiring + 0.1
-		else
-			self.timeFiring = 0
 		end
 
 		self:MDL_PunchPos(Vec(0, 0, GetRandomFloat(0.133, 0.166)))
@@ -122,24 +114,23 @@ function CTestGun:SecondaryAttack(dt)
 		if self.isLocal then
 			client.VFX_DynLight(self.owner, 30, 0.25, Vec(0.7, 0.5, 0.3), Vec(), "muzzle")
 
-			client.PUNCH_MachineGunKick(1, self.timeFiring, 2)
+			client.PUNCH_Axis(1, 5)
 
 			self:MDL_PunchAngReset(-15)
-			self:MDL_PunchAng(Vec(GetRandomFloat(0.5, 1), GetRandomFloat(-0.5, 0.5), GetRandomFloat(-1, 1)))
+			self:MDL_PunchAng(Vec(GetRandomFloat(2, 3), GetRandomFloat(-0.5, 0.5), GetRandomFloat(-1, 1)))
 
 			-- shell ejection
 			client.TENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
 		end
 
 		self:muzzleFlash(mt.pos, 0.8)
+
+		self.ammoAltTotal = self.ammoAltTotal - 1
 	else
 		PlayFireSound(self.snds[1], mt.pos, 300)
 	end
 
-	baseWeap.DepleteAmmo(self, 4, 4)
-
-	self:FireProjectilePlayer(1, GetPlayerEyeTransform(self.owner).pos, GLOBAL_5DEGREES)
-	--self:FireBulletsPlayer(4, GetPlayerEyeTransform(self.owner).pos, GLOBAL_5DEGREES, 100)
+	self:FireProjectilePlayer(1, mt.pos, GLOBAL_1DEGREE)
 
 	-- Use get time because GetNextAttackDelay breaks here
 	self.nextFire = GetTime() + 0.5
@@ -168,7 +159,7 @@ function ProjectileVars(mdl, pos, dir)
 		model = mdl,
 		curPos = VecCopy(pos),
 		oldPos = VecCopy(pos),
-		curDir = VecCopy(dir),
+		Velocity = VecScale(dir, 25),
 	}
 end
 
@@ -182,19 +173,23 @@ function CTestGun:FireProjectilePlayer(shots, pos, spreadRad)
 		table.insert(
 			self.projectiles, 
 			ProjectileVars(
-				client and Spawn("MOD/prefab/crossbow_bolt.xml", Transform(pos))[1] --[[body]] or 0,
-				posUse, 
+				client and Spawn("MOD/models/xml/gren_m203.xml", Transform(pos))[1] --[[body]] or 0,
+				posUse,
 				dir
 			)
 		)
 
 		PostEvent("pwb_shot_m203", posUse, dir, self.dmg_world, self.dmg_plyr)
 	end
+
+	-- Reset seed AFTER using it on both server and client
+	-- Can be unreliable at high latency
+	if server then shared.seed = GetRandomInt(0,10000) end
 end
 
 function CTestGun:Update(dt)
 	if #self.projectiles == 0 then return end -- no crossbow bolts
-	
+
 	for index, data in pairs(self.projectiles) do
 		if data.totalDist > 80 then -- make 500 if using HL2 speed
 			Delete(data.model)
@@ -202,10 +197,10 @@ function CTestGun:Update(dt)
 		else
 			QueryRequire("large visible physical")
 			QueryRejectBody(data.model)
-			local hit, dist, shape, hitPlayer, _, normal = QueryShot(data.curPos, data.curDir, PROJ_VELOCITY * dt, 0.0, data.owner)
+			local hit, dist, shape, hitPlayer, _, normal = QueryShot(data.curPos, data.Velocity, VecLength(data.Velocity) * dt, 0.0, data.owner)
 
-			data.curPos = VecAdd(data.curPos, VecScale(data.curDir, dist))
-			data.curPos = VecAdd(data.curPos, VecScale(GetGravity(), dt))
+			data.curPos = VecAdd(data.curPos, VecScale(data.Velocity, dt))
+			data.Velocity = VecAdd(data.Velocity, VecScale(GetGravity(), dt))
 
 			data.totalDist = data.totalDist + dist
 
@@ -230,10 +225,10 @@ function CTestGun:Update(dt)
 					if client then
 						Delete(data.model)
 					else
-						Explosion(data.curPos, 2)
+						Explosion(data.curPos, 1)
 					end
-					
-					table.remove(CrossbowBolts, index)
+
+					table.remove(self.projectiles, index)
 				end
 			end
 		end
