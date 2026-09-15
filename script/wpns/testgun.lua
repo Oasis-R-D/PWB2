@@ -156,10 +156,10 @@ CTestGun.projectiles = {}
 function ProjectileVars(mdl, pos, dir)
 	return {
 		totalDist = 0,
-		model = mdl,
-		curPos = VecCopy(pos),
-		oldPos = VecCopy(pos),
-		Velocity = VecScale(dir, 25),
+		model 	  = mdl,
+		curPos 	  = VecCopy(pos),
+		oldPos 	  = VecCopy(pos),
+		Velocity  = VecScale(dir, 25),
 	}
 end
 
@@ -188,6 +188,9 @@ function CTestGun:FireProjectilePlayer(shots, pos, spreadRad)
 end
 
 function CTestGun:Update(dt)
+	-- TO-DO: make sure projectiles[] is global and not per weapon
+	if PWB_SETTING.debug then DebugPrint("player " .. self.owner .. " projectiles: " .. #self.projectiles) end
+
 	if #self.projectiles == 0 then return end -- no crossbow bolts
 
 	for index, data in pairs(self.projectiles) do
