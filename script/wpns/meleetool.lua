@@ -1,4 +1,4 @@
-CMelee = {} -- goes in GLOBAL_WEAPONS
+C_Melee = {} -- goes in GLOBAL_WEAPONS
 ---------------------------------------------------------------------------
 -- MELEE WEAPON DOCS:
 -- Melee weapons in PWB2 use a system similar to Left4Dead2's for it's melee
@@ -23,27 +23,27 @@ CMelee = {} -- goes in GLOBAL_WEAPONS
 -- Static values for this specific weapon
 -- These don't need redefined in a weapon if a var is just the default value
 
-CMelee.model = "crowbar.xml" -- Path to the XML model file
+C_Melee.model = "crowbar.xml" -- Path to the XML model file
 
-CMelee.edgeDir		 = Vec(0,1,-1) -- What direction hits will be considered
-CMelee.edgeType		 = 1		   -- 0: blunt 1: slice (slice hits things multiple times)
-CMelee.hitDist		 = 1.33		   -- How far from the edge to check hits
-CMelee.knockbackMult = 500		   -- Object impulse multiplier, rec: 1000 for blunt, 50 for slice
+C_Melee.edgeDir		 = Vec(0,1,-1) -- What direction hits will be considered
+C_Melee.edgeType		 = 1		   -- 0: blunt 1: slice (slice hits things multiple times)
+C_Melee.hitDist		 = 1.33		   -- How far from the edge to check hits
+C_Melee.knockbackMult = 500		   -- Object impulse multiplier, rec: 1000 for blunt, 50 for slice
 
-CMelee.toolID 	= "testmelee"  -- Used by the engine. Lowercase and no spaces
-CMelee.toolName = "PWB2 Melee" -- Shown in killfeed
-CMelee.toolSlot	= 1
+C_Melee.toolID 	= "testmelee"  -- Used by the engine. Lowercase and no spaces
+C_Melee.toolName = "PWB2 Melee" -- Shown in killfeed
+C_Melee.toolSlot	= 1
 
-CMelee.ammoLoadedMax  = -1   -- Max clip 	 -- -1 for no clip (pulls from reserve)
-CMelee.ammoPickupSize = 9999 -- Defaults to full mag
-CMelee.dmg_world	  = 0.4  -- Size of hole in meters
-CMelee.dmg_plyr		  = 0.05 -- 0.0-1.0
+C_Melee.ammoLoadedMax  = -1   -- Max clip 	 -- -1 for no clip (pulls from reserve)
+C_Melee.ammoPickupSize = 9999 -- Defaults to full mag
+C_Melee.dmg_world	  = 0.4  -- Size of hole in meters
+C_Melee.dmg_plyr		  = 0.05 -- 0.0-1.0
 
-CMelee.flags = addFlags(0, FWPN_NOALTACTIONPOSE, FWPN_NOHUD) -- weapon flags
-CMelee.snds	 = 0 -- Prechached SFX list, set on INIT
+C_Melee.flags = addFlags(0, FWPN_NOALTACTIONPOSE, FWPN_NOHUD) -- weapon flags
+C_Melee.snds	 = 0 -- Prechached SFX list, set on INIT
 
 -- override initVars to add new variables
-function CMelee:initVars(owner)
+function C_Melee:initVars(owner)
 	baseWeap.initVars(self, owner)
 
 	if client then
@@ -63,7 +63,7 @@ function CMelee:initVars(owner)
 	self.startHitDelay = -1
 end
 
-function CMelee:MDL_CallAnimator(dt)
+function C_Melee:MDL_CallAnimator(dt)
 	tickToolAnimator(client.PWB_ANIMATOR[self.owner], dt, nil, self.owner, self.swingNumb, self.swingNumb, true)
 end
 
@@ -71,7 +71,7 @@ end
 -- Define the weapon's SFX / VFX
 --=========================================================================
 
-function CMelee:Sounds()
+function C_Melee:Sounds()
 	return {
 		{"base/bullet_hit0.ogg", "sv", 10}, -- Player hit
 		{"base/empty.ogg", "sv", 10}, -- Hard object hit
@@ -82,7 +82,7 @@ end
 -- Weapon functions
 --=========================================================================
 
-function CMelee:Holster()
+function C_Melee:Holster()
 	if server then
 		self:StopSwing()
 	else
@@ -93,7 +93,7 @@ function CMelee:Holster()
 	end
 end
 
-function CMelee:Deploy()
+function C_Melee:Deploy()
 	if client then
 		-- override certain animator settings
 		client.PWB_ANIMATOR[self.owner].maxActionPoseTime = 0.2
@@ -103,7 +103,7 @@ function CMelee:Deploy()
 	end
 end
 
-function CMelee:PrimaryAttack(dt)
+function C_Melee:PrimaryAttack(dt)
 	self.startHitDelay = GetTime() + 0.1
 
 	if client then
@@ -119,9 +119,9 @@ function CMelee:PrimaryAttack(dt)
 end
 
 -- OPTIMIZATION: Add this to make sure it doesn't check for alt fire
-function CMelee:SV_DontFireAltCond() return true end
+function C_Melee:SV_DontFireAltCond() return true end
 
-function CMelee:CheckHit()
+function C_Melee:CheckHit()
 	self.hitDelay = GetTime() + 0.01
 
 	local t = GetBodyTransform(GetToolBody(self.owner))
@@ -206,15 +206,15 @@ function CMelee:CheckHit()
 	end
 end
 
-function CMelee:StopSwing()
+function C_Melee:StopSwing()
 	self.stopHitDelay = -1
 	self.hitDelay = -1
 	self.swingStartPos = false
 	self.lasHitObj = -1
 end
 
-function CMelee:ShouldWeaponIdle() return true end
-function CMelee:WeaponIdle()
+function C_Melee:ShouldWeaponIdle() return true end
+function C_Melee:WeaponIdle()
 	if self.startHitDelay ~= -1 and self.startHitDelay < GetTime() then
 		if client then
 			client.PWB_ANIMATOR[self.owner].forceSecondaryActionPose = false

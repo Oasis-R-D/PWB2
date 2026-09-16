@@ -1,4 +1,4 @@
-CAdsGun = {} -- goes in GLOBAL_WEAPONS
+C_ADSgun = {} -- goes in GLOBAL_WEAPONS
 
 --=========================================================================
 -- Define the weapon and it's variables
@@ -7,25 +7,25 @@ CAdsGun = {} -- goes in GLOBAL_WEAPONS
 -- Static values for this specific weapon
 -- These don't need redefined in a weapon if a var is just the default value
 
-CAdsGun.model	  = "grease.xml"		   -- Path to the XML model file
-CAdsGun.casingOrg = Vec(0.01, 0.12, -0.15) -- Where casings are ejected
+C_ADSgun.model	  = "grease.xml"		   -- Path to the XML model file
+C_ADSgun.casingOrg = Vec(0.01, 0.12, -0.15) -- Where casings are ejected
 
-CAdsGun.toolID 	 = "testads"  -- Used by the engine. Lowercase and no spaces
-CAdsGun.toolName = "PWB2 ADS" -- Shown in killfeed
-CAdsGun.toolSlot = 3
+C_ADSgun.toolID 	 = "testads"  -- Used by the engine. Lowercase and no spaces
+C_ADSgun.toolName = "PWB2 ADS" -- Shown in killfeed
+C_ADSgun.toolSlot = 3
 
-CAdsGun.ammoLoadedMax 	 = 30					 -- Max clip 	 	-- -1 for no clip (pulls from reserve)
-CAdsGun.ammoAltLoadedMax = 0 					 -- Max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
-CAdsGun.ammoAltItemID	 = 0 					 -- WpnID of item to drain ammo for when altfiring
-CAdsGun.ammoPickupSize	 = CAdsGun.ammoLoadedMax -- Defaults to full mag
-CAdsGun.dmg_world		 = 0.5					 -- Size of hole in meters
-CAdsGun.dmg_plyr		 = 0.16					 -- 0.0-1.0
+C_ADSgun.ammoLoadedMax 	 = 30					 -- Max clip 	 	-- -1 for no clip (pulls from reserve)
+C_ADSgun.ammoAltLoadedMax = 0 					 -- Max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
+C_ADSgun.ammoAltItemID	 = 0 					 -- WpnID of item to drain ammo for when altfiring
+C_ADSgun.ammoPickupSize	 = C_ADSgun.ammoLoadedMax -- Defaults to full mag
+C_ADSgun.dmg_world		 = 0.5					 -- Size of hole in meters
+C_ADSgun.dmg_plyr		 = 0.16					 -- 0.0-1.0
 
-CAdsGun.flags= addFlags(0, FWPN_SV_CALLONCE_SEC, FWPN_CLICK_SEC) -- Weapon flags
-CAdsGun.snds = 0 -- Prechached SFX list, set on INIT 
+C_ADSgun.flags= addFlags(0, FWPN_SV_CALLONCE_SEC, FWPN_CLICK_SEC) -- Weapon flags
+C_ADSgun.snds = 0 -- Prechached SFX list, set on INIT 
 
 -- override initVars to add new variables
-function CAdsGun:initVars(owner)
+function C_ADSgun:initVars(owner)
 	baseWeap.initVars(self, owner)
 
 	if server then
@@ -37,7 +37,7 @@ end
 -- Define the weapon's SFX / VFX
 --=========================================================================
 
-function CAdsGun:Sounds()
+function C_ADSgun:Sounds()
 	return {
 		{"smg1_fire.ogg",   "sv", 10},
 		{"smg1_reload.ogg", "cl", 10},
@@ -45,7 +45,7 @@ function CAdsGun:Sounds()
 	}
 end
 
-function CAdsGun:muzzleFlash(pos, size, color)
+function C_ADSgun:muzzleFlash(pos, size, color)
 	color = color or Vec(1, 1, 1)
 
 	if self.isLocal then
@@ -56,16 +56,16 @@ function CAdsGun:muzzleFlash(pos, size, color)
 	t.rot = QuatRotateQuat(GetCameraTransform().rot, QuatEuler(0,0,GetRandomFloat(-15, 15)))
 
 	-- Create the flashSPR variable to hold the sprite
-	if not CAdsGun.flashSPR then CAdsGun.flashSPR = LoadSprite("gfx/flare_0.png") end
+	if not C_ADSgun.flashSPR then C_ADSgun.flashSPR = LoadSprite("gfx/flare_0.png") end
 
-	DrawSprite(CAdsGun.flashSPR, t, size, size, color[1], color[2], color[3], 1.0, true, true, true)
+	DrawSprite(C_ADSgun.flashSPR, t, size, size, color[1], color[2], color[3], 1.0, true, true, true)
 end
 
 --=========================================================================
 -- Weapon functions
 --=========================================================================
 
-function CAdsGun:Holster()
+function C_ADSgun:Holster()
 	if client then
 		client.PWB_ANIMATOR[self.owner].forceSecondaryActionPose = false
 		if self.isLocal then client.FOV_set(1) end
@@ -74,7 +74,7 @@ function CAdsGun:Holster()
 	end
 end
 
-function CAdsGun:PrimaryAttack(dt)
+function C_ADSgun:PrimaryAttack(dt)
 	local mt = GetToolLocationWorldTransform("muzzle", self.owner)
 	if not mt then return end
 
@@ -128,7 +128,7 @@ function CAdsGun:PrimaryAttack(dt)
 	self.nextFire = self:GetNextAttackDelay(0.133)
 end
 
-function CAdsGun:Reload()
+function C_ADSgun:Reload()
 	if not self:DefaultReload(1.5) then return end
 
 	if self.isLocal then
@@ -145,7 +145,7 @@ function CAdsGun:Reload()
 	client.PWB_ANIMATOR[self.owner].forceSecondaryActionPose = false
 end
 
-function CAdsGun:SecondaryAttack(dt, ads)
+function C_ADSgun:SecondaryAttack(dt, ads)
 	if client then
 		ads = not client.PWB_ANIMATOR[self.owner].forceSecondaryActionPose
 		client.PWB_ANIMATOR[self.owner].forceSecondaryActionPose = ads
@@ -162,11 +162,11 @@ function CAdsGun:SecondaryAttack(dt, ads)
 	self.nextAltFire = GetTime() + 0.33
 end
 
-function CAdsGun:WeaponIdle()
+function C_ADSgun:WeaponIdle()
 	self.playEmptySound = true
 end
 
-function CAdsGun:tickPlayer_cl(dt)
+function C_ADSgun:tickPlayer_cl(dt)
 	if self.isLocal then
 		if client.PWB_ANIMATOR[self.owner].forceSecondaryActionPose then
 			self.idleCycleScale = 0.05

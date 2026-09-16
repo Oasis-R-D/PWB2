@@ -1,4 +1,4 @@
-CPattGun = {} -- goes in GLOBAL_WEAPONS
+C_PattGun = {} -- goes in GLOBAL_WEAPONS
 
 --=========================================================================
 -- Define the weapon and it's variables
@@ -7,24 +7,24 @@ CPattGun = {} -- goes in GLOBAL_WEAPONS
 -- Static values for this specific weapon
 -- These don't need redefined in a weapon if a var is just the default value
 
-CPattGun.model	   = "smg1.xml" 			-- Path to the XML model file
-CPattGun.casingOrg = Vec(0.02, 0.15, -0.15) -- Where casings are ejected
+C_PattGun.model	   = "smg1.xml" 			-- Path to the XML model file
+C_PattGun.casingOrg = Vec(0.02, 0.15, -0.15) -- Where casings are ejected
 
-CPattGun.toolID   = "pattgun"	  		 -- Used by the engine. Lowercase and no spaces
-CPattGun.toolName = "PWB2 CounterStrike" -- Shown in killfeed
-CPattGun.toolSlot = 3
+C_PattGun.toolID   = "pattgun"	  		 -- Used by the engine. Lowercase and no spaces
+C_PattGun.toolName = "PWB2 CounterStrike" -- Shown in killfeed
+C_PattGun.toolSlot = 3
 
-CPattGun.ammoLoadedMax 	  = 30					   -- Max clip 	 	-- -1 for no clip (pulls from reserve)
-CPattGun.ammoAltLoadedMax = 0 				 	   -- Max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
-CPattGun.ammoPickupSize	  = CPattGun.ammoLoadedMax -- Defaults to full mag
-CPattGun.dmg_world		  = 0.1				       -- Size of hole in meters
-CPattGun.dmg_plyr		  = 0.31				   -- 0.0-1.0
+C_PattGun.ammoLoadedMax 	  = 30					   -- Max clip 	 	-- -1 for no clip (pulls from reserve)
+C_PattGun.ammoAltLoadedMax = 0 				 	   -- Max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
+C_PattGun.ammoPickupSize	  = C_PattGun.ammoLoadedMax -- Defaults to full mag
+C_PattGun.dmg_world		  = 0.1				       -- Size of hole in meters
+C_PattGun.dmg_plyr		  = 0.31				   -- 0.0-1.0
 
-CPattGun.flags = addFlags(0, FWPN_NONE) -- Weapon flags
-CPattGun.snds  = 0 -- Prechached SFX list, set on INIT
+C_PattGun.flags = addFlags(0, FWPN_NONE) -- Weapon flags
+C_PattGun.snds  = 0 -- Prechached SFX list, set on INIT
 
 -- override initVars to add new variables
-function CPattGun:initVars(owner)
+function C_PattGun:initVars(owner)
 	if client then
 		self.timeFiring = 0
 	end
@@ -41,7 +41,7 @@ end
 -- Define the weapon's SFX / VFX
 --=========================================================================
 
-function CPattGun:Sounds()
+function C_PattGun:Sounds()
 	return {
 		{"smg1_fire.ogg", 	"sv", 10},
 		{"smg1_reload.ogg", "cl", 10},
@@ -89,7 +89,7 @@ local SprayPattern = {
 	Vec(5.65625,3.03125,0),
 }
 
-function CPattGun:GetAccuracy()
+function C_PattGun:GetAccuracy()
 	local spread = 0.00060
 
 	if not IsPlayerGrounded(self.owner) then
@@ -110,7 +110,7 @@ function CPattGun:GetAccuracy()
     return retVal
 end
 
-function CPattGun:PrimaryAttack(dt)
+function C_PattGun:PrimaryAttack(dt)
 	local mt = GetToolLocationWorldTransform("muzzle", self.owner)
 	if not mt then return end
 
@@ -160,11 +160,11 @@ function CPattGun:PrimaryAttack(dt)
 	self.nextFire = self:GetNextAttackDelay(0.09009)
 end
 
-function CPattGun:ResetShots()
+function C_PattGun:ResetShots()
 	self.shot = 1
 end
 
-function CPattGun:Reload()
+function C_PattGun:Reload()
 	if not self:DefaultReload(3.1) then return end
 
 	self:ResetShots()
@@ -177,18 +177,18 @@ function CPattGun:Reload()
 	end
 end
 
-function CPattGun:GetViewpunch()
+function C_PattGun:GetViewpunch()
 	local PUNCH_Recoil = SprayPattern[self.shot]
 	PUNCH_Recoil[2] = PUNCH_Recoil[2] * 0.66
 	PUNCH_Recoil[1] = Clamp(PUNCH_Recoil[1], 4, 10) / 1.7
 	return PUNCH_Recoil
 end
 
-function CPattGun:WeaponIdle()
+function C_PattGun:WeaponIdle()
 	self.playEmptySound = true
 end
 
-function CPattGun:DebugCustom()
+function C_PattGun:DebugCustom()
 	if client and not self.isLocal then return end
 
 	local prefix = "SV "

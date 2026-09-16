@@ -184,13 +184,7 @@ GLOBAL_HEADSHOTMULT = 2.0
 ----------------------------------------------------------------------------------------------
 
 -- pointers to each weapon's class
-local GLOBAL_WEAPONS = {
-   CTestGun,
-   CAdsGun,
-   CPattGun,
-   CTestShotgun,
-   CMelee
-}
+local GLOBAL_WEAPONS = loadWeaponClasses()
 
 -- only calculate this once
 local GLOBAL_WEAPONS_AMNT = #GLOBAL_WEAPONS

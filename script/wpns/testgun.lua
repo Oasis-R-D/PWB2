@@ -1,4 +1,4 @@
-CTestGun = {} -- goes in GLOBAL_WEAPONS
+C_Gun = {} -- goes in GLOBAL_WEAPONS
 
 --=========================================================================
 -- Define the weapon and it's variables
@@ -7,24 +7,24 @@ CTestGun = {} -- goes in GLOBAL_WEAPONS
 -- Static values for this specific weapon
 -- These don't need redefined in a weapon if a var is just the default value
 
-CTestGun.model	   = "smg1.xml" 			-- Path to the XML model file
-CTestGun.casingOrg = Vec(0.02, 0.15, -0.15) -- Where casings are ejected
+C_Gun.model	   = "smg1.xml" 			-- Path to the XML model file
+C_Gun.casingOrg = Vec(0.02, 0.15, -0.15) -- Where casings are ejected
 
-CTestGun.toolID   = "testgun"  -- Used by the engine. Lowercase and no spaces
-CTestGun.toolName = "PWB2 Gun" -- Shown in killfeed
-CTestGun.toolSlot = 3
+C_Gun.toolID   = "testgun"  -- Used by the engine. Lowercase and no spaces
+C_Gun.toolName = "PWB2 Gun" -- Shown in killfeed
+C_Gun.toolSlot = 3
 
-CTestGun.ammoLoadedMax 	  = 45					   -- Max clip 	 	-- -1 for no clip (pulls from reserve)
-CTestGun.ammoAltLoadedMax = 3 				 	   -- Max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
-CTestGun.ammoPickupSize	  = CTestGun.ammoLoadedMax -- Defaults to full mag
-CTestGun.dmg_world		  = 0.4				       -- Size of hole in meters
-CTestGun.dmg_plyr		  = 0.05				   -- 0.0-1.0
+C_Gun.ammoLoadedMax 	  = 45					   -- Max clip 	 	-- -1 for no clip (pulls from reserve)
+C_Gun.ammoAltLoadedMax = 3 				 	   -- Max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
+C_Gun.ammoPickupSize	  = C_Gun.ammoLoadedMax -- Defaults to full mag
+C_Gun.dmg_world		  = 0.4				       -- Size of hole in meters
+C_Gun.dmg_plyr		  = 0.05				   -- 0.0-1.0
 
-CTestGun.flags = addFlags(0, FWPN_NONE) -- Weapon flags
-CTestGun.snds  = 0 -- Prechached SFX list, set on INIT
+C_Gun.flags = addFlags(0, FWPN_NONE) -- Weapon flags
+C_Gun.snds  = 0 -- Prechached SFX list, set on INIT
 
 -- override initVars to add new variables
-function CTestGun:initVars(owner)
+function C_Gun:initVars(owner)
 	baseWeap.initVars(self, owner)
 
 	if client and self.isLocal then
@@ -37,7 +37,7 @@ end
 -- Define the weapon's SFX / VFX
 --=========================================================================
 
-function CTestGun:Sounds()
+function C_Gun:Sounds()
 	return {
 		{"smg1_fire.ogg", 	"sv", 10},
 		{"smg1_reload.ogg", "cl", 10},
@@ -49,7 +49,7 @@ end
 -- Weapon functions
 --=========================================================================
 
-function CTestGun:PrimaryAttack(dt)
+function C_Gun:PrimaryAttack(dt)
 	local mt = GetToolLocationWorldTransform("muzzle", self.owner)
 	if not mt then return end
 
@@ -95,11 +95,11 @@ function CTestGun:PrimaryAttack(dt)
 	self.nextAltFire = GetTime() + 0.075
 end
 
-function CTestGun:SV_DontFireAltCond(dt)
+function C_Gun:SV_DontFireAltCond(dt)
 	return self.ammoAltTotal <= 0
 end
 
-function CTestGun:SecondaryAttack(dt)
+function C_Gun:SecondaryAttack(dt)
 	local mt = GetToolLocationWorldTransform("muzzle", self.owner)
 	if not mt then return end
 
@@ -139,7 +139,7 @@ function CTestGun:SecondaryAttack(dt)
 	self.nextAltFire = self.nextFire
 end
 
-function CTestGun:Reload()
+function C_Gun:Reload()
 	if not self:DefaultReload(1.5) then return end
 
 	if self.isLocal then
@@ -149,11 +149,11 @@ function CTestGun:Reload()
 	end
 end
 
-function CTestGun:WeaponIdle()
+function C_Gun:WeaponIdle()
 	self.playEmptySound = true
 end
 
-CTestGun.projectiles = {}
+C_Gun.projectiles = {}
 
 function ProjectileVars(mdl, pos, dir)
 	return {
@@ -165,7 +165,7 @@ function ProjectileVars(mdl, pos, dir)
 	}
 end
 
-function CTestGun:FireProjectilePlayer(shots, pos, spreadRad)
+function C_Gun:FireProjectilePlayer(shots, pos, spreadRad)
 	for i=1, shots do
 		local posUse, dir = AIM_GetSpreadedAim(pos, spreadRad, 80, self.owner, i)
 
@@ -190,7 +190,7 @@ function CTestGun:FireProjectilePlayer(shots, pos, spreadRad)
 end
 
 
-function CTestGun:Update(dt)
+function C_Gun:Update(dt)
 	if #self.projectiles == 0 then return end
 
 	for index, data in pairs(self.projectiles) do

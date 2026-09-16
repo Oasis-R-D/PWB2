@@ -2,6 +2,18 @@
 -- UTILs
 ----------------------------------------------------------------------------------------------
 
+-- Finds weapon classes based on their 'C_' (CLASS_) prefix
+function loadWeaponClasses()
+	local prefix = "C_"
+	local classes = {}
+	for k, v in pairs(_G)
+		if type(k) == "string" and type(v) == "table" and string.sub(k, 1, #prefix) == prefix then
+			table.insert(classes, v)
+		end
+	end
+	return classes
+end
+
 function findArrayOpening(array)
     local i = 1
     while array[i] ~= nil do

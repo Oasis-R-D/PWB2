@@ -1,4 +1,4 @@
-CTestShotgun = {} -- goes in GLOBAL_WEAPONS
+C_Shtgn = {} -- goes in GLOBAL_WEAPONS
 
 --=========================================================================
 -- Define the weapon and it's variables
@@ -6,27 +6,27 @@ CTestShotgun = {} -- goes in GLOBAL_WEAPONS
 
 -- Static values for this specific weapon
 -- These don't need redefined in a weapon if a var is just the default value
-CTestShotgun.model	   = "shotgun.xml" 		    -- Path to the XML model file
-CTestShotgun.casingOrg = Vec(0.02, 0.08, 0.022) -- Where casings are ejected
+C_Shtgn.model	   = "shotgun.xml" 		    -- Path to the XML model file
+C_Shtgn.casingOrg = Vec(0.02, 0.08, 0.022) -- Where casings are ejected
 
-CTestShotgun.toolID   = "testsg"  	   -- Used by the engine. Lowercase and no spaces
-CTestShotgun.toolName = "PWB2 Shotgun" -- Shown in killfeed
-CTestShotgun.toolSlot = 3
+C_Shtgn.toolID   = "testsg"  	   -- Used by the engine. Lowercase and no spaces
+C_Shtgn.toolName = "PWB2 Shotgun" -- Shown in killfeed
+C_Shtgn.toolSlot = 3
 
-CTestShotgun.ammoLoadedMax 	  = 8						   -- Max clip 	 	-- -1 for no clip (pulls from reserve)
-CTestShotgun.ammoAltLoadedMax = 0 						   -- Max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
-CTestShotgun.ammoPickupSize	  = CTestShotgun.ammoLoadedMax -- Defaults to full mag
-CTestShotgun.dmg_world		  = 0.35					   -- Size of hole in meters
-CTestShotgun.dmg_plyr		  = 0.1						   -- 0.0-1.0
+C_Shtgn.ammoLoadedMax 	  = 8						   -- Max clip 	 	-- -1 for no clip (pulls from reserve)
+C_Shtgn.ammoAltLoadedMax = 0 						   -- Max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
+C_Shtgn.ammoPickupSize	  = C_Shtgn.ammoLoadedMax -- Defaults to full mag
+C_Shtgn.dmg_world		  = 0.35					   -- Size of hole in meters
+C_Shtgn.dmg_plyr		  = 0.1						   -- 0.0-1.0
 
-CTestShotgun.flags = addFlags(0, FWPN_SV_CALLONCE_PRIM,
+C_Shtgn.flags = addFlags(0, FWPN_SV_CALLONCE_PRIM,
 								 FWPN_SV_CALLONCE_SEC,
 								 FWPN_CLICK_PRIM,
 								 FWPN_CLICK_SEC) -- Weapon flags
-CTestShotgun.snds = 0 -- Prechached SFX list, set on INIT
+C_Shtgn.snds = 0 -- Prechached SFX list, set on INIT
 
 -- override initVars to add new variables
-function CTestShotgun:initVars(owner)
+function C_Shtgn:initVars(owner)
 	baseWeap.initVars(self, owner)
 
 	if client and self.isLocal then
@@ -42,7 +42,7 @@ end
 -- Define the weapon's SFX / VFX
 --=========================================================================
 
-function CTestShotgun:Sounds()
+function C_Shtgn:Sounds()
 	return {
 		{"sbarrel.ogg", 	  "sv", 10},
 		{"dbarrel.ogg", 	  "sv", 10},
@@ -53,7 +53,7 @@ function CTestShotgun:Sounds()
 	}
 end
 
-function CTestShotgun:muzzleFlash(pos, size, color)
+function C_Shtgn:muzzleFlash(pos, size, color)
 	color = color or Vec(1, 1, 1)
 
 	if self.isLocal then
@@ -73,13 +73,13 @@ end
 -- Weapon functions
 --=========================================================================
 
-function CTestShotgun:Holster()
+function C_Shtgn:Holster()
 	if client then
 		client.PWB_ANIMATOR[self.owner].leftHand.transform.pos = Vec()
 	end
 end
 
-function CTestShotgun:PrimaryAttack(dt)
+function C_Shtgn:PrimaryAttack(dt)
 	local mt = GetToolLocationWorldTransform("muzzle", self.owner)
 	if not mt then return end
 
@@ -126,7 +126,7 @@ function CTestShotgun:PrimaryAttack(dt)
 	self.nextAltFire = GetTime() + 0.75
 end
 
-function CTestShotgun:SecondaryAttack(dt)
+function C_Shtgn:SecondaryAttack(dt)
 	local mt = GetToolLocationWorldTransform("muzzle", self.owner)
 	if not mt then return end
 
@@ -176,7 +176,7 @@ function CTestShotgun:SecondaryAttack(dt)
 	self.nextAltFire = GetTime() + 1.5
 end
 
-function CTestShotgun:Reload()
+function C_Shtgn:Reload()
 	if self.ammoTotal <= 0 or self.ammoLoaded == self.ammoLoadedMax then
 		return end
 
@@ -240,7 +240,7 @@ function CTestShotgun:Reload()
 	end
 end
 
-function CTestShotgun:WeaponIdle()
+function C_Shtgn:WeaponIdle()
 	self.playEmptySound = true
 
 	if server then return end
@@ -278,7 +278,7 @@ function CTestShotgun:WeaponIdle()
 	end
 end
 
-function CTestShotgun:tickPlayer_cl(dt)
+function C_Shtgn:tickPlayer_cl(dt)
 	if self.pumpTime > 0 and self.pumpTime <= GetTime() then
 		local mt = GetToolLocationWorldTransform("muzzle", self.owner)
 
@@ -298,7 +298,7 @@ function CTestShotgun:tickPlayer_cl(dt)
 	baseWeap.tickPlayer_cl(self, dt)
 end
 
-function CTestShotgun:MDL_CustomAnimate(dt)
+function C_Shtgn:MDL_CustomAnimate(dt)
 	if not self.isLocal then return end
 
 	--Animate Slide
