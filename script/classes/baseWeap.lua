@@ -113,8 +113,10 @@ function baseWeap:initVars(owner)
 	self.nextAltFire        = 0
 
 	-- time creep vars
-	self.prevPrimFireTime   = -1
-	self.lastFireTime       = 0
+	-- last shot's calculated delay
+	self.prevPrimFireDelay   = -1
+	-- time of last shot, resets when primary attack is released
+	self.lastShotInHoldTime  = 0
 
 	-- time used for running code in Idle()
 	self.timeWeaponIdle		= 0
@@ -292,7 +294,7 @@ function baseWeap:tickPlayer_cl(dt)
 
 	local empty_prim = (self.ammoLoaded == 0 or (self.ammoLoadedMax == WEAPON_NOCLIP and 0 == self.ammoTotal)) or self:SV_DontFireCond()
 	if not fireKeyDown or altfireKeyDown or empty_prim or self.ammoLoaded == 0 then
-		self.lastFireTime = 0.0
+		self.lastShotInHoldTime = 0.0
 
 		if self.isLocal and self.inPrimary == true then
 			self.inPrimary = false
@@ -310,7 +312,7 @@ function baseWeap:tickPlayer_cl(dt)
 		-- enforce order
 		self.inPrimary = false
 
-		self.lastFireTime = 0.0
+		self.lastShotInHoldTime = 0.0
 
 		if not altfireKeyDown or empty_sec then
 			self.inSecondary = false
@@ -379,9 +381,9 @@ function baseWeap:tickPlayer_sv(dt)
 	-- enforce order
 	if self.inSecondary then
 		self.inPrimary = false
-		self.lastFireTime = 0.0
+		self.lastShotInHoldTime = 0.0
 	elseif not self.inPrimary then
-		self.lastFireTime = 0.0
+		self.lastShotInHoldTime = 0.0
     end
 
 	if self.inSecondary == true and self:CanAttack(self.nextAltFire, curTime) then
@@ -435,7 +437,7 @@ function baseWeap:BaseDeploy(curTime)
 	-- no rapid firing
 	self.nextFire 	  = math.max(self.nextFire, curTime + 0.33)
 	self.nextAltFire  = math.max(self.nextAltFire, self.nextFire)
-	self.lastFireTime = 0.0
+	self.lastShotInHoldTime = 0.0
 
 	self.holstered 	  = false
 
@@ -475,7 +477,7 @@ function baseWeap:BaseHolster()
 		self.inSecondary  = false
 	end
 
-	self.lastFireTime = 0.0
+	self.lastShotInHoldTime = 0.0
 
 	self.holstered = true
 	self:Holster()
@@ -723,8 +725,10 @@ function baseWeap:RecursiveBulletPenetration(shootPos, hitPos, dir, alottedDist,
 		if bHit and iterations < 5 then
 			if alottedDist >= maxDist then
 				Shoot(shootPos, dir, "bullet", 0.0, maxDist, self.owner)
+				if PWB_SETTING.debug then DebugPrint("Hit at max dist, iterations: " .. iterations) end
 			elseif not matPenetratable(GetShapeMaterialAtPos(pShape, hitLocation)) or HasTag(GetShapeBody(pShape), "unbreakable") then
 				Shoot(shootPos, dir, "bullet", self.dmg_world, alottedDist+1, self.owner)
+				if PWB_SETTING.debug then DebugPrint("Hit too hard obj, iterations: " .. iterations) end
 			else
 				local damage = self.dmg_world > 0.4 and self.dmg_world or 0.4
 				MakeHole(hitLocation, damage, 0, 0)
@@ -742,6 +746,7 @@ function baseWeap:RecursiveBulletPenetration(shootPos, hitPos, dir, alottedDist,
 			self:RecursiveBulletPenetration(shootPos, hitLocation, dir, alottedDist, maxDist, iterations)
 		else
 			Shoot(shootPos, dir, "bullet", 0.0, maxDist, self.owner)
+			if PWB_SETTING.debug then DebugPrint("Hit nothing, iterations: " .. iterations) end
 		end
 	elseif self.dmg_plyr then
 		-- play player impact SFX
@@ -765,6 +770,8 @@ function baseWeap:RecursiveBulletPenetration(shootPos, hitPos, dir, alottedDist,
 			-- Deal damage
 			ApplyPlayerDamage(playerhit, dmg, self.toolName, self.owner)
 		end
+
+		if PWB_SETTING.debug then DebugPrint("Hit flesh, iterations: " .. iterations) end
 
 		server.BloodDecal(hitLocation, dir, self.dmg_plyr, hitAnimator)
 	end
@@ -810,7 +817,7 @@ function baseWeap:FireBulletsPlayer(shots, pos, spreadRad, range, impulseMult, r
 			if playerhit == 0 and hitAnimator == 0 then
 				-- use normal shooting for world
 				if PWB_SETTING.penetration then
-					self:RecursiveBulletPenetration(posUse, hitLocation, dir, pdist, range, 1)
+					self:RecursiveBulletPenetration(posUse, hitLocation, dir, pdist, range, 0)
 				else
 					Shoot(posUse, dir, "bullet", self.dmg_world, range, self.owner)
 				end
@@ -898,27 +905,26 @@ end
 function baseWeap:GetNextAttackDelay(delay)
     local curTime = GetTime()
 
-	if self.lastFireTime == 0.0 or self.prevPrimFireTime == -1 then
+	if self.lastShotInHoldTime == 0.0 or self.prevPrimFireDelay == -1 then
 		-- At this point, we are assuming that the client has stopped firing
 		-- and we are going to reset our book keeping variables.
-		self.lastFireTime = curTime
-		self.prevPrimFireTime = delay
+		self.prevPrimFireDelay = delay
     end
+
+	self.lastShotInHoldTime = curTime
 
 	-- calculate the time between this shot and the previous
-	local flTimeBetweenFires = curTime - self.lastFireTime
+	local flTimeBetweenFires = curTime - self.lastShotInHoldTime
 	local flCreep = 0.0
 	if flTimeBetweenFires > 0 then
-		flCreep = flTimeBetweenFires - self.prevPrimFireTime -- postive or negative
+		flCreep = flTimeBetweenFires - self.prevPrimFireDelay -- postive or negative
     end
-
-	self.lastFireTime = curTime
 
 	local flNextAttack = curTime + delay - flCreep
 
-	-- we need to remember what the self.prevPrimFireTime time is set to for each shot,
-	-- store it as self.prevPrimFireTime.
-	self.prevPrimFireTime = flNextAttack - curTime
+	-- we need to remember what the self.prevPrimFireDelay time is set to for each shot,
+	-- store it as self.prevPrimFireDelay.
+	self.prevPrimFireDelay = flNextAttack - curTime
 	return flNextAttack
 end
 
@@ -1049,9 +1055,11 @@ function baseWeap:DumpGlobals()
 	DebugWatch(prefix .. "holstered", 			self.holstered)
 
 	if false then
-		DebugWatch(prefix .. "prevPrimFireTime", 	self.prevPrimFireTime)
-		DebugWatch(prefix .. "lastFireTime", 		self.lastFireTime)
+		DebugWatch(prefix .. "prevPrimFireDelay", 	self.prevPrimFireDelay)
+		DebugWatch(prefix .. "lastShotInHoldTime", 		self.lastShotInHoldTime)
 
 		DebugWatch(prefix .. "timeWeaponIdle", 		self.timeWeaponIdle)
 	end
+	
+	DebugWatch(prefix .. "recoil", 				AIM_RecoilGetVec(self.owner))
 end

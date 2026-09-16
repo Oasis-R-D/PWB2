@@ -3,5 +3,13 @@
     "TeardownIntellisense.showPrompt": false,
     "Lua.diagnostics.globals": [
         "include"
-    ]
+    ],
+    "Lua.workspace.library": [
+        "c:\\Users\\pacma\\.vscode\\extensions\\ghoustuser.teardown-intellisense-0.7.1\\api-definitions"
+    ],
+    "Lua.diagnostics.disable": [
+        "duplicate-set-field"
+    ],
+    "Lua.runtime.plugin": "c:\\Users\\pacma\\.vscode\\extensions\\ghoustuser.teardown-intellisense-0.7.1\\editor-plugin.lua",
+    "Lua.runtime.version": "Lua 5.1"
 }

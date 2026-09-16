@@ -119,9 +119,9 @@ function AIM_RecoilTick(dt)
 	for p in Players() do
 		local len = VecLength(playerRecoil[p])
 		if len > 0 then
-		len = len - ((10.0 + len * 0.5) * dt)
-		len = math.max(len, 0.0)
-		playerRecoil[p] = VecScale(VecNormalize(playerRecoil[p]), len)
+			len = len - ((10.0 + len * 0.5) * dt)
+			len = math.max(len, 0.0)
+			playerRecoil[p] = VecScale(VecNormalize(playerRecoil[p]), len)
 		end
 	end
 end
@@ -130,6 +130,10 @@ end
 local function AIM_RecoilGet(p)
 	local recoil = playerRecoil[p]
 	return QuatEuler(recoil[1], recoil[2], recoil[3])
+end
+
+function AIM_RecoilGetVec(p)
+	return playerRecoil[p]
 end
 
 -- AIM_RECOILADD: Increments the aim direction's rotational offset used in FireBulletsPlayer()

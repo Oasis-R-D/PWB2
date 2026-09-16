@@ -124,7 +124,10 @@ end
 
    -  Source viewpunch is 'laggy'
 
-   -  make 1 global animator for all weapons (better for memory)
+   -  fix static vars not being static
+   -- Checked using self.toolName and class.toolName, seems to work fine?
+
+   -  fix client bullets not having recoil applied
 ============================================================================================]]
 
 #version 2

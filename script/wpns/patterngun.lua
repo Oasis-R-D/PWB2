@@ -32,6 +32,8 @@ function CPattGun:initVars(owner)
 	-- Which shot is this? (used because server doesn't have clip)
 	self.shot = 1
 
+	self.lastFireTime = 0
+
 	baseWeap.initVars(self, owner)
 end
 
@@ -112,9 +114,10 @@ function CPattGun:PrimaryAttack(dt)
 	local mt = GetToolLocationWorldTransform("muzzle", self.owner)
 	if not mt then return end
 
-	if self.lastFireTime < GetTime() - 0.2 then
+	if self.lastFireTime < GetTime() - 0.4 then
 		self.shot = 1
 	end
+	self.lastFireTime = GetTime()
 
 	if client then
 		if self.ammoLoaded <= 0 then

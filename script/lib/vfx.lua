@@ -242,16 +242,12 @@ end
 
 function client.BloodParticles(pos, dir, damage, playerhit)
 	local impactsize = damage
-	if impactsize > 0.3 then
-		impactsize = 0.3
+	if impactsize > 0.4 then
+		impactsize = 0.4
 	end
 
 	local size = impactsize/5
-	if size > 0.035 then
-		size = 0.035
-	elseif size <= 0.02 then
-		size = 0.02
-	end
+	size = Clamp(size, 0.02, 0.035)
 
 	local playervel = GetPlayerVelocity(playerhit)
 
@@ -274,6 +270,7 @@ function client.BloodParticles(pos, dir, damage, playerhit)
 		local direct = VecAdd(blooddir, GetRandomDirection(0.25))
 		SpawnParticle(pos, VecAdd(VecScale(direct, GetRandomFloat(0.8, 3.0)), playervel), 0.75)
 
+		--[[
 		ParticleReset()
 		ParticleRadius(cloudsize, 0.35)
 		ParticleAlpha(5, 0, "easein") 
@@ -282,23 +279,44 @@ function client.BloodParticles(pos, dir, damage, playerhit)
 		ParticleColor(0.33, 0.01, 0)
 		ParticleCollide(0)
 		SpawnParticle(pos, VecAdd(VecScale(direct, math.random()*1.5), playervel), 0.75)
+		]]
 	end
 
+	--[[ -- old chunks
+	ParticleReset()
+	ParticleTile(6)
+	ParticleDrag(0.0625)
+	ParticleSticky(0.5)
+	ParticleRotation(0.2, 0)
+	ParticleAlpha(1, 0, "easein") 
+	ParticleColor(0.33, 0.01, 0)
+	ParticleCollide(0, 1, "easeout")
+	ParticleStretch(1, 0, "easein")
 	for i=0, (impactsize * 40) do
 		size = size + GetRandomFloat(-0.01, 0.005)
 		local newPos = VecAdd(pos, GetRandomDirection(0.25))
-		ParticleReset()
+
 		ParticleGravity(GetRandomFloat(-20, -25))
 		ParticleRadius(size)
-		ParticleAlpha(1, 0, "easein") 
-		ParticleColor(0.33, 0.01, 0)
-		ParticleTile(6)
-		ParticleDrag(0.0625)
-		ParticleSticky(0.5)
-		ParticleCollide(0, 1, "easeout")
-		ParticleRotation(0.2, 0)
-		ParticleStretch(1, 0, "easein")
 		SpawnParticle(newPos, VecAdd(VecScale(GetRandomDirection(), GetRandomFloat(2, 6)), playervel), 3)
+	end]]
+
+	ParticleReset()
+	ParticleAlpha(1.0, 0, "linear", 0, 0.5)
+	ParticleColor(0.33, 0.01, 0)
+	ParticleDrag(0.0)
+	ParticleRadius(0.05)
+	ParticleTile(1)
+	ParticleStretch(1)
+	ParticleSticky(0.1)
+	local rand = math.random -- precache it for that sweet succulent 0.0001 ms saved
+	for i=1, 100 do
+		local offset = Vec(-1.0 + 2.0 * rand(), -1.0 + 2.0 * rand(), -1.0 + 2.0 * rand())
+		offset = VecNormalize(offset)
+		offset = VecScale(offset, 0.1)
+
+		ParticleGravity(-5.0 + rand() * -5.0)
+		SpawnParticle(VecAdd(pos, offset), VecScale(offset, 15.0), 1 + rand()^2 * 1.55)
 	end
 end
 

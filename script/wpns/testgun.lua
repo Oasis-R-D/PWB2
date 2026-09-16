@@ -25,11 +25,12 @@ CTestGun.snds  = 0 -- Prechached SFX list, set on INIT
 
 -- override initVars to add new variables
 function CTestGun:initVars(owner)
-	if client then
-		self.timeFiring = 0
-	end
-
 	baseWeap.initVars(self, owner)
+
+	if client and self.isLocal then
+		self.timeFiring = 0
+		self.lastFireTime = 0
+	end
 end
 
 --=========================================================================
@@ -60,17 +61,18 @@ function CTestGun:PrimaryAttack(dt)
 			return
 		end
 
-		if GetTime() - self.lastFireTime < 0.1 then
-			self.timeFiring = self.timeFiring + 0.1
-		else
-			self.timeFiring = 0
-		end
-
 		self:MDL_PunchPos(Vec(0, 0, GetRandomFloat(0.133, 0.166)))
 
 		if self.isLocal then
 			client.VFX_DynLight(self.owner, 15, 0.08, Vec(0.7, 0.5, 0.3), Vec(), "muzzle")
 
+			if self.lastFireTime < GetTime() - 0.2 then
+				self.timeFiring = 0
+			else
+				self.timeFiring = self.timeFiring + 0.1
+			end
+
+			self.lastFireTime = GetTime()
 			client.PUNCH_MachineGunKick(1, self.timeFiring, 2)
 
 			self:MDL_PunchAngReset(-15)
@@ -187,10 +189,8 @@ function CTestGun:FireProjectilePlayer(shots, pos, spreadRad)
 	if server then shared.seed = GetRandomInt(0,10000) end
 end
 
-function CTestGun:Update(dt)
-	-- TO-DO: make sure projectiles[] is global and not per weapon
-	if PWB_SETTING.debug then DebugPrint("player " .. self.owner .. " projectiles: " .. #self.projectiles) end
 
+function CTestGun:Update(dt)
 	if #self.projectiles == 0 then return end -- no crossbow bolts
 
 	for index, data in pairs(self.projectiles) do
