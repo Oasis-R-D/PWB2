@@ -73,8 +73,8 @@ end
 
 function CMelee:Sounds()
 	return {
-		{"smg1_fire.ogg", "sv", 10}, -- Player hit
-		{"smg1_fire.ogg", "sv", 10}, -- Hard object hit
+		{"base/bullet_hit0.ogg", "sv", 10}, -- Player hit
+		{"base/empty.ogg", "sv", 10}, -- Hard object hit
 	}
 end
 
