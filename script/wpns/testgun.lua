@@ -191,12 +191,10 @@ end
 
 
 function CTestGun:Update(dt)
-	if #self.projectiles == 0 then return end -- no crossbow bolts
-
-	if PWB_SETTING.debug then DebugPrint("player " .. self.owner .. " projectiles: " .. #self.projectiles) end
+	if #self.projectiles == 0 then return end
 
 	for index, data in pairs(self.projectiles) do
-		if data.totalDist > 80 then -- make 500 if using HL2 speed
+		if data.totalDist > 80 then
 			Delete(data.model)
 			table.remove(self.projectiles, index)
 		else
