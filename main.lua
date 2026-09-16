@@ -123,11 +123,6 @@ end
       muzzle dynamically face the target spot though)
 
    -  Source viewpunch is 'laggy'
-
-   -  fix static vars not being static
-   -- Checked using self.toolName and class.toolName, seems to work fine?
-
-   -  fix client bullets not having recoil applied
 ============================================================================================]]
 
 #version 2
