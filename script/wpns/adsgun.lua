@@ -7,13 +7,12 @@ C_ADSgun = {} -- goes in GLOBAL_WEAPONS
 -- Static values for this specific weapon
 -- These don't need redefined in a weapon if a var is just the default value
 
-C_ADSgun.model	  = "grease.xml"		    -- Path to the XML model file
+C_ADSgun.model	   = "grease.xml"		    -- Path to the XML model file
 C_ADSgun.casingOrg = Vec(0.01, 0.12, -0.15) -- Where casings are ejected
 
 C_ADSgun.toolID   = "testads"  -- Used by the engine. Lowercase and no spaces
 C_ADSgun.toolName = "PWB2 ADS" -- Shown in killfeed
 C_ADSgun.toolSlot = 3
-C_ADSgun.toolPos  = 1
 C_ADSgun.toolPos  = 3		   -- placement in the hud column
 
 C_ADSgun.ammoLoadedMax 	  = 30					   -- Max clip 	 	-- -1 for no clip (pulls from reserve)

@@ -18,8 +18,9 @@ You can however rummage through the registry if you really need a weapon in a sp
 weapons in PWB2 use LUA's "class" system in order to abstract away the complicated portions.
 to make a mod using this base, you can either copy an existing weapon or start from scratch.
 
-to make a simple new weapon, define the class, static variables, SFX and then override
-common functions if/when needed (PrimaryAttack(), SecondaryAttack(), Reload(), initVars() etc)
+to make a simple new weapon, define the class (MUST BE PREFIXED WITH 'C_'), static variables, SFX and then override
+common functions if/when needed (PrimaryAttack(), SecondaryAttack(), Reload(), initVars() etc).
+To hook the weapon into main, just include it's file, main.lua finds the weapon's class by itself.
 
 if you need help with PWB2 or it's utilization of object oriented programming, message
 'Packman.09' on Discord, create a discussion post about it or check the LUA documentation for object oriented programming below
@@ -51,7 +52,7 @@ Player settings can be found at "savegame.mod.pwb.[HERE]" in the registry.
 ==============================================================================================
 ==============================================================================================
 
-C_demoWeap = {} -- goes in GLOBAL_WEAPONS
+C_Example = {} -- goes in GLOBAL_WEAPONS
 
 --=========================================================================
 -- Define the weapon and it's variables
@@ -59,29 +60,30 @@ C_demoWeap = {} -- goes in GLOBAL_WEAPONS
 
 -- Static values for this specific weapon
 -- These don't need redefined in a weapon if a var is just the default value
-C_demoWeap.model		 = "mdl.xml"  -- XML model file, parses from "MOD/models/xml/"
-C_demoWeap.casingOrg  = Vec(0,0,0) -- Where casings are ejected
+C_Example.model		= "mdl.xml"  -- XML model file, parses from "MOD/models/xml/"
+C_Example.casingOrg  = Vec(0,0,0) -- Where casings are ejected
 
-C_demoWeap.toolID   = "demoWeap"	   -- used by the engine. Lowercase and no spaces
-C_demoWeap.toolName = "PWB2 Weapon" -- Shown in killfeed
-C_demoWeap.toolSlot = 3
-C_demoWeap.toolPos  = 4					-- placement in the hud column
-C_demoWeap.ammoLoadedMax 	 = 45						       -- Max clip 	 	-- -1 for no clip (pulls from reserve)
-C_demoWeap.ammoAltLoadedMax = -1 						    -- Max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
-C_demoWeap.ammoPickupSize	 = C_demoWeap.ammoLoadedMax -- Mefaults to full mag
-C_demoWeap.dmg_world		    = 0.4                      -- Size of hole in meters
-C_demoWeap.dmg_plyr			 = 0.05						    -- 0.0-1.0
+C_Example.toolID   = "demoWeap"	  -- used by the engine. Lowercase and no spaces
+C_Example.toolName = "PWB2 Weapon" -- Shown in killfeed
+C_Example.toolSlot = 3
+C_Example.toolPos  = 4				  -- placement in the hud column
 
-C_demoWeap.flags = addFlags(0, FWPN_NONE) -- Weapon flags
-C_demoWeap.snds  = 0 -- Prechached SFX list, set on INIT
+C_Example.ammoLoadedMax 	= 45						     -- Max clip 	 	-- -1 for no clip (pulls from reserve)
+C_Example.ammoAltLoadedMax = -1 						     -- Max alt clip -- -1 for no clip (pulls from reserve) 0 for no alt fire
+C_Example.ammoPickupSize	= C_Example.ammoLoadedMax -- Mefaults to full mag
+C_Example.dmg_world		   = 0.4                     -- Size of hole in meters
+C_Example.dmg_plyr			= 0.05						  -- 0.0-1.0
 
-C_demoWeap.recoilPosDecay  = 0.25 -- multiplier for recoil pos decay. Lower is slower, higher is faster
-C_demoWeap.recoilAngSpring = 65	  -- bigger number increases the speed at which the angle corrects
-C_demoWeap.recoilAngDamp	 = 9	  -- bigger number makes the response more damped, smaller is less damped
-									     -- currently the system will overshoot, with larger damping values it won't
+C_Example.flags = addFlags(0, FWPN_NONE) -- Weapon flags
+C_Example.snds  = 0 -- Prechached SFX list, set on INIT
+
+C_Example.recoilPosDecay  = 0.25 -- multiplier for recoil pos decay. Lower is slower, higher is faster
+C_Example.recoilAngSpring = 65	-- bigger number increases the speed at which the angle corrects
+C_Example.recoilAngDamp	  = 9	   -- bigger number makes the response more damped, smaller is less damped
+									      -- currently the system will overshoot, with larger damping values it won't
 
 -- override initVars to add new variables
-function C_demoWeap:initVars(owner)
+function C_Example:initVars(owner)
    baseWeap.initVars(self, owner)
 
 	if client then
@@ -103,7 +105,7 @@ end
 -- Define the weapon's SFX / VFX
 --=========================================================================
 
-function C_demoWeap:WeaponSounds()
+function C_Example:WeaponSounds()
 	return {
 --  		SOUND		load to	  dist   [loop]
 		{"sfx.ogg",  "sv",      10     true}

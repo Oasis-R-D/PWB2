@@ -7,7 +7,7 @@ C_Gun = {} -- goes in GLOBAL_WEAPONS
 -- Static values for this specific weapon
 -- These don't need redefined in a weapon if a var is just the default value
 
-C_Gun.model	   = "smg1.xml" 			-- Path to the XML model file
+C_Gun.model	    = "smg1.xml" 			 -- Path to the XML model file
 C_Gun.casingOrg = Vec(0.02, 0.15, -0.15) -- Where casings are ejected
 
 C_Gun.toolID   = "testgun"  -- Used by the engine. Lowercase and no spaces
@@ -15,11 +15,11 @@ C_Gun.toolName = "PWB2 Gun" -- Shown in killfeed
 C_Gun.toolSlot = 3
 C_Gun.toolPos  = 1			-- placement in the hud column
 
-C_Gun.ammoLoadedMax 	  = 45					   -- Max clip 	 	-- -1 for no clip (pulls from reserve)
-C_Gun.ammoAltLoadedMax = 3 				 	   -- Max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
-C_Gun.ammoPickupSize	  = C_Gun.ammoLoadedMax -- Defaults to full mag
-C_Gun.dmg_world		  = 0.4				       -- Size of hole in meters
-C_Gun.dmg_plyr		  = 0.05				   -- 0.0-1.0
+C_Gun.ammoLoadedMax    = 45					 -- Max clip 	 	-- -1 for no clip (pulls from reserve)
+C_Gun.ammoAltLoadedMax = 3 				 	 -- Max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
+C_Gun.ammoPickupSize   = C_Gun.ammoLoadedMax -- Defaults to full mag
+C_Gun.dmg_world		   = 0.4				 -- Size of hole in meters
+C_Gun.dmg_plyr		   = 0.05				 -- 0.0-1.0
 
 C_Gun.flags = addFlags(0, FWPN_NONE) -- Weapon flags
 C_Gun.snds  = 0 -- Prechached SFX list, set on INIT

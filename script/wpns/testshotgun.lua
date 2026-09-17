@@ -6,7 +6,7 @@ C_Shtgn = {} -- goes in GLOBAL_WEAPONS
 
 -- Static values for this specific weapon
 -- These don't need redefined in a weapon if a var is just the default value
-C_Shtgn.model	   = "shotgun.xml" 		   -- Path to the XML model file
+C_Shtgn.model	  = "shotgun.xml" 		   -- Path to the XML model file
 C_Shtgn.casingOrg = Vec(0.02, 0.08, 0.022) -- Where casings are ejected
 
 C_Shtgn.toolID   = "testsg"  	  -- Used by the engine. Lowercase and no spaces

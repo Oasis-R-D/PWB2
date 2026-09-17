@@ -41,7 +41,7 @@ C_Melee.dmg_world	   = 0.4  -- Size of hole in meters
 C_Melee.dmg_plyr	   = 0.05 -- 0.0-1.0
 
 C_Melee.flags = addFlags(0, FWPN_NOALTACTIONPOSE, FWPN_NOHUD) -- weapon flags
-C_Melee.snds	 = 0 -- Prechached SFX list, set on INIT
+C_Melee.snds  = 0 -- Prechached SFX list, set on INIT
 
 -- override initVars to add new variables
 function C_Melee:initVars(owner)
