@@ -25,6 +25,7 @@ baseWeap.casingOrg = Vec(0,0,0) -- Where casings are ejected
 baseWeap.toolID   = "basetool"		 -- Used by the engine. Lowercase and no spaces
 baseWeap.toolName = "PWB2 Base Tool" -- shown in killfeed
 baseWeap.toolSlot = 0
+baseWeap.toolPos  = -1 				 -- placement in the hud column
 
 baseWeap.ammoLoadedMax 	  = 0						-- Max clip 	 	-- -1 for no clip (pulls from reserve)
 baseWeap.ammoAltLoadedMax = 0 						-- Max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
@@ -732,12 +733,20 @@ function baseWeap:RecursiveBulletPenetration(shootPos, hitPos, dir, alottedDist,
 			else
 				local damage = self.dmg_world > 0.4 and self.dmg_world or 0.4
 				MakeHole(hitLocation, damage, 0, 0)
-				MakeHole(VecAdd(hitLocation, VecScale(dir, damage)), damage, 0, 0)
 
 				-- TO-DO: this is incredibly hacky
 				QueryRequire("small")
 				QueryRejectShape(pShape)
 				local _, _, _, hitshape = QueryClosestPoint(hitLocation, damage)
+				Delete(hitshape)
+
+				local scndLocation = VecAdd(hitLocation, VecScale(dir, damage))
+				MakeHole(scndLocation, damage, 0, 0)
+
+				-- TO-DO: this is incredibly hacky
+				QueryRequire("small")
+				QueryRejectShape(pShape)
+				_, _, _, hitshape = QueryClosestPoint(scndLocation, damage)
 				Delete(hitshape)
 
 				self:RecursiveBulletPenetration(shootPos, hitLocation, dir, alottedDist, maxDist, iterations)

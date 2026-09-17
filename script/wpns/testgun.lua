@@ -13,6 +13,7 @@ C_Gun.casingOrg = Vec(0.02, 0.15, -0.15) -- Where casings are ejected
 C_Gun.toolID   = "testgun"  -- Used by the engine. Lowercase and no spaces
 C_Gun.toolName = "PWB2 Gun" -- Shown in killfeed
 C_Gun.toolSlot = 3
+C_Gun.toolPos  = 1			-- placement in the hud column
 
 C_Gun.ammoLoadedMax 	  = 45					   -- Max clip 	 	-- -1 for no clip (pulls from reserve)
 C_Gun.ammoAltLoadedMax = 3 				 	   -- Max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire

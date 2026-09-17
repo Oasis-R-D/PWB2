@@ -6,9 +6,13 @@
 function loadWeaponClasses()
 	local prefix = "C_"
 	local classes = {}
-	for k, v in pairs(_G)
+	for k, v in pairs(_G) do
 		if type(k) == "string" and type(v) == "table" and string.sub(k, 1, #prefix) == prefix then
-			table.insert(classes, v)
+			if not v.toolPos or v.toolPos == -1 then
+				table.insert(classes, v)
+			else
+				table.insert(classes, v.toolPos, v)
+			end
 		end
 	end
 	return classes

@@ -25,19 +25,20 @@ C_Melee = {} -- goes in GLOBAL_WEAPONS
 
 C_Melee.model = "crowbar.xml" -- Path to the XML model file
 
-C_Melee.edgeDir		 = Vec(0,1,-1) -- What direction hits will be considered
-C_Melee.edgeType		 = 1		   -- 0: blunt 1: slice (slice hits things multiple times)
-C_Melee.hitDist		 = 1.33		   -- How far from the edge to check hits
-C_Melee.knockbackMult = 500		   -- Object impulse multiplier, rec: 1000 for blunt, 50 for slice
+C_Melee.edgeDir		  = Vec(0,1,-1) -- What direction hits will be considered
+C_Melee.edgeType	  = 1			-- 0: blunt 1: slice (slice hits things multiple times)
+C_Melee.hitDist		  = 1.33		-- How far from the edge to check hits
+C_Melee.knockbackMult = 500		   	-- Object impulse multiplier, rec: 1000 for blunt, 50 for slice
 
-C_Melee.toolID 	= "testmelee"  -- Used by the engine. Lowercase and no spaces
+C_Melee.toolID 	 = "testmelee"  -- Used by the engine. Lowercase and no spaces
 C_Melee.toolName = "PWB2 Melee" -- Shown in killfeed
-C_Melee.toolSlot	= 1
+C_Melee.toolSlot = 1
+C_Melee.toolPos	 = 1			-- placement in the hud column
 
 C_Melee.ammoLoadedMax  = -1   -- Max clip 	 -- -1 for no clip (pulls from reserve)
 C_Melee.ammoPickupSize = 9999 -- Defaults to full mag
-C_Melee.dmg_world	  = 0.4  -- Size of hole in meters
-C_Melee.dmg_plyr		  = 0.05 -- 0.0-1.0
+C_Melee.dmg_world	   = 0.4  -- Size of hole in meters
+C_Melee.dmg_plyr	   = 0.05 -- 0.0-1.0
 
 C_Melee.flags = addFlags(0, FWPN_NOALTACTIONPOSE, FWPN_NOHUD) -- weapon flags
 C_Melee.snds	 = 0 -- Prechached SFX list, set on INIT
@@ -133,7 +134,7 @@ function C_Melee:CheckHit()
 		return
 	end
 
-	QueryRequire("large physical, visible")
+	QueryRequire("large physical visible")
 	local pHit, pDist, pHitWorld, pHitPlayer, _, pNorm = QueryShot(t.pos, dir, self.hitDist, 0.25, self.owner)
 
 	-- pull out a little to prevent overshooting

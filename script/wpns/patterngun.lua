@@ -7,18 +7,19 @@ C_PattGun = {} -- goes in GLOBAL_WEAPONS
 -- Static values for this specific weapon
 -- These don't need redefined in a weapon if a var is just the default value
 
-C_PattGun.model	   = "smg1.xml" 			-- Path to the XML model file
+C_PattGun.model	    = "smg1.xml" 			 -- Path to the XML model file
 C_PattGun.casingOrg = Vec(0.02, 0.15, -0.15) -- Where casings are ejected
 
-C_PattGun.toolID   = "pattgun"	  		 -- Used by the engine. Lowercase and no spaces
+C_PattGun.toolID   = "pattgun"	  		  -- Used by the engine. Lowercase and no spaces
 C_PattGun.toolName = "PWB2 CounterStrike" -- Shown in killfeed
 C_PattGun.toolSlot = 3
+C_PattGun.toolPos  = 4					  -- placement in the hud column
 
-C_PattGun.ammoLoadedMax 	  = 30					   -- Max clip 	 	-- -1 for no clip (pulls from reserve)
-C_PattGun.ammoAltLoadedMax = 0 				 	   -- Max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
-C_PattGun.ammoPickupSize	  = C_PattGun.ammoLoadedMax -- Defaults to full mag
-C_PattGun.dmg_world		  = 0.1				       -- Size of hole in meters
-C_PattGun.dmg_plyr		  = 0.31				   -- 0.0-1.0
+C_PattGun.ammoLoadedMax    = 30					  	 -- Max clip 	 	-- -1 for no clip (pulls from reserve)
+C_PattGun.ammoAltLoadedMax = 0 				 	  	 -- Max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
+C_PattGun.ammoPickupSize   = C_PattGun.ammoLoadedMax -- Defaults to full mag
+C_PattGun.dmg_world		   = 0.1				     -- Size of hole in meters
+C_PattGun.dmg_plyr		   = 0.31				   	 -- 0.0-1.0
 
 C_PattGun.flags = addFlags(0, FWPN_NONE) -- Weapon flags
 C_PattGun.snds  = 0 -- Prechached SFX list, set on INIT

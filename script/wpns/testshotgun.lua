@@ -6,18 +6,19 @@ C_Shtgn = {} -- goes in GLOBAL_WEAPONS
 
 -- Static values for this specific weapon
 -- These don't need redefined in a weapon if a var is just the default value
-C_Shtgn.model	   = "shotgun.xml" 		    -- Path to the XML model file
+C_Shtgn.model	   = "shotgun.xml" 		   -- Path to the XML model file
 C_Shtgn.casingOrg = Vec(0.02, 0.08, 0.022) -- Where casings are ejected
 
-C_Shtgn.toolID   = "testsg"  	   -- Used by the engine. Lowercase and no spaces
+C_Shtgn.toolID   = "testsg"  	  -- Used by the engine. Lowercase and no spaces
 C_Shtgn.toolName = "PWB2 Shotgun" -- Shown in killfeed
 C_Shtgn.toolSlot = 3
+C_Shtgn.toolPos	 = 2			  -- placement in the hud column
 
-C_Shtgn.ammoLoadedMax 	  = 8						   -- Max clip 	 	-- -1 for no clip (pulls from reserve)
-C_Shtgn.ammoAltLoadedMax = 0 						   -- Max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
-C_Shtgn.ammoPickupSize	  = C_Shtgn.ammoLoadedMax -- Defaults to full mag
-C_Shtgn.dmg_world		  = 0.35					   -- Size of hole in meters
-C_Shtgn.dmg_plyr		  = 0.1						   -- 0.0-1.0
+C_Shtgn.ammoLoadedMax 	 = 8				     -- Max clip 	 	-- -1 for no clip (pulls from reserve)
+C_Shtgn.ammoAltLoadedMax = 0 					 -- Max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
+C_Shtgn.ammoPickupSize	 = C_Shtgn.ammoLoadedMax -- Defaults to full mag
+C_Shtgn.dmg_world		 = 0.35					 -- Size of hole in meters
+C_Shtgn.dmg_plyr		 = 0.1					 -- 0.0-1.0
 
 C_Shtgn.flags = addFlags(0, FWPN_SV_CALLONCE_PRIM,
 								 FWPN_SV_CALLONCE_SEC,
@@ -64,9 +65,9 @@ function C_Shtgn:muzzleFlash(pos, size, color)
 	t.rot = QuatRotateQuat(GetCameraTransform().rot, QuatEuler(0,0,GetRandomFloat(-180, 180)))
 
 	-- Create the flashSPR variable to hold the sprite
-	if not CTestGun.flashSPR then CTestGun.flashSPR = LoadSprite("gfx/flare_0.png") end
+	if not C_Shtgn.flashSPR then C_Shtgn.flashSPR = LoadSprite("gfx/flare_0.png") end
 
-	DrawSprite(CTestGun.flashSPR, t, size, size, color[1], color[2], color[3], 1.0, true, true, true)
+	DrawSprite(C_Shtgn.flashSPR, t, size, size, color[1], color[2], color[3], 1.0, true, true, true)
 end
 
 --=========================================================================
@@ -149,7 +150,7 @@ function C_Shtgn:SecondaryAttack(dt)
 
 			client.PUNCH_Axis(1, 5)
 			client.PUNCH_Axis(2, GetRandomFloat(-0.5, 0.5))
-			
+
 			-- shell ejection
 			client.TENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_shtgn.xml", FSFX_SHTGN)
 		end

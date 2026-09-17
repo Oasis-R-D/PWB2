@@ -51,7 +51,7 @@ Player settings can be found at "savegame.mod.pwb.[HERE]" in the registry.
 ==============================================================================================
 ==============================================================================================
 
-demoWeap = {} -- goes in GLOBAL_WEAPONS
+C_demoWeap = {} -- goes in GLOBAL_WEAPONS
 
 --=========================================================================
 -- Define the weapon and it's variables
@@ -59,29 +59,29 @@ demoWeap = {} -- goes in GLOBAL_WEAPONS
 
 -- Static values for this specific weapon
 -- These don't need redefined in a weapon if a var is just the default value
-demoWeap.model		 = "mdl.xml"  -- XML model file, parses from "MOD/models/xml/"
-demoWeap.casingOrg = Vec(0,0,0) -- Where casings are ejected
+C_demoWeap.model		 = "mdl.xml"  -- XML model file, parses from "MOD/models/xml/"
+C_demoWeap.casingOrg  = Vec(0,0,0) -- Where casings are ejected
 
-demoWeap.toolID 	= "demoWeap"	 -- used by the engine. Lowercase and no spaces
-demoWeap.toolName = "PWB2 Weapon" -- Shown in killfeed
-demoWeap.toolSlot = 3
+C_demoWeap.toolID   = "demoWeap"	   -- used by the engine. Lowercase and no spaces
+C_demoWeap.toolName = "PWB2 Weapon" -- Shown in killfeed
+C_demoWeap.toolSlot = 3
+C_demoWeap.toolPos  = 4					-- placement in the hud column
+C_demoWeap.ammoLoadedMax 	 = 45						       -- Max clip 	 	-- -1 for no clip (pulls from reserve)
+C_demoWeap.ammoAltLoadedMax = -1 						    -- Max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
+C_demoWeap.ammoPickupSize	 = C_demoWeap.ammoLoadedMax -- Mefaults to full mag
+C_demoWeap.dmg_world		    = 0.4                      -- Size of hole in meters
+C_demoWeap.dmg_plyr			 = 0.05						    -- 0.0-1.0
 
-demoWeap.ammoLoadedMax 	  = 45						   -- Max clip 	 	-- -1 for no clip (pulls from reserve)
-demoWeap.ammoAltLoadedMax = -1 						   -- Max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
-demoWeap.ammoPickupSize	  = demoWeap.ammoLoadedMax -- Mefaults to full mag
-demoWeap.dmg_world		  = 0.4                    -- Size of hole in meters
-demoWeap.dmg_plyr			  = 0.05						   -- 0.0-1.0
+C_demoWeap.flags = addFlags(0, FWPN_NONE) -- Weapon flags
+C_demoWeap.snds  = 0 -- Prechached SFX list, set on INIT
 
-demoWeap.flags = addFlags(0, FWPN_NONE) -- Weapon flags
-demoWeap.snds	= 0 -- Prechached SFX list, set on INIT
-
-baseWeap.recoilPosDecay  = 0.25 -- multiplier for recoil pos decay. Lower is slower, higher is faster
-baseWeap.recoilAngSpring = 65	  -- bigger number increases the speed at which the angle corrects
-baseWeap.recoilAngDamp	 = 9	  -- bigger number makes the response more damped, smaller is less damped
+C_demoWeap.recoilPosDecay  = 0.25 -- multiplier for recoil pos decay. Lower is slower, higher is faster
+C_demoWeap.recoilAngSpring = 65	  -- bigger number increases the speed at which the angle corrects
+C_demoWeap.recoilAngDamp	 = 9	  -- bigger number makes the response more damped, smaller is less damped
 									     -- currently the system will overshoot, with larger damping values it won't
 
 -- override initVars to add new variables
-function demoWeap:initVars(owner)
+function C_demoWeap:initVars(owner)
    baseWeap.initVars(self, owner)
 
 	if client then
@@ -103,7 +103,7 @@ end
 -- Define the weapon's SFX / VFX
 --=========================================================================
 
-function demoWeap:WeaponSounds()
+function C_demoWeap:WeaponSounds()
 	return {
 --  		SOUND		load to	  dist   [loop]
 		{"sfx.ogg",  "sv",      10     true}
@@ -174,6 +174,7 @@ GLOBAL_HEADSHOTMULT = 2.0
 #include "script/wpns/adsgun.lua"
 #include "script/wpns/patterngun.lua"
 #include "script/wpns/testshotgun.lua"
+
 #include "script/wpns/meleetool.lua"
 
 -- UI
