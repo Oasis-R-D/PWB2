@@ -59,7 +59,7 @@ C_Example = {} -- goes in GLOBAL_WEAPONS
 --=========================================================================
 
 -- Static values for this specific weapon
--- These don't need redefined in a weapon if a var is just the default value
+-- These don't need redefined in a weapon if a var is just the default value found in baseWeap
 C_Example.model		= "mdl.xml"  -- XML model file, parses from "MOD/models/xml/"
 C_Example.casingOrg  = Vec(0,0,0) -- Where casings are ejected
 
@@ -98,7 +98,7 @@ function C_Example:initVars(owner)
       self.servervar = 69
 	end
 
-   self.sharedvar = 1 -- not synced between SV+CL, exists on both
+   self.sharedvar = 1 -- not synced between SV+CL, just exists on both
 end
 
 --=========================================================================

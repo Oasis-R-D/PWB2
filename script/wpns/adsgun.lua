@@ -5,7 +5,7 @@ C_ADSgun = {} -- goes in GLOBAL_WEAPONS
 --=========================================================================
 
 -- Static values for this specific weapon
--- These don't need redefined in a weapon if a var is just the default value
+-- These don't need redefined in a weapon if a var is just the default value found in baseWeap
 
 C_ADSgun.model	   = "grease.xml"		    -- Path to the XML model file
 C_ADSgun.casingOrg = Vec(0.01, 0.12, -0.15) -- Where casings are ejected
@@ -142,7 +142,7 @@ function C_ADSgun:Reload()
 	else
 		PlaySound(self.snds[1], GetPlayerPos(self.owner), 1)
 	end
-	
+
 	client.PWB_ANIMATOR[self.owner].forceSecondaryActionPose = false
 end
 

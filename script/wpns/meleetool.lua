@@ -21,7 +21,7 @@ C_Melee = {} -- goes in GLOBAL_WEAPONS
 --=========================================================================
 
 -- Static values for this specific weapon
--- These don't need redefined in a weapon if a var is just the default value
+-- These don't need redefined in a weapon if a var is just the default value found in baseWeap
 
 C_Melee.model = "crowbar.xml" -- Path to the XML model file
 

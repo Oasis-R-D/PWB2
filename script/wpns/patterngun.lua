@@ -5,7 +5,7 @@ C_PattGun = {} -- goes in GLOBAL_WEAPONS
 --=========================================================================
 
 -- Static values for this specific weapon
--- These don't need redefined in a weapon if a var is just the default value
+-- These don't need redefined in a weapon if a var is just the default value found in baseWeap
 
 C_PattGun.model	    = "smg1.xml" 			 -- Path to the XML model file
 C_PattGun.casingOrg = Vec(0.02, 0.15, -0.15) -- Where casings are ejected
