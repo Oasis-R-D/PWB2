@@ -185,13 +185,19 @@ function baseWeap:muzzleFlash(pos, size, color)
 	DrawSprite(baseWeap.flashSPR, t, size, size, color[1], color[2], color[3], 1.0, true, true, true)
 end
 
--- sound data for PrecacheSFX(), override per weapon
--- loop is optional and doesn't need included
--- sounds are automatically parsed from MOD/snd
+-- defines sound data per weapon class
+-- sounds are automatically parsed from the snd folder
+-- dist and loop are optional and default to values shown in table
+-- index is optional and defaults to order loaded (shown below)
+-- x sv (index 1 on sv)
+-- y cl (index 1 on cl)
+-- z cl (index 2 on cl)
+-- NOTE: if you really want to save space, 
+-- you can access sounds from other weapon classes instead of duplicating them
 function baseWeap:Sounds()
 	return {
---  		   SOUND		  load to	 dist	[loop]
-		{"SOUND.ogg", "sv|cl", 	  10,	false}
+--  	   SOUND	  load to	  [index]      [loop]  [dist]
+		{"SOUND.ogg", "sv|cl", "name/num/nil", false,	10}
 	}
 end
 
@@ -1007,19 +1013,27 @@ function baseWeap:PrecacheSFX()
 	local soundsLoaded = 0
 
 	for i, sounddata in ipairs(self:Sounds()) do
+		-- Distance defaults to 10 on SV + CL
+		sounddata[4] = sounddata[4] and sounddata[4] or 10
+
+		-- Set the index
+		sounddata[3] = sounddata[3] and sounddata[3] or (soundsLoaded + 1)
+
 		if server and sounddata[2] == "sv" then
             soundsLoaded = soundsLoaded + 1
+
 			if sounddata[4] and sounddata[4] == true then
-                precachedSounds[soundsLoaded] = LoadLoop("MOD/snd/" .. sounddata[1], sounddata[3])
+                precachedSounds[sounddata[3]] = LoadLoop("MOD/snd/" .. sounddata[1], sounddata[5])
             else
-                precachedSounds[soundsLoaded] = LoadSound("MOD/snd/" .. sounddata[1], sounddata[3])
+                precachedSounds[sounddata[3]] = LoadSound("MOD/snd/" .. sounddata[1], sounddata[5])
             end
 		elseif client and sounddata[2] == "cl" then
             soundsLoaded = soundsLoaded + 1
+
             if sounddata[4] and sounddata[4] == true then
-                precachedSounds[soundsLoaded] = LoadLoop("MOD/snd/" .. sounddata[1], sounddata[3])
+                precachedSounds[sounddata[3]] = LoadLoop("MOD/snd/" .. sounddata[1], sounddata[5])
             else
-                precachedSounds[soundsLoaded] = LoadSound("MOD/snd/" .. sounddata[1], sounddata[3])
+                precachedSounds[sounddata[3]] = LoadSound("MOD/snd/" .. sounddata[1], sounddata[5])
             end
 		end
 	end

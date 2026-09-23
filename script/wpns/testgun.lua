@@ -40,9 +40,9 @@ end
 
 function C_Gun:Sounds()
 	return {
-		{"smg1_fire.ogg", 	"sv", 10},
-		{"smg1_reload.ogg", "cl", 10},
-		{"smg1_reload.ogg", "cl", 10, true}
+		{"smg1_fire.ogg",   "sv", "fire"  },
+		{"smg1_reload.ogg", "cl", "reload"},
+		{"smg1_reload.ogg", "cl", "reloadLoop", true}
 	}
 end
 
@@ -85,7 +85,7 @@ function C_Gun:PrimaryAttack(dt)
 
 		self:muzzleFlash(mt.pos, 0.8)
 	else
-		PlayFireSound(self.snds[1], mt.pos, 300)
+		PlayFireSound(self.snds["fire"], mt.pos, 300)
 	end
 
 	baseWeap.DepleteAmmo(self, 1, 1)
@@ -130,7 +130,7 @@ function C_Gun:SecondaryAttack(dt)
 
 		self.ammoAltTotal = self.ammoAltTotal - 1
 	else
-		PlayFireSound(self.snds[1], mt.pos, 300)
+		PlayFireSound(self.snds["fire"], mt.pos, 300)
 	end
 
 	self:FireProjectilePlayer(1, mt.pos, GLOBAL_1DEGREE)
@@ -144,9 +144,9 @@ function C_Gun:Reload()
 	if not self:DefaultReload(1.5) then return end
 
 	if self.isLocal then
-		self:PlayFollowingSound(self.snds[2], 1.258)
+		self:PlayFollowingSound(self.snds["reloadLoop"], 1.258)
 	else
-		PlaySound(self.snds[1], GetPlayerPos(self.owner), 1)
+		PlaySound(self.snds["reload"], GetPlayerPos(self.owner), 1)
 	end
 end
 

@@ -74,8 +74,8 @@ end
 
 function C_Melee:Sounds()
 	return {
-		{"base/bullet_hit0.ogg", "sv", 10}, -- Player hit
-		{"base/empty.ogg", "sv", 10}, -- Hard object hit
+		{"base/bullet_hit0.ogg", "sv", "flesh"},
+		{"base/empty.ogg", 		 "sv", "hard" }
 	}
 end
 
@@ -160,7 +160,7 @@ function C_Melee:CheckHit()
 			server.BloodDecal(hitPos, VecNormalize(VecScale(hitForce, -1)), self.dmg_plyr, pHitPlayer)
 
 			if self.edgeType == 0 or self.lasHitObj ~= pHitPlayer then
-				PlaySound(self.snds[1], hitPos)
+				PlaySound(self.snds["flesh"], hitPos)
 			end
 
 			if pHitPlayer ~= 0 then
@@ -183,7 +183,7 @@ function C_Melee:CheckHit()
 					if mat == "hardmetal" or mat == "metal" or mat == "rock" or mat == "hardmasonry" or mat == "masonry" or mat == "heavymetal" then
 						penalty = penalty + 0.05
 						if self.lasHitObj ~= pHitWorld then
-							--PlaySound(self.snds[2], hitPos)
+							--PlaySound(self.snds["hard"], hitPos)
 						end
 					end
 				end

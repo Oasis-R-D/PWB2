@@ -105,10 +105,10 @@ end
 -- Define the weapon's SFX / VFX
 --=========================================================================
 
-function C_Example:WeaponSounds()
+function C_Example::Sounds()
 	return {
---  		SOUND		load to	  dist   [loop]
-		{"sfx.ogg",  "sv",      10     true}
+--  	   SOUND	     load to	  [index]      [loop]  [dist]
+		{"SOUND.ogg", "sv|cl", "name/num/nil", false,	10}
 	}
 end
 
