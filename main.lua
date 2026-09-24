@@ -336,12 +336,12 @@ function client.update(dt)
    client.TENT_Update(dt, 10 --[[Gravity]])
 end
 
-local function ShouldDraw()
+local function DontDraw()
    return client.settingsDraw() or not PLAYER_WEAPONS or GetPlayerHealth() <= 0 or GetPlayerVehicle() ~= 0
 end
 
 function client.draw()
-   if not ShouldDraw() then return end
+   if DontDraw() then return end
 
    local tool = GetPlayerTool()
    local wpns = PLAYER_WEAPONS[GetLocalPlayer()]

@@ -196,7 +196,7 @@ function client.PUNCH_MachineGunKick(maxVerticleKickAngle, fireDurationTime, sli
 	end
 
 	--Add it to the view punch
-	-- NOTE: 10 is just tuned to match the old effect before the punch became simulated
+	-- NOTE: mult is tuned to match the old effect before the punch became simulated
 	client.PUNCH_Vec(vecScratch, 10)
 end
 
@@ -244,20 +244,18 @@ function client.BloodParticles(pos, dir, damage, playerhit)
 
 	local blooddir = VecScale(dir, -1)
 
-	local cloudsize = size*10
-
 	local dropsize = damage/3
 	if dropsize > 0.4 then dropsize = 0.4 end
 
 	ParticleReset()
 	ParticleRadius(dropsize)
-	ParticleAlpha(5, 0, "easein") 
+	ParticleAlpha(5, 0, "easein")
 	ParticleTile(5)
 	ParticleStretch(10)
 	ParticleColor(0.33, 0.01, 0)
 	ParticleCollide(0)
 	for i=0, 4 do
-		ParticleGravity(GetRandomFloat(-5, -10)\
+		ParticleGravity(GetRandomFloat(-5, -10))
 		local direct = VecAdd(blooddir, GetRandomDirection(0.25))
 		SpawnParticle(pos, VecAdd(VecScale(direct, GetRandomFloat(0.8, 3.0)), playervel), 0.75)
 	end

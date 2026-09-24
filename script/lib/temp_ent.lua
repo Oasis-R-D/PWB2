@@ -1,5 +1,4 @@
 -- NOTE: some features have been removed. See entity.CPP in the Half-Life: 1 SDK if you really need them back.
-if server then return end
 
 local pTempEnts = {}
 
