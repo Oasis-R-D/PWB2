@@ -52,7 +52,7 @@ local function R_TempModel(pos, velocity, angles, life, model, soundtype)
 
 	tempent.velocity = velocity
 	tempent.angleVel = GetRandomDirection(256)
-	
+
 	tempent.die = GetTime() + life
 end
 
@@ -79,6 +79,12 @@ function client.TENT_EjectShell(p, org, dir, model, casingtype)
 	local x, y, z = GetQuatEuler(transform.rot)
 
 	R_TempModel(eject_origin, eject_vel, Vec(x, y, z), 2.5, model, casingtype)
+
+	-- Don't let there be too many tempents
+	if #pTempEnts > client.MAX_TEMPENTS then
+		Delete(pTempEnts[1].model)
+		table.remove(pTempEnts, 1)
+	end
 end
 
 --===========================================
@@ -94,7 +100,7 @@ function client.TENT_Update(
 	cl_gravity)	-- True gravity on client
 
     for i, pTemp in pairs(pTempEnts) do
-		if (pTemp.die - client_time) < 0 or i - client.MAX_TEMPENTS > 0 then
+		if (pTemp.die - client_time) < 0 then
 			Delete(pTemp.model)
 			table.remove(pTempEnts, i)
 		else

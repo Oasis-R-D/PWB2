@@ -142,7 +142,7 @@ PWB_SETTING = {}
 
 client.PWB_ANIMATOR = {}
 
-client.MAX_TEMPENTS = 500
+client.MAX_TEMPENTS = 128
 
 -- LIBRARYS
 #include "script/lib/pwbtoolanimation.lua"
