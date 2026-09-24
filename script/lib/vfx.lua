@@ -7,12 +7,6 @@
 
 local dynLights = {}
 
--- retreives the f value where Lerp(1-f^dt) will reach "0" after time t
-local function GetLerpFactor(t)
-	local ep = 0.00001; -- target %
-	return ep ^ (1.0 / t)
-end
-
 ---@param p number Who should this light follow
 ---@param intensity number Starting size of the light
 ---@param life number How long until the light is gone 
@@ -23,7 +17,11 @@ function client.VFX_DynLight(p, intensity, life, color, pos, attachment)
     if PWB_SETTING.dynlights == false then return end
 
     attachment = attachment or false
-    table.insert(dynLights, {p, intensity, GetLerpFactor(life), color, pos, attachment})
+
+	-- retreives the f value where Lerp(1-f^dt) will reach 0.00001 after time t
+	life = 0.00001 ^ (1.0 / life)
+
+    table.insert(dynLights, {p, intensity, life, color, pos, attachment})
 end
 
 function client.VFX_DynLightDraw(dt)
@@ -191,22 +189,15 @@ function client.PUNCH_MachineGunKick(maxVerticleKickAngle, fireDurationTime, sli
 
 	--Clip each component
 	for i=1, 3 do
-		if final[i] > clip[i] then
-			final[i] = clip[i]
-		elseif final[i] < -clip[i] then
-			final[i] = -clip[i]
-		end
+		final[i] = Clamp(final[i], -clip[i], clip[i])
 
 		--Return the result
 		vecScratch[i] = final[i] - vecPunchAngle[i]
 	end
 
 	--Add it to the view punch
-	-- NOTE: 0.5 is just tuned to match the old effect before the punch became simulated
-	vecScratch = VecScale(vecScratch, 0.5)
-	client.PUNCH_Axis(1, vecScratch[1])
-	client.PUNCH_Axis(2, vecScratch[2])
-	client.PUNCH_Axis(3, vecScratch[3])
+	-- NOTE: 10 is just tuned to match the old effect before the punch became simulated
+	client.PUNCH_Vec(vecScratch, 10)
 end
 
 --============================================================================================
@@ -258,48 +249,18 @@ function client.BloodParticles(pos, dir, damage, playerhit)
 	local dropsize = damage/3
 	if dropsize > 0.4 then dropsize = 0.4 end
 
+	ParticleReset()
+	ParticleRadius(dropsize)
+	ParticleAlpha(5, 0, "easein") 
+	ParticleTile(5)
+	ParticleStretch(10)
+	ParticleColor(0.33, 0.01, 0)
+	ParticleCollide(0)
 	for i=0, 4 do
-		ParticleReset()
-		ParticleRadius(dropsize)
-		ParticleGravity(GetRandomFloat(-5, -10))
-		ParticleAlpha(5, 0, "easein") 
-		ParticleTile(5)
-		ParticleStretch(10)
-		ParticleColor(0.33, 0.01, 0)
-		ParticleCollide(0)
+		ParticleGravity(GetRandomFloat(-5, -10)\
 		local direct = VecAdd(blooddir, GetRandomDirection(0.25))
 		SpawnParticle(pos, VecAdd(VecScale(direct, GetRandomFloat(0.8, 3.0)), playervel), 0.75)
-
-		--[[
-		ParticleReset()
-		ParticleRadius(cloudsize, 0.35)
-		ParticleAlpha(5, 0, "easein") 
-		ParticleTile(1)
-		ParticleStretch(10)
-		ParticleColor(0.33, 0.01, 0)
-		ParticleCollide(0)
-		SpawnParticle(pos, VecAdd(VecScale(direct, math.random()*1.5), playervel), 0.75)
-		]]
 	end
-
-	--[[ -- old chunks
-	ParticleReset()
-	ParticleTile(6)
-	ParticleDrag(0.0625)
-	ParticleSticky(0.5)
-	ParticleRotation(0.2, 0)
-	ParticleAlpha(1, 0, "easein") 
-	ParticleColor(0.33, 0.01, 0)
-	ParticleCollide(0, 1, "easeout")
-	ParticleStretch(1, 0, "easein")
-	for i=0, (impactsize * 40) do
-		size = size + GetRandomFloat(-0.01, 0.005)
-		local newPos = VecAdd(pos, GetRandomDirection(0.25))
-
-		ParticleGravity(GetRandomFloat(-20, -25))
-		ParticleRadius(size)
-		SpawnParticle(newPos, VecAdd(VecScale(GetRandomDirection(), GetRandomFloat(2, 6)), playervel), 3)
-	end]]
 
 	ParticleReset()
 	ParticleAlpha(1.0, 0, "linear", 0, 0.5)

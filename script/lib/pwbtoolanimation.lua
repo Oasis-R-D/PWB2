@@ -1,3 +1,5 @@
+if server then return end
+
 -- Return signed angle between vec0 and vec1 with respect to axis
 local function getSignedAngle(vec0, vec1, axis)
     local dot0 = VecDot(axis, vec0)

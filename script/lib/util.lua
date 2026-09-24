@@ -20,6 +20,13 @@ function loadWeaponClasses()
 	return classes
 end
 
+function RemovePlayer(p)
+	PLAYER_WEAPONS[p] = nil
+    AIM_RecoilSet(p, nil)
+
+	if client then client.PWB_ANIMATOR[p] = nil end
+end
+
 function findArrayOpening(array)
     local i = 1
     

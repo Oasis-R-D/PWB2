@@ -147,7 +147,7 @@ client.MAX_TEMPENTS = 128
 
 -- LIBRARYS
 #include "script/lib/pwbtoolanimation.lua"
-#include "script/lib/bit_ops.lua"
+#include "script/lib/custommath.lua"
 #include "script/lib/vfx.lua"
 #include "script/lib/temp_ent.lua"
 #include "script/include/player.lua"
@@ -203,14 +203,14 @@ PLAYER_WEAPONS = {}
 --============================================================================================
 
 -- Reset player data on death
-function CheckDeathReset()
+local function CheckDeathReset()
 	local count = GetEventCount("playerdied")
    	for i=1, count do
 		local p, _, _ = GetEvent("playerdied", i)
 
 		local wpns = PLAYER_WEAPONS[p]
 		for j=1, GLOBAL_WEAPONS_AMNT do
-			wpns[j]:initVars(p) -- 
+			wpns[j]:initVars(p)
 		end
    end
 end
@@ -225,8 +225,7 @@ end
 -- Doesn't need used
 function server.tick(dt)
    for p in PlayersRemoved() do
-      PLAYER_WEAPONS[p] = nil
-      AIM_RecoilSet(p, nil)
+      RemovePlayer(p)
    end
 
    for _, wpns in pairs(PLAYER_WEAPONS) do
@@ -255,14 +254,17 @@ function server.update(dt)
 
    for p, wpns in pairs(PLAYER_WEAPONS) do
       local tool = GetPlayerTool(p)
+
       for i=1, GLOBAL_WEAPONS_AMNT do
-         if tool == wpns[i].toolID then
-            wpns[i]:tickPlayer_sv(dt)
-         elseif wpns[i].holstered == false then
-            wpns[i]:BaseHolster()
+         local wpnPlyr = wpns[i]
+
+         if tool == wpnPlyr.toolID then
+            wpnPlyr:tickPlayer_sv(dt)
+         elseif wpnPlyr.holstered == false then
+            wpnPlyr:BaseHolster()
          end
 
-         wpns[i]:Update(dt)
+         wpnPlyr:Update(dt)
       end
    end
 end
@@ -281,13 +283,15 @@ function client.tick(dt)
    for p, wpns in pairs(PLAYER_WEAPONS) do
       local tool = GetPlayerTool(p)
       for i=1, GLOBAL_WEAPONS_AMNT do
-         if tool == wpns[i].toolID then
-            wpns[i]:tickPlayer_cl(dt)
-         elseif wpns[i].holstered == false then
-            wpns[i]:BaseHolster()
+         local wpnPlyr = wpns[i]
+
+         if tool == wpnPlyr.toolID then
+            wpnPlyr:tickPlayer_cl(dt)
+         elseif wpnPlyr.holstered == false then
+            wpnPlyr:BaseHolster()
          end
 
-         wpns[i]:Tick(dt)
+         wpnPlyr:Tick(dt)
       end
    end
 
@@ -304,6 +308,7 @@ function client.update(dt)
       AIM_RecoilSet(p, Vec())
       client.PWB_ANIMATOR[p] = ToolAnimator()
       PLAYER_WEAPONS[p] = {}
+
       for weapon=1, GLOBAL_WEAPONS_AMNT do
          local wpnPlyr = baseWeap:new(GLOBAL_WEAPONS[weapon], p)
 		   PLAYER_WEAPONS[p][weapon] = wpnPlyr
@@ -312,9 +317,7 @@ function client.update(dt)
 	end
 
    for p in PlayersRemoved() do
-      PLAYER_WEAPONS[p] = nil
-      client.PWB_ANIMATOR[p] = nil
-      AIM_RecoilSet(p, nil)
+      RemovePlayer(p)
    end
 
    CheckDeathReset()
@@ -330,19 +333,15 @@ function client.update(dt)
 
    client.VFX_DynLightDraw(dt)
 
-   client.TENT_Update(
-      dt,
-      GetTime(),
-      10 -- Gravity
-   )
+   client.TENT_Update(dt, 10 --[[Gravity]])
+end
+
+local function ShouldDraw()
+   return client.settingsDraw() or not PLAYER_WEAPONS or GetPlayerHealth() <= 0 or GetPlayerVehicle() ~= 0
 end
 
 function client.draw()
-   if client.settingsDraw() then return end
-
-   if not PLAYER_WEAPONS then return end
-
-   if GetPlayerHealth() <= 0 or GetPlayerVehicle() ~= 0 then return end
+   if not ShouldDraw() then return end
 
    local tool = GetPlayerTool()
    local wpns = PLAYER_WEAPONS[GetLocalPlayer()]

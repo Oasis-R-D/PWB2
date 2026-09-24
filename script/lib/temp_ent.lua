@@ -96,11 +96,10 @@ local shellSFX_buck = 0
 
 function client.TENT_Update(
     frametime,	-- Simulation time
-	client_time, -- Absolute time on client
 	cl_gravity)	-- True gravity on client
 
     for i, pTemp in pairs(pTempEnts) do
-		if (pTemp.die - client_time) < 0 then
+		if (pTemp.die - GetTime()) < 0 then
 			Delete(pTemp.model)
 			table.remove(pTempEnts, i)
 		else
