@@ -115,9 +115,9 @@ function baseWeap:initVars(owner)
 
 	-- time creep vars
 	-- last shot's calculated delay
-	self.prevPrimFireDelay   = -1
+	self.prevPrimFireDelay  = -1
 	-- time of last shot, resets when primary attack is released
-	self.lastShotInHoldTime  = 0
+	self.lastShotInHoldTime = 0
 
 	-- time used for running code in Idle()
 	self.timeWeaponIdle		= 0
@@ -162,6 +162,14 @@ end
 function baseWeap:init_tool()
 	RegisterTool(self.toolID, self.toolName, "MOD/models/xml/" .. self.model, self.toolSlot)
 	SetToolAmmoPickupAmount(self.toolID, self.ammoPickupSize)
+end
+
+-- Called on player join, after their weapons are set up
+function baseWeap:init_player()
+	if server then
+		SetToolEnabled(self.toolID, true, self.owner)
+		SetToolAmmo(self.toolID, 9999, self.owner)
+	end
 end
 
 --=========================================================================
@@ -225,7 +233,7 @@ function baseWeap:Reload()            		   	end -- called on reload start
 function baseWeap:WeaponIdle()		  		   	end -- called when no buttons pressed
 
 function baseWeap:MDL_CustomAnimate(dt)	  		end -- called every frame, use for adding custom
-										 	    	-- weapon movement, such as PWB1 slide/pump anims
+										 	    	-- weapon movement, such as PWB1 style slide/pump anims
 
 -- Override these if the weapon has extra conditions needed for firing
 -- I.E. Weapon uses multiple rounds in the mag per fire

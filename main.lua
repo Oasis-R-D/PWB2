@@ -138,6 +138,7 @@ end
 -- WEAPON INCLUDES AND GLOBALS
 ----------------------------------------------------------------------------------------------
 
+-- GLOBAL VARS
 PWB_SETTING = {}
 
 client.PWB_ANIMATOR = {}
@@ -148,11 +149,11 @@ client.MAX_TEMPENTS = 128
 #include "script/lib/pwbtoolanimation.lua"
 #include "script/lib/bit_ops.lua"
 #include "script/lib/vfx.lua"
-#include "script/lib/util.lua"
 #include "script/lib/temp_ent.lua"
+#include "script/include/player.lua"
+#include "script/lib/util.lua"
 
-
-
+-- WEAPON VARS
 GLOBAL_1DEGREE    = 0.00873
 GLOBAL_2DEGREES   = 0.01745
 GLOBAL_3DEGREES   = 0.02618
@@ -168,9 +169,8 @@ GLOBAL_20DEGREES  = 0.17365
 
 GLOBAL_HEADSHOTMULT = 2.0
 
--- GLOBALS
+-- MAIN
 #include "script/classes/baseWeap.lua"
-#include "script/include/player.lua"
 
 -- WEAPONS
 #include "script/wpns/testgun.lua"
@@ -210,7 +210,7 @@ function CheckDeathReset()
 
 		local wpns = PLAYER_WEAPONS[p]
 		for j=1, GLOBAL_WEAPONS_AMNT do
-			wpns[j]:initVars(p) -- this SHOULD reset weapons on death
+			wpns[j]:initVars(p) -- 
 		end
    end
 end
@@ -247,8 +247,7 @@ function server.update(dt)
       for weapon=1, GLOBAL_WEAPONS_AMNT do
          local wpnPlyr = baseWeap:new(GLOBAL_WEAPONS[weapon], p)
 		   PLAYER_WEAPONS[p][weapon] = wpnPlyr
-         SetToolEnabled(wpnPlyr.toolID, true, p)
-		   SetToolAmmo(wpnPlyr.toolID, 9999, p)
+         wpnPlyr:init_player()
       end
 	end
 
@@ -308,6 +307,7 @@ function client.update(dt)
       for weapon=1, GLOBAL_WEAPONS_AMNT do
          local wpnPlyr = baseWeap:new(GLOBAL_WEAPONS[weapon], p)
 		   PLAYER_WEAPONS[p][weapon] = wpnPlyr
+         wpnPlyr:init_player()
       end
 	end
 
