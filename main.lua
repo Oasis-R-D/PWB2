@@ -271,7 +271,7 @@ end
 
 -- Sets up weapon classes, precaches SFX and haptics
 function client.init()
-   settingsInit()
+   client.settingsInit()
 
    for weapon=1, GLOBAL_WEAPONS_AMNT do
       baseWeap.init_cl(GLOBAL_WEAPONS[weapon], weapon)

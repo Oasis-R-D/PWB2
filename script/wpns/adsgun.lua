@@ -150,7 +150,7 @@ function C_ADSgun:SecondaryAttack(dt, ads)
 	if client then
 		ads = not client.PWB_ANIMATOR[self.owner].forceSecondaryActionPose
 		client.PWB_ANIMATOR[self.owner].forceSecondaryActionPose = ads
-		
+
 		if self.isLocal then
 			self:ServerWpnCall("SecondaryAttack", dt, ads)
 			if ads then client.FOV_set(0.9) else client.FOV_set(1) end

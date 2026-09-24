@@ -29,11 +29,11 @@ end
 
 function findArrayOpening(array)
     local i = 1
-    
+
 	while array[i] ~= nil do
         i = i + 1
     end
-    
+
 	return i
 end
 
@@ -45,9 +45,10 @@ end
 
 function PlayFireSound(snd, pos, vol)
 	StopSound(snd)
-	PlaySound(snd, pos, 300)
+	PlaySound(snd, pos, vol)
 end
 
+-- FREE: deletes inputted object (only works on functions/tables)
 function FREE(obj)
 	obj = nil
 end
@@ -59,13 +60,13 @@ end
 function GetShapeMaterialAtPos(shape, pos)
 	local _, point = GetShapeClosestPoint(shape, pos)
 
-	pos = TransformToLocalPoint(GetShapeWorldTransform(shape), point)
+	point = TransformToLocalPoint(GetShapeWorldTransform(shape), point)
 
 	for i = 1, 3 do
-		pos[i] = math.floor(pos[i]*10)
+		point[i] = math.floor(point[i]*10)
 	end
 
-	return GetShapeMaterialAtIndex(shape, pos[1], pos[2], pos[3])
+	return GetShapeMaterialAtIndex(shape, point[1], point[2], point[3])
 end
 
 function PlayImpactSFX(shape, pos, mag)
