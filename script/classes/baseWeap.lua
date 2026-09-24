@@ -1014,7 +1014,7 @@ function baseWeap:PrecacheSFX()
 
 	for i, sounddata in ipairs(self:Sounds()) do
 		-- Distance defaults to 10 on SV + CL
-		sounddata[4] = sounddata[4] and sounddata[4] or 10
+		sounddata[5] = sounddata[5] and sounddata[5] or 10
 
 		-- Set the index
 		sounddata[3] = sounddata[3] and sounddata[3] or (soundsLoaded + 1)
