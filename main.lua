@@ -2,25 +2,26 @@
 -- INFO
 ----------------------------------------------------------------------------------------------
 
-this file calls all weapon functions. To add your weapon just add a pointer to it's class
-in GLOBAL_WEAPONS (make sure to '#include' it's lua file also).
+this file calls all weapon functions.
 
 weapon systems are built to function like the weapon systems from Half-Life: 1 / Counter Strike
 and can fully support weapons from both with (near) minimal adaptation.
-
-Weapon HUD order is set by the order they are listed in the GLOBAL_WEAPONS table.
-You can however rummage through the registry if you really need a weapon in a specifc spot.
 
 ----------------------------------------------------------------------------------------------
 -- USAGE
 ----------------------------------------------------------------------------------------------
 
-weapons in PWB2 use LUA's "class" system in order to abstract away the complicated portions.
+Tools in PWB2 use LUA's "class" system in order to abstract away the complicated portions.
 to make a mod using this base, you can either copy an existing weapon or start from scratch.
 
 to make a simple new weapon, define the class (MUST BE PREFIXED WITH 'C_'), static variables, SFX and then override
 common functions if/when needed (PrimaryAttack(), SecondaryAttack(), Reload(), initVars() etc).
 To hook the weapon into main, just include it's file, main.lua finds the weapon's class by itself.
+
+Tool HUD order in relation to other tools in this weapon pack is set using the classes
+toolPos value or the load order if toolPos is not found.
+There's also a few hacks that can be done to get a tool in a specific spot in relation to
+all loaded tools using the registry.
 
 if you need help with PWB2 or it's utilization of object oriented programming, message
 'Packman.09' on Discord, create a discussion post about it or check the LUA documentation for object oriented programming below
@@ -137,9 +138,13 @@ end
 -- WEAPON INCLUDES AND GLOBALS
 ----------------------------------------------------------------------------------------------
 
--- LIBRARYS
 PWB_SETTING = {}
+
 client.PWB_ANIMATOR = {}
+
+client.MAX_TEMPENTS = 500
+
+-- LIBRARYS
 #include "script/lib/pwbtoolanimation.lua"
 #include "script/lib/bit_ops.lua"
 #include "script/lib/vfx.lua"
@@ -147,10 +152,6 @@ client.PWB_ANIMATOR = {}
 #include "script/lib/temp_ent.lua"
 
 
-
--- max tempents the client can simulate at once
--- this probably won't be reached normally
-GLOBAL_MAX_TEMPENTS = 500
 
 GLOBAL_1DEGREE    = 0.00873
 GLOBAL_2DEGREES   = 0.01745

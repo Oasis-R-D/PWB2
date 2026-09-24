@@ -1,4 +1,5 @@
 -- NOTE: some features have been removed. See entity.CPP in the Half-Life: 1 SDK if you really need them back.
+if server then return end
 
 local pTempEnts = {}
 
@@ -15,10 +16,6 @@ local function newTempEnt()
 		-- floats
 		die = 0,
 		bounceFactor = 1.0,
-
-
-		-- float
-		nextThink = 0.0,
 
 		-- Actual render position and angles
 		origin = Vec(),
@@ -52,11 +49,11 @@ local function R_TempModel(pos, velocity, angles, life, model, soundtype)
 
 	tempent.angles = angles
 	tempent.hitSound = soundtype
-	tempent.frameMax = 0 -- tempent.frameMax = framecount
 
 	tempent.velocity = velocity
 	tempent.angleVel = GetRandomDirection(256)
-	tempent.die = life + GetTime()
+	
+	tempent.die = GetTime() + life
 end
 
 ---@param p number Who's shell is being ejected
@@ -97,7 +94,7 @@ function client.TENT_Update(
 	cl_gravity)	-- True gravity on client
 
     for i, pTemp in pairs(pTempEnts) do
-		if (pTemp.die - client_time) < 0 then
+		if (pTemp.die - client_time) < 0 or i - client.MAX_TEMPENTS > 0 then
 			Delete(pTemp.model)
 			table.remove(pTempEnts, i)
 		else
