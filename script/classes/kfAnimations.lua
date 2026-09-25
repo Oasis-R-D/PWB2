@@ -19,7 +19,9 @@ function baseWeap:KF_Animate(dt)
         local pos, rotEuler = data.pos, data.angles
         local rot = rotEuler and QuatEuler(rotEuler[1], rotEuler[2], rotEuler[3]) or nil
 
-        local u = 3*self.animFrameTime^2 - 2*self.animFrameTime^3
+        -- cubic interpolation between 0 and 0.0166 repeating
+        local t = self.animFrameTime*60
+        local u = 3*t^2 - 2*t^3
         if u > 1 then u = 1 end
 
         pos = VecLerp(data.pos, self.animNextFrameInfo[shapeIndex].pos, u)
