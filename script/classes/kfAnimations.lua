@@ -37,15 +37,22 @@ function baseWeap:KF_Animate(dt)
             client.PWB_ANIMATOR[self.owner].leftHand.transform = offsetTransform
         elseif shapeIndex == "hand_r" then
             client.PWB_ANIMATOR[self.owner].leftHand.transform = offsetTransform
-        else
+        else -- TO-DO: rotate around center
             local transformingShape = GetBodyShapes(GetToolBody())[shapeIndex]
 
             local min, max = GetShapeBounds(transformingShape)
-            local center = Transform(VecLerp(min, max, 0.5), Quat())
-            -- TO-DO: rotate around center
-            
+            local centerTransform = Transform(VecLerp(min, max, 0.5), self.shapeTransforms[shapeIndex].rot)
+
+            local rotTransform = TransformToLocalTransform(centerTransform, GetShapeLocalTransform(transformingShape))
+            rotTransform.rot = QuatRotateQuat(rotTransform.rot, offsetTransform.rot)
+            newShapeTransform = TransformToParentTransform(rotTransform, self.shapeTransforms[shapeIndex])
+
+            SetShapeLocalTransform(transformingShape, Transform(shapeOffsetTransform.pos, newShapeTransform.rot))
+
+            --[[
             local shapeOffsetTransform = TransformToParentTransform(offsetTransform, self.shapeTransforms[shapeIndex])
             SetShapeLocalTransform(transformingShape, shapeOffsetTransform)
+            ]]
 
             if PWB_SETTING.debug then DebugPrint(VecStr(pos) .. " NEW: " .. VecStr(self.animNextFrameInfo[shapeIndex].pos)) end
         end
