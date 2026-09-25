@@ -12,6 +12,22 @@ local function ExtractValues(data)
     }
 end
 
+function baseWeap:KF_ApplyAnimation(shapeIndex, offsetTransform)
+    local shapeTransform = TransformCopy(self.shapeTransforms[shapeIndex])
+
+    -- Rotate around pivot
+    local relativePivot = VecSub(shapeTransform.pos, self.shapeCenters[shapeIndex])
+
+    relativePivot = QuatRotateVec(offsetTransform.rot, relativePivot)
+
+    shapeTransform.pos = VecAdd(VecAdd(self.shapeCenters[shapeIndex], relativePivot), offsetTransform.pos)
+    shapeTransform.rot = QuatRotateQuat(offsetTransform.rot, shapeTransform.rot)
+
+    SetShapeLocalTransform(GetBodyShapes(GetToolBody(self.owner))[shapeIndex], shapeTransform)
+
+    if PWB_SETTING.debug then DebugPrint(VecStr(shapeTransform.pos) .. " NEW: " .. VecStr(self.animNextFrameInfo[shapeIndex].pos)) end
+end
+
 function baseWeap:KF_Animate(dt)
     if self.animIndex == 0 then return end
 
@@ -20,6 +36,7 @@ function baseWeap:KF_Animate(dt)
         self.animNextFrameInfo[shapeIndex] = self.animNextFrameInfo[shapeIndex] and self.animNextFrameInfo[shapeIndex] or self.animFrameInfo[shapeIndex]
 
         -- cubic interpolation between 0 and 0.0166 repeating
+        -- NOTE: this undershoots!
         local t = self.animFrameTime*60
         local u = 3*t^2 - 2*t^3
         if u > 1 then u = 1 end
@@ -37,24 +54,8 @@ function baseWeap:KF_Animate(dt)
             client.PWB_ANIMATOR[self.owner].leftHand.transform = offsetTransform
         elseif shapeIndex == "hand_r" then
             client.PWB_ANIMATOR[self.owner].leftHand.transform = offsetTransform
-        else -- TO-DO: rotate around center
-            local transformingShape = GetBodyShapes(GetToolBody())[shapeIndex]
-
-            local min, max = GetShapeBounds(transformingShape)
-            local centerTransform = Transform(VecLerp(min, max, 0.5), self.shapeTransforms[shapeIndex].rot)
-
-            local rotTransform = TransformToLocalTransform(centerTransform, GetShapeLocalTransform(transformingShape))
-            rotTransform.rot = QuatRotateQuat(rotTransform.rot, offsetTransform.rot)
-            newShapeTransform = TransformToParentTransform(rotTransform, self.shapeTransforms[shapeIndex])
-
-            SetShapeLocalTransform(transformingShape, Transform(shapeOffsetTransform.pos, newShapeTransform.rot))
-
-            --[[
-            local shapeOffsetTransform = TransformToParentTransform(offsetTransform, self.shapeTransforms[shapeIndex])
-            SetShapeLocalTransform(transformingShape, shapeOffsetTransform)
-            ]]
-
-            if PWB_SETTING.debug then DebugPrint(VecStr(pos) .. " NEW: " .. VecStr(self.animNextFrameInfo[shapeIndex].pos)) end
+        else
+            self:KF_ApplyAnimation(shapeIndex, offsetTransform)
         end
     end
 
@@ -86,11 +87,12 @@ function baseWeap:KF_NewFrame(keyFrame)
     local shape = GetBodyShapes(GetToolBody())[shapeIndex]
     if not self.shapeTransforms[shapeIndex] then
         self.shapeTransforms[shapeIndex] = GetShapeLocalTransform(shape)
+
+        local min, max = GetShapeBounds(shape)
+        self.shapeCenters[shapeIndex] = TransformToLocalPoint(GetBodyTransform(GetToolBody(self.owner)), VecLerp(min, max, 0.5))
     end
 
-    local tOffset = Transform(pos, rot)
-    local t = TransformToParentTransform(tOffset, self.shapeTransforms[shapeIndex])
-    SetShapeLocalTransform(shape, t)
+    self:KF_ApplyAnimation(shapeIndex, Transform(pos, rot))
 end
 
 function baseWeap:KF_Advance(dt)
@@ -122,6 +124,7 @@ end
 function baseWeap:KF_SetAnim(animIndex)
     if not self.shapeTransforms then
         self.shapeTransforms = {}
+        self.shapeCenters = {}
     end
 
     if not self.anims[animIndex] then error("Animation " .. animIndex .. " not found!", 2) return end
