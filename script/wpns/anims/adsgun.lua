@@ -41,7 +41,7 @@ local reload = Anim(
     {2, {0, 0, 0},          {0, 0, 0}}
 )
 
-local test = Anim(
+local test = Anim( -- rotates the mag 180 degrees to test rotations
     {2, {0, -0.1, -0.1},          {0, 0, 0}},         0,
     {2, {0, -0.1, -0.1},          {0, 10, 0}},        0,
     {2, {0, -0.1, -0.1},          {0, 20, 0}},        0,

@@ -734,7 +734,7 @@ end
 --=========================================================================
 
 local function matPenetratable(mat)
-	return mat == "foliage" or mat == "glass" or mat == "plastic" or mat == "plaster"
+	return mat == "glass" or mat == "plastic" or mat == "plaster"
 end
 
 function baseWeap:RecursiveBulletPenetration(shootPos, hitPos, dir, alottedDist, maxDist, iterations)
