@@ -19,6 +19,12 @@ function baseWeap:KF_Animate(dt)
         local pos, rotEuler = data.pos, data.angles
         local rot = rotEuler and QuatEuler(rotEuler[1], rotEuler[2], rotEuler[3]) or nil
 
+        local u = 3*self.animFrameTime^2 - 2*self.animFrameTime^3
+        if u > 1 then u = 1 end
+
+        pos = VecLerp(data.pos, self.animNextFrameInfo[shapeIndex].pos, u)
+        rot = VecLerp(data.angles, self.animNextFrameInfo[shapeIndex].angles, u)
+
         if shapeIndex == "hand_l" then
             client.PWB_ANIMATOR[self.owner].leftHand.transform = Transform(pos, rot)
             return
@@ -35,9 +41,9 @@ function baseWeap:KF_Animate(dt)
         self.animNextFrameInfo[shapeIndex] = self.animNextFrameInfo[shapeIndex] and self.animNextFrameInfo[shapeIndex] or self.animFrameInfo[shapeIndex]
 
         if PWB_SETTING.debug then DebugPrint(VecStr(data.pos) .. " NEW: " .. VecStr(self.animNextFrameInfo[shapeIndex].pos)) end
-        VecLerpExponential(data.pos, self.animNextFrameInfo[shapeIndex].pos, 0.063, dt)
-        VecLerpExponential(data.angles, self.animNextFrameInfo[shapeIndex].angles, 0.063, dt)
     end
+
+    self.animFrameTime = self.animFrameTime + dt
 end
 
 function baseWeap:KF_NewFrame(keyFrame)
@@ -46,6 +52,11 @@ function baseWeap:KF_NewFrame(keyFrame)
 
     -- Animation events
     if keyFrame[4] then keyFrame[4]() end
+
+    self.animFrameTime = 0
+    self.animFrame = self.animFrame + 1
+    -- This value is not accurate if you have multiple shapes moving per frame!!!
+    if PWB_SETTING.debug then DebugPrint("THIS FRAME: " .. self.animFrame / 2) end
 
     if shapeIndex == "hand_l" then
         client.PWB_ANIMATOR[self.owner].leftHand.transform = Transform(pos, rot)
@@ -74,13 +85,7 @@ function baseWeap:KF_Advance(dt)
     repeat
         self.animFrameInfo[anim[self.animFrame][1]] = ExtractValues(anim[self.animFrame])
 
-        -- Enforce Position to make sure it didn't bug out
         self:KF_NewFrame(anim[self.animFrame])
-
-        self.animFrame = self.animFrame + 1
-
-        -- This value is not accurate if you have multiple shapes moving per frame!!!
-        if PWB_SETTING.debug then DebugPrint("THIS FRAME: " .. self.animFrame / 2) end
     until type(anim[self.animFrame]) ~= "table"
 
     if not anim[self.animFrame] then -- end of anim
