@@ -16,31 +16,30 @@ function baseWeap:KF_Animate(dt)
     if self.animIndex == 0 then return end
 
     for shapeIndex, data in pairs(self.animFrameInfo) do
-        local pos, rotEuler = data.pos, data.angles
-        local rot = rotEuler and QuatEuler(rotEuler[1], rotEuler[2], rotEuler[3]) or nil
+        -- freeze parts if they aren't used next frame
+        self.animNextFrameInfo[shapeIndex] = self.animNextFrameInfo[shapeIndex] and self.animNextFrameInfo[shapeIndex] or self.animFrameInfo[shapeIndex]
 
         -- cubic interpolation between 0 and 0.0166 repeating
         local t = self.animFrameTime*60
         local u = 3*t^2 - 2*t^3
         if u > 1 then u = 1 end
 
-        pos = VecLerp(data.pos, self.animNextFrameInfo[shapeIndex].pos, u)
-        rot = VecLerp(data.angles, self.animNextFrameInfo[shapeIndex].angles, u)
+        local pos = VecLerp(data.pos, self.animNextFrameInfo[shapeIndex].pos, u)
+        local rot = data.angles and VecLerp(data.angles, self.animNextFrameInfo[shapeIndex].angles, u) or nil
+        if rot then rot = QuatEuler(rot[1], rot[2], rot[3]) end
+
+        local offsetTransform = Transform(pos, rot)
 
         if shapeIndex == "hand_l" then
-            client.PWB_ANIMATOR[self.owner].leftHand.transform = Transform(pos, rot)
+            client.PWB_ANIMATOR[self.owner].leftHand.transform = offsetTransform
             return
         elseif shapeIndex == "hand_r" then
-            client.PWB_ANIMATOR[self.owner].leftHand.transform = Transform(pos, rot)
+            client.PWB_ANIMATOR[self.owner].leftHand.transform = offsetTransform
             return
         end
 
-        local tOffset = Transform(pos, rot)
-        local t = TransformToParentTransform(tOffset, self.shapeTransforms[shapeIndex])
-        SetShapeLocalTransform(GetBodyShapes(GetToolBody())[shapeIndex], t)
-
-        -- freeze parts if they aren't used next frame
-        self.animNextFrameInfo[shapeIndex] = self.animNextFrameInfo[shapeIndex] and self.animNextFrameInfo[shapeIndex] or self.animFrameInfo[shapeIndex]
+        local shapeOffsetTransform = TransformToParentTransform(offsetTransform, self.shapeTransforms[shapeIndex])
+        SetShapeLocalTransform(GetBodyShapes(GetToolBody())[shapeIndex], shapeOffsetTransform)
 
         if PWB_SETTING.debug then DebugPrint(VecStr(data.pos) .. " NEW: " .. VecStr(self.animNextFrameInfo[shapeIndex].pos)) end
     end
