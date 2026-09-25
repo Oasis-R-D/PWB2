@@ -25,27 +25,30 @@ function baseWeap:KF_Animate(dt)
         if u > 1 then u = 1 end
 
         local pos = VecLerp(data.pos, self.animNextFrameInfo[shapeIndex].pos, u)
-        local rot = data.angles and VecLerp(data.angles, self.animNextFrameInfo[shapeIndex].angles, u) or nil
-        if rot then
-            -- this should theoretically make sure shapes keep original rotation
-            local x, y, z = GetQuatEuler(ogRot = self.shapeTransforms[shapeIndex].rot)
-            rot = QuatEuler(x + rot[1], y + rot[2], z + rot[3]) 
+        local rotEuler = data.angles and VecLerp(data.angles, self.animNextFrameInfo[shapeIndex].angles, u) or nil
+        local rot = nil
+        if rotEuler then
+            rot = QuatEuler(rotEuler[1], rotEuler[2], rotEuler[3])
         end
 
         local offsetTransform = Transform(pos, rot)
 
         if shapeIndex == "hand_l" then
             client.PWB_ANIMATOR[self.owner].leftHand.transform = offsetTransform
-            return
         elseif shapeIndex == "hand_r" then
             client.PWB_ANIMATOR[self.owner].leftHand.transform = offsetTransform
-            return
+        else
+            local transformingShape = GetBodyShapes(GetToolBody())[shapeIndex]
+
+            local min, max = GetShapeBounds(transformingShape)
+            local center = Transform(VecLerp(min, max, 0.5), Quat())
+            -- TO-DO: rotate around center
+            
+            local shapeOffsetTransform = TransformToParentTransform(offsetTransform, self.shapeTransforms[shapeIndex])
+            SetShapeLocalTransform(transformingShape, shapeOffsetTransform)
+
+            if PWB_SETTING.debug then DebugPrint(VecStr(pos) .. " NEW: " .. VecStr(self.animNextFrameInfo[shapeIndex].pos)) end
         end
-
-        local shapeOffsetTransform = TransformToParentTransform(offsetTransform, self.shapeTransforms[shapeIndex])
-        SetShapeLocalTransform(GetBodyShapes(GetToolBody())[shapeIndex], shapeOffsetTransform)
-
-        if PWB_SETTING.debug then DebugPrint(VecStr(data.pos) .. " NEW: " .. VecStr(self.animNextFrameInfo[shapeIndex].pos)) end
     end
 
     self.animFrameTime = self.animFrameTime + dt
@@ -60,6 +63,7 @@ function baseWeap:KF_NewFrame(keyFrame)
 
     self.animFrameTime = 0
     self.animFrame = self.animFrame + 1
+
     -- This value is not accurate if you have multiple shapes moving per frame!!!
     if PWB_SETTING.debug then DebugPrint("THIS FRAME: " .. self.animFrame / 2) end
 
@@ -94,7 +98,7 @@ function baseWeap:KF_Advance(dt)
     until type(anim[self.animFrame]) ~= "table"
 
     if not anim[self.animFrame] then -- end of anim
-        self.animIndex = 0
+        self:KF_Reset()
         return
     else -- new frame
         self.animFrame = self.animFrame + 1 -- start on a real frame
@@ -118,7 +122,6 @@ function baseWeap:KF_SetAnim(animIndex)
     self:KF_Reset()
 
     self.animIndex = animIndex
-    self.animFrame = 1
 
     if PWB_SETTING.debug then DebugPrint("ANIM SET: " .. animIndex) end
 end
@@ -142,4 +145,6 @@ function baseWeap:KF_Reset() -- reset anims
     self.animIndex = 0
     self.animFrameInfo = {}
     self.animNextFrameInfo = {}
+    self.animFrame = 1
+    self.animFrameTime = 0
 end
