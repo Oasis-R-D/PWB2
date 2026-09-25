@@ -133,6 +133,8 @@ function C_ADSgun:Reload()
 	if not self:DefaultReload(1.5) then return end
 
 	if self.isLocal then
+		self:KF_SetAnim(C_ADSgun.ANIM_RELOAD)
+
 		self:PlayFollowingSound(self.snds["reloadLoop"], 1.258)
 
 		if client.PWB_ANIMATOR[self.owner].forceSecondaryActionPose then

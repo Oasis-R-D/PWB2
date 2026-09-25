@@ -141,3 +141,9 @@ end
 function Lerp(a, b, t)
     return a + (b - a) * t
 end
+
+function VecLerpBetter(a, b, decay, t)
+    for i=1, 3 do
+        a[i] = Lerp(a[i], b[i], 1.0 - decay ^ t)
+    end
+end
