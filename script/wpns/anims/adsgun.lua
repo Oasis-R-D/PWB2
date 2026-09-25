@@ -1,6 +1,6 @@
 -- Someone needs to make a blender extension for this
 -- 0s are to signify the end of the frame, have multiple tables before the 0 if you need multiple moving parts
--- A 4th input to the keyframe can be added for functions, put a function in and it will call the function when ran
+-- A 4th input to the keyframe can be added for callback functions, function will be run on that frame
 local reload = Anim(
     {2, {0, 0, 0},          {0, 0, 0}},         0,
     {2, {0, -0.02, 0},      {0, 0, 0}},         0,

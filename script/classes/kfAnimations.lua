@@ -26,7 +26,11 @@ function baseWeap:KF_Animate(dt)
 
         local pos = VecLerp(data.pos, self.animNextFrameInfo[shapeIndex].pos, u)
         local rot = data.angles and VecLerp(data.angles, self.animNextFrameInfo[shapeIndex].angles, u) or nil
-        if rot then rot = QuatEuler(rot[1], rot[2], rot[3]) end
+        if rot then
+            -- this should theoretically make sure shapes keep original rotation
+            local x, y, z = GetQuatEuler(ogRot = self.shapeTransforms[shapeIndex].rot)
+            rot = QuatEuler(x + rot[1], y + rot[2], z + rot[3]) 
+        end
 
         local offsetTransform = Transform(pos, rot)
 

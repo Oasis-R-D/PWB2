@@ -44,14 +44,14 @@ if you need help with PWB2 or it's utilization of object oriented programming, m
 -- NEW KEYFRAME ANIMATION SYSTEM (KF_ prefix): --
   Weapons can now optionally have keyframed animations. FORMAT: Anim({shape, pos, rot, [function]}, tbl, 0, tbl, 0, tbl [end])
   Keyframes are defined with 0s as separators. Do multiple tables before a 0 to have multiple shapes moving per keyframe. 
-  Do "hand_[r/l]" instead of a shape index to offset the player's third person hands (useful for reloading). [function] is called once the keyframe is reached.
+  Do "hand_[r/l]" instead of a shape index to offset the player's third person hands (useful for reloading). [function]() is called once the keyframe is reached.
   The keyframe system works using an indexed table of animations, containing pointers to animation tables.
   an example on how to use the new keyframed animations is in wpns/adsgun.lua and wpns/anims/adsgun.lua.
 
 -- COMPATIBILITY: --
 PWB2 has a few ways of communicating with other mods, this section contains all events and exposed information.
 
-Weapon firing event arguments: ("pwb_shot", fire pos, hit location, hit shape, hit player, dmg_world, dmg_plyr)
+Bullet firing event arguments: ("pwb_shot", fire pos, hit location, hit shape, hit player, dmg_world, dmg_plyr)
 Player settings can be found at "savegame.mod.pwb.[HERE]" in the registry.
 
 ==============================================================================================
