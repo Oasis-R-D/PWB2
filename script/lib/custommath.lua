@@ -113,7 +113,7 @@ end
 
 ----------------------------------------------------------------------------------------------
 
-function clearFlag(var, flag) 
+function clearFlag(var, flag)
     return var % (flag * 2) >= flag and var - flag or var
 end
 
@@ -142,8 +142,6 @@ function Lerp(a, b, t)
     return a + (b - a) * t
 end
 
-function VecLerpBetter(a, b, decay, t)
-    for i=1, 3 do
-        a[i] = Lerp(a[i], b[i], 1.0 - decay ^ t)
-    end
+function VecLerpExponential(a, b, decay, t)
+    a = VecLerp(a, b, 1.0 - decay ^ t)
 end

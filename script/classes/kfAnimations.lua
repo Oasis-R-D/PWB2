@@ -35,8 +35,8 @@ function baseWeap:KF_Animate(dt)
         self.animNextFrameInfo[shapeIndex] = self.animNextFrameInfo[shapeIndex] and self.animNextFrameInfo[shapeIndex] or self.animFrameInfo[shapeIndex]
 
         if PWB_SETTING.debug then DebugPrint(VecStr(data.pos) .. " NEW: " .. VecStr(self.animNextFrameInfo[shapeIndex].pos)) end
-        VecLerpBetter(data.pos, self.animNextFrameInfo[shapeIndex].pos, 0.063, dt)
-        VecLerpBetter(data.angles, self.animNextFrameInfo[shapeIndex].angles, 0.063, dt)
+        VecLerpExponential(data.pos, self.animNextFrameInfo[shapeIndex].pos, 0.063, dt)
+        VecLerpExponential(data.angles, self.animNextFrameInfo[shapeIndex].angles, 0.063, dt)
     end
 end
 

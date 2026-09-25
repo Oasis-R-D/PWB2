@@ -124,8 +124,6 @@ function C_ADSgun:PrimaryAttack(dt)
 	local inAds = (server and self.ads) or (client and client.PWB_ANIMATOR[self.owner].forceSecondaryActionPose)
 	self:FireBulletsPlayer(1, GetPlayerEyeTransform(self.owner).pos, inAds and GLOBAL_1DEGREE or GLOBAL_3DEGREES, 100)
 
-	AIM_RecoilAdd(self.owner, Vec(1.33, GetRandomFloat(-2, 2), 0))
-
 	self.nextFire = self:GetNextAttackDelay(0.133)
 end
 
