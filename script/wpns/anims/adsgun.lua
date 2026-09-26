@@ -2,6 +2,21 @@
 -- 0s are to signify the end of the frame, have multiple tables before the 0 if you need multiple moving parts
 -- A 4th input to the keyframe can be added for callback functions, function will be run on that frame
 
+--[[ MULTI SHAPE DEMONSTRATION:
+local multiShape = anim(
+    {2, {0, -0.1, -0.1},          {0, 0, 0}},
+    {3, {0, -0.1, -0.1},          {0, 10, 0}} -- move this as well
+    0,
+    {2, {0, -0.1, -0.1},          {0, 20, 0}}
+    {3, {0, -0.1, -0.1},          {0, 30, 0}}, -- move this as well
+    0,
+    {2, {0, -0.1, -0.1},          {0, 25, 0}} -- only move this on this frame
+    0,
+    {3, {0, -0.1, -0.1},          {0, 20, 0}} -- only move this on this frame
+    0,
+)
+]]
+
 local reload = Anim(
     {2, {0, 0, 0},          {0, 0, 0}},         0,
     {2, {0, -0.02, 0},      {0, 0, 0}},         0,
@@ -41,6 +56,11 @@ local reload = Anim(
     {2, {0, 0, 0},          {0, 0, 0}}
 )
 
+-- Callback function example
+function func()
+    DebugPrint("EVENT")
+end
+
 local test = Anim( -- rotates the mag 180 degrees to test rotations
     {2, {0, -0.1, -0.1},          {0, 0, 0}},         0,
     {2, {0, -0.1, -0.1},          {0, 10, 0}},        0,
@@ -50,7 +70,7 @@ local test = Anim( -- rotates the mag 180 degrees to test rotations
     {2, {0, -0.1, -0.1},          {0, 50, 0}},        0,
     {2, {0, -0.1, -0.1},          {0, 60, 0}},        0,
     {2, {0, -0.1, -0.1},          {0, 70, 0}},        0,
-    {2, {0, -0.1, -0.1},          {0, 80, 0}},        0,
+    {2, {0, -0.1, -0.1},          {0, 80, 0}, func},        0,
     {2, {0, -0.1, -0.1},          {0, 90, 0}},        0,
     {2, {0, -0.1, -0.1},          {0, 100, 0}},       0,
     {2, {0, -0.1, -0.1},          {0, 120, 0}},       0,
