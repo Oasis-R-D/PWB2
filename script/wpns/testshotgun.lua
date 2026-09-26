@@ -124,7 +124,7 @@ function C_Shtgn:PrimaryAttack(dt)
 	self:FireBulletsPlayer(6, GetPlayerEyeTransform(self.owner).pos, GLOBAL_10DEGREES, 80)
 
 	self.nextFire = self:GetNextAttackDelay(0.75)
-	self.nextAltFire = GetTime() + 0.75
+	self.nextAltFire = self.nextFire
 end
 
 function C_Shtgn:SecondaryAttack(dt)
@@ -174,7 +174,7 @@ function C_Shtgn:SecondaryAttack(dt)
 	self:FireBulletsPlayer(12, GetPlayerEyeTransform(self.owner).pos, GLOBAL_10DEGREES, 80)
 
 	self.nextFire = self:GetNextAttackDelay(1.5)
-	self.nextAltFire = GetTime() + 1.5
+	self.nextAltFire = self.nextFire
 end
 
 function C_Shtgn:Reload()

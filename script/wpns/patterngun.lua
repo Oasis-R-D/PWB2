@@ -161,6 +161,9 @@ function C_PattGun:PrimaryAttack(dt)
 	self.nextFire = self:GetNextAttackDelay(0.09009)
 end
 
+-- OPTIMIZATION: Add this to make sure it doesn't check for alt fire
+function C_PattGun:SV_DontFireAltCond() return true end
+
 function C_PattGun:ResetShots()
 	self.shot = 1
 end

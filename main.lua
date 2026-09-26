@@ -29,7 +29,7 @@ if you need help with PWB2 or it's utilization of object oriented programming, m
    https://www.lua.org/pil/16.html
 
 -- NEW TOOL ANIMATOR FEATURES: --
-- PWB tickToolAnimator():
+- PWB2 tickToolAnimator():
   tickToolAnimator(toolAnimator, dt, defaultPoseTransform, playerId, swingamnts, swingamntsALT, noheldaction)
 
 - swingamnts + fp_actionX name/tag: (only for first person) you can now define a infinite amount of actions that will be randomly chosen.
@@ -41,80 +41,18 @@ if you need help with PWB2 or it's utilization of object oriented programming, m
 
 - fp/tp_secaction and swingamntsALT: a secondary action position, can only activated with the forceSecondaryActionPose bool
 
+-- NEW KEYFRAME ANIMATION SYSTEM (KF_ prefix): --
+  Weapons can now optionally have keyframed animations. FORMAT: Anim({shape, pos, rot, [function]}, tbl, 0, tbl, 0, tbl [end])
+  Keyframes are defined with 0s as separators. Do multiple tables before a 0 to have multiple shapes moving per keyframe. 
+  Do "hand_[r/l]" instead of a shape index to offset the player's third person hands (useful for reloading). [function]() is called once the keyframe is reached.
+  The keyframe system works using an indexed table of animations, containing pointers to animation tables.
+  an example on how to use the new keyframed animations is in wpns/adsgun.lua and wpns/anims/adsgun.lua.
+
 -- COMPATIBILITY: --
 PWB2 has a few ways of communicating with other mods, this section contains all events and exposed information.
 
-Weapon firing event arguments: ("pwb_shot", fire pos, hit location, hit shape, hit player, dmg_world, dmg_plyr)
+Bullet firing event arguments: ("pwb_shot", fire pos, hit location, hit shape, hit player, dmg_world, dmg_plyr)
 Player settings can be found at "savegame.mod.pwb.[HERE]" in the registry.
-
-==============================================================================================
-==============================================================================================
--- WEAPON DEFINITION EXAMPLE
-==============================================================================================
-==============================================================================================
-
-C_Example = {} -- goes in GLOBAL_WEAPONS
-
---=========================================================================
--- Define the weapon and it's variables
---=========================================================================
-
--- Static values for this specific weapon
--- These don't need redefined in a weapon if a var is just the default value found in baseWeap
-C_Example.model		= "mdl.xml"  -- XML model file, parses from "MOD/models/xml/"
-C_Example.casingOrg  = Vec(0,0,0) -- Where casings are ejected
-
-C_Example.toolID   = "demoWeap"	  -- used by the engine. Lowercase and no spaces
-C_Example.toolName = "PWB2 Weapon" -- Shown in killfeed
-C_Example.toolSlot = 3
-C_Example.toolPos  = 4				  -- placement in the hud column
-
-C_Example.ammoLoadedMax 	= 45						     -- Max clip 	 	-- -1 for no clip (pulls from reserve)
-C_Example.ammoAltLoadedMax = -1 						     -- Max alt clip -- -1 for no clip (pulls from reserve) 0 for no alt fire
-C_Example.ammoPickupSize	= C_Example.ammoLoadedMax -- Mefaults to full mag
-C_Example.dmg_world		   = 0.4                     -- Size of hole in meters
-C_Example.dmg_plyr			= 0.05						  -- 0.0-1.0
-
-C_Example.flags = addFlags(0, FWPN_NONE) -- Weapon flags
-C_Example.snds  = 0 -- Prechached SFX list, set on INIT
-
-C_Example.recoilPosDecay  = 0.25 -- multiplier for recoil pos decay. Lower is slower, higher is faster
-C_Example.recoilAngSpring = 65	-- bigger number increases the speed at which the angle corrects
-C_Example.recoilAngDamp	  = 9	   -- bigger number makes the response more damped, smaller is less damped
-									      -- currently the system will overshoot, with larger damping values it won't
-
--- override initVars to add new variables
-function C_Example:initVars(owner)
-   baseWeap.initVars(self, owner)
-
-	if client then
-		self.clientvar = 0
-
-      -- base initVars must be ran before to use self.isLocal
-      -- otherwise do IsPlayerLocal(owner)
-      if self.isLocal then 
-         self.localVar = "truely false"
-      end
-   else
-      self.servervar = 69
-	end
-
-   self.sharedvar = 1 -- not synced between SV+CL, just exists on both
-end
-
---=========================================================================
--- Define the weapon's SFX / VFX
---=========================================================================
-
-function C_Example::Sounds()
-	return {
---  	   SOUND	     load to	  [index]      [loop]  [dist]
-		{"SOUND.ogg", "sv|cl", "name/num/nil", false,	10}
-	}
-end
-
--- overrided functions from the Weapon SFX / VFX section go here
-   (muzzle flash, empty sound ect.)
 
 ==============================================================================================
 ==============================================================================================
@@ -122,10 +60,7 @@ end
 ==============================================================================================
    -  alt fire can use another tools ammo (to add ammo pickups)
 
-   -  making the gun fire in the muzzle dir could be intersting (would need to make the model
-      muzzle dynamically face the target spot though)
-
-   -  Source viewpunch is 'laggy'
+   -  Source viewpunch and FOV lerping is 'laggy' sometimes (investigate)
 ============================================================================================]]
 
 #version 2
@@ -171,6 +106,7 @@ GLOBAL_HEADSHOTMULT = 2.0
 
 -- MAIN
 #include "script/classes/baseWeap.lua"
+#include "script/classes/kfAnimations.lua"
 
 -- WEAPONS
 #include "script/wpns/testgun.lua"
@@ -180,6 +116,9 @@ GLOBAL_HEADSHOTMULT = 2.0
 
 #include "script/wpns/meleetool.lua"
 
+-- ANIMATIONS
+#include "script/wpns/anims/adsgun.lua"
+
 -- UI
 #include "script/lib/menu.lua"
 
@@ -187,7 +126,7 @@ GLOBAL_HEADSHOTMULT = 2.0
 -- MAIN GLOBALS
 ----------------------------------------------------------------------------------------------
 
--- pointers to each weapon's class
+-- pointers to each weapon class
 local GLOBAL_WEAPONS = loadWeaponClasses()
 
 -- only calculate this once
@@ -224,19 +163,31 @@ end
 
 -- Doesn't need used
 function server.tick(dt)
-   for p in PlayersRemoved() do
-      RemovePlayer(p)
-   end
+   for p, wpns in pairs(PLAYER_WEAPONS) do
+      local tool = GetPlayerTool(p)
 
-   for _, wpns in pairs(PLAYER_WEAPONS) do
       for i=1, GLOBAL_WEAPONS_AMNT do
-         wpns[i]:Tick(dt)
+         local wpnPlyr = wpns[i]
+
+         if tool == wpnPlyr.toolID then
+            wpnPlyr:tickPlayer_sv(dt)
+         elseif wpnPlyr.holstered == false then
+            wpnPlyr:BaseHolster()
+         end
+
+         wpnPlyr:Tick(dt)
       end
    end
 end
 
 -- Runs firing code
 function server.update(dt)
+   for p in PlayersRemoved() do
+      RemovePlayer(p)
+   end
+
+   CheckDeathReset()
+
    AIM_RecoilTick(dt)
 
    for p in PlayersAdded() do
@@ -250,28 +201,16 @@ function server.update(dt)
       end
 	end
 
-   CheckDeathReset()
-
-   for p, wpns in pairs(PLAYER_WEAPONS) do
-      local tool = GetPlayerTool(p)
-
+   for _, wpns in pairs(PLAYER_WEAPONS) do
       for i=1, GLOBAL_WEAPONS_AMNT do
-         local wpnPlyr = wpns[i]
-
-         if tool == wpnPlyr.toolID then
-            wpnPlyr:tickPlayer_sv(dt)
-         elseif wpnPlyr.holstered == false then
-            wpnPlyr:BaseHolster()
-         end
-
-         wpnPlyr:Update(dt)
+         wpns[i]:Update(dt)
       end
    end
 end
 
 -- Sets up weapon classes, precaches SFX and haptics
 function client.init()
-   settingsInit()
+   client.settingsInit()
 
    for weapon=1, GLOBAL_WEAPONS_AMNT do
       baseWeap.init_cl(GLOBAL_WEAPONS[weapon], weapon)
@@ -280,11 +219,16 @@ end
 
 -- Runs majority of weapon code
 function client.tick(dt)
+   for p in PlayersRemoved() do
+      RemovePlayer(p)
+   end
+
+   CheckDeathReset()
+
    for p, wpns in pairs(PLAYER_WEAPONS) do
       local tool = GetPlayerTool(p)
       for i=1, GLOBAL_WEAPONS_AMNT do
          local wpnPlyr = wpns[i]
-
          if tool == wpnPlyr.toolID then
             wpnPlyr:tickPlayer_cl(dt)
          elseif wpnPlyr.holstered == false then
@@ -295,7 +239,11 @@ function client.tick(dt)
       end
    end
 
+   client.FOV_Apply(dt)
+
    client.PUNCH_Apply(dt)
+
+   client.VFX_DynLightDraw(dt)
 
    client.settingsTick()
 end
@@ -316,22 +264,22 @@ function client.update(dt)
       end
 	end
 
-   for p in PlayersRemoved() do
-      RemovePlayer(p)
-   end
-
-   CheckDeathReset()
-
    for _, wpns in pairs(PLAYER_WEAPONS) do
       for i=1, GLOBAL_WEAPONS_AMNT do
          wpns[i]:Update(dt)
       end
    end
 
-   client.FOV_Apply(dt)
-   client.PUNCHBASIC_Apply(dt)
+   local tool = GetPlayerTool()
+   local wpns = PLAYER_WEAPONS[GetLocalPlayer()]
+   for i=1, GLOBAL_WEAPONS_AMNT do
+      if tool == wpns[i].toolID then
+         wpns[i]:KF_Advance(dt)
+         break
+      end
+   end
 
-   client.VFX_DynLightDraw(dt)
+   client.PUNCHBASIC_Apply(dt)
 
    client.TENT_Update(dt, 10 --[[Gravity]])
 end

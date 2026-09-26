@@ -28,7 +28,7 @@ local function InitBool(key, default, onSV)
 	end
 end
 
-function settingsInit()
+function client.settingsInit()
     InitBool("shelleject",  true,  false)
     InitBool("dynlights",   true,  false)
 	InitBool("penetration", true,  true)
@@ -53,7 +53,7 @@ function client.settingsDraw()
     if MenuAlpha > 0.0 then
 		-- we do now want to draw a cursor
 		if LastInputDevice() == UI_DEVICE_GAMEPAD then
-			UiSetCursorState(UI_CURSOR_HIDE_AND_LOCK)	
+			UiSetCursorState(UI_CURSOR_HIDE_AND_LOCK)
 		end
 		if MenuActive then
 			UiMakeInteractive()

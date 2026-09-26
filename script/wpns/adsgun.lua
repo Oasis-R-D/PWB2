@@ -124,8 +124,6 @@ function C_ADSgun:PrimaryAttack(dt)
 	local inAds = (server and self.ads) or (client and client.PWB_ANIMATOR[self.owner].forceSecondaryActionPose)
 	self:FireBulletsPlayer(1, GetPlayerEyeTransform(self.owner).pos, inAds and GLOBAL_1DEGREE or GLOBAL_3DEGREES, 100)
 
-	AIM_RecoilAdd(self.owner, Vec(1.33, GetRandomFloat(-2, 2), 0))
-
 	self.nextFire = self:GetNextAttackDelay(0.133)
 end
 
@@ -133,6 +131,8 @@ function C_ADSgun:Reload()
 	if not self:DefaultReload(1.5) then return end
 
 	if self.isLocal then
+		self:KF_SetAnim(C_ADSgun.ANIM_RELOAD)
+
 		self:PlayFollowingSound(self.snds["reloadLoop"], 1.258)
 
 		if client.PWB_ANIMATOR[self.owner].forceSecondaryActionPose then
@@ -150,17 +150,27 @@ function C_ADSgun:SecondaryAttack(dt, ads)
 	if client then
 		ads = not client.PWB_ANIMATOR[self.owner].forceSecondaryActionPose
 		client.PWB_ANIMATOR[self.owner].forceSecondaryActionPose = ads
-		
+
 		if self.isLocal then
 			self:ServerWpnCall("SecondaryAttack", dt, ads)
-			if ads then client.FOV_set(0.9) else client.FOV_set(1) end
+			if ads then
+				client.FOV_set(0.9)
+
+				self:MDL_PunchAngReset()
+				self:MDL_PunchAng(Vec(-1, 0, 0.5))
+			else
+				client.FOV_set(1)
+
+				self:MDL_PunchAngReset()
+				self:MDL_PunchAng(Vec(1, 0, -0.5))
+			end
 		end
 	else
 		self.ads = ads
 	end
 
 	self.nextFire = self:GetNextAttackDelay(0.33)
-	self.nextAltFire = GetTime() + 0.33
+	self.nextAltFire = self.nextFire
 end
 
 function C_ADSgun:WeaponIdle()

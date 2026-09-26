@@ -21,7 +21,8 @@ C_Gun.ammoPickupSize   = C_Gun.ammoLoadedMax -- Defaults to full mag
 C_Gun.dmg_world		   = 0.4				 -- Size of hole in meters
 C_Gun.dmg_plyr		   = 0.05				 -- 0.0-1.0
 
-C_Gun.flags = addFlags(0, FWPN_NONE) -- Weapon flags
+C_Gun.flags = addFlags(0, FWPN_SV_CALLONCE_SEC,
+						  FWPN_CLICK_SEC) -- Weapon flags
 C_Gun.snds  = 0 -- Prechached SFX list, set on INIT
 
 -- override initVars to add new variables
@@ -96,10 +97,6 @@ function C_Gun:PrimaryAttack(dt)
 	self.nextAltFire = GetTime() + 0.075
 end
 
-function C_Gun:SV_DontFireAltCond(dt)
-	return self.ammoAltTotal <= 0
-end
-
 function C_Gun:SecondaryAttack(dt)
 	local mt = GetToolLocationWorldTransform("muzzle", self.owner)
 	if not mt then return end
@@ -115,6 +112,9 @@ function C_Gun:SecondaryAttack(dt)
 		self:MDL_PunchPos(Vec(0, 0, GetRandomFloat(0.133, 0.166)))
 
 		if self.isLocal then
+			-- Manually call this, as having it be automatic causes the final shot to reliably fail
+			self:ServerWpnCall("SecondaryAttack", dt)
+
 			client.VFX_DynLight(self.owner, 30, 0.25, Vec(0.7, 0.5, 0.3), Vec(), "muzzle")
 
 			client.PUNCH_Axis(1, 5)
@@ -135,8 +135,7 @@ function C_Gun:SecondaryAttack(dt)
 
 	self:FireProjectilePlayer(1, mt.pos, GLOBAL_1DEGREE)
 
-	-- Use get time because GetNextAttackDelay breaks here
-	self.nextFire = GetTime() + 0.5
+	self.nextFire = self:GetNextAttackDelay(0.5)
 	self.nextAltFire = self.nextFire
 end
 
@@ -156,7 +155,7 @@ end
 
 C_Gun.projectiles = {}
 
-function ProjectileVars(mdl, pos, dir)
+local function ProjectileVars(mdl, pos, dir)
 	return {
 		totalDist = 0,
 		model 	  = mdl,

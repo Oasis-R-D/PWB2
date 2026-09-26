@@ -41,6 +41,8 @@ baseWeap.recoilAngSpring = 65  -- bigger number increases the speed at which the
 baseWeap.recoilAngDamp	 = 9   -- bigger number makes the response more damped, smaller is less damped
 							   -- currently the system will overshoot, with larger damping values it won't
 
+baseWeap.anims = {} -- Table of keyframed weapon animations. Override this inside of a anim file in wpns/anims (see testanim.lua)
+
 local WEAPON_NOCLIP = -1
 
 -----------------------------------------------------------
@@ -80,7 +82,7 @@ function baseWeap:initVars(owner)
 		-- play empty sounds. Reset it in Idle()
 		self.playEmptySound		= true
 
-		self.recoilPos 			= Vec(0,0,0)
+		self.recoilPos 			= Vec()
 
 		-- Better than calling IsPlayerLocal()
 		-- every time needed
@@ -89,11 +91,15 @@ function baseWeap:initVars(owner)
 		if IsPlayerLocal(owner) then
 			self.isLocal 		= true
 
-			self.recoilAng 		= Vec(0,0,0)
-			self.recoilAngVel 	= Vec(0,0,0)
+			self.recoilAng 		= Vec()
+			self.recoilAngVel 	= Vec()
 
 			self.idleCycleTime  = 0
 			self.idleCycleScale = 1
+
+			-- Which animation is playing and which frame of animation are we on?
+			self.animIndex		= 0
+			self.animFrame		= 0
 		end
 	end
 
@@ -295,7 +301,7 @@ function baseWeap:tickPlayer_cl(dt)
 			self:BaseHolster()
 			fireKeyDown, altfireKeyDown = false, false
 		end
-	elseif GetPlayerGrabBody(self.owner) == 0 and GetPlayerVehicle(self.owner) == 0 then
+	elseif GetPlayerGrabBody(self.owner) == 0 and GetPlayerVehicle(self.owner) == 0 and GetToolBody(self.owner) then
 		-- deploying weapon
 		self:BaseDeploy(curTime)
 	end
@@ -322,7 +328,7 @@ function baseWeap:tickPlayer_cl(dt)
 	end
 
 	-- TO-DO: this probably breaks if FWPN_SV_CALLONCE_PRIM is true and you press both at once
-	local empty_sec = false or self:SV_DontFireAltCond() or (self.ammoAltLoadedMax ~= WEAPON_NOCLIP and self.ammoAltTotal == 0) or (self.ammoAltLoadedMax == WEAPON_NOCLIP and empty_prim)
+	local empty_sec = (self.ammoAltLoadedMax ~= WEAPON_NOCLIP and self.ammoAltTotal == 0) or (self.ammoAltLoadedMax == WEAPON_NOCLIP and empty_prim) or self:SV_DontFireAltCond()
 	if self.isLocal and self.inSecondary == true then
 		-- enforce order
 		self.inPrimary = false
@@ -458,7 +464,7 @@ function baseWeap:BaseDeploy(curTime)
 
 	if client then
 		-- Reset old recoil and do some movement
-		self.recoilPos = Vec(0,0,0)
+		self.recoilPos = Vec()
 
 		--  hold straight
 		client.PWB_ANIMATOR[self.owner].timeSinceFire = 0.0
@@ -468,6 +474,8 @@ function baseWeap:BaseDeploy(curTime)
 			self:MDL_PunchAng(Vec(3, 0.75, 0.66))
 
 			self:MDL_PunchPos(Vec(0.05, 0.1, -0.05))
+
+			self:KF_Deploy()
 		end
 	end
 
@@ -571,8 +579,8 @@ function baseWeap:MDL_Animate(dt)
 		self:MDL_ApplyPos(dt)
 
 		if VecLength(self.recoilAng) <= 0.000001 and VecLength(self.recoilAngVel) <= 0.000001 then
-			self.recoilAng 	  = Vec(0,0,0)
-			self.recoilAngVel = Vec(0,0,0)
+			self.recoilAng 	  = Vec()
+			self.recoilAngVel = Vec()
 		else
 			self:MDL_DecayPunchAng(dt)
 		end
@@ -585,6 +593,8 @@ function baseWeap:MDL_Animate(dt)
 	self:MDL_DecayPunchPos(dt)
 
 	self:MDL_CustomAnimate(dt)
+
+	self:KF_Animate(dt)
 
 	self:MDL_CallAnimator(dt)
 end
@@ -603,7 +613,7 @@ end
 function baseWeap:MDL_DecayPunchPos(dt)
 	local len = VecLength(self.recoilPos)
 	if len == 0 then
-		self.recoilPos = Vec(0,0,0)
+		self.recoilPos = Vec()
 		return 
 	end
 	len = len - ((2 + len * self.recoilPosDecay) * dt)
@@ -641,8 +651,8 @@ function baseWeap:MDL_PunchAngReset(tolerance)
 		end
 	end
 
-	self.recoilAng 	  = Vec(0,0,0)
-	self.recoilAngVel = Vec(0,0,0)
+	self.recoilAng 	  = Vec()
+	self.recoilAngVel = Vec()
 end
 
 -- MODEL_PUNCHANGRESET: Resets positional recoil of the weapon model
@@ -659,7 +669,7 @@ function baseWeap:MDL_PunchPosReset(tolerance)
 		end
 	end
 
-	self.recoilPos = Vec(0,0,0)
+	self.recoilPos = Vec()
 end
 
 -- MODEL_APPLYPOS: Applies positional recoil, idle cycle and the Y offset
@@ -724,7 +734,7 @@ end
 --=========================================================================
 
 local function matPenetratable(mat)
-	return mat == "foliage" or mat == "glass" or mat == "plastic" or mat == "plaster"
+	return mat == "glass" or mat == "plastic" or mat == "plaster"
 end
 
 function baseWeap:RecursiveBulletPenetration(shootPos, hitPos, dir, alottedDist, maxDist, iterations)
