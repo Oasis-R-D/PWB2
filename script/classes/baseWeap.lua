@@ -328,7 +328,7 @@ function baseWeap:tickPlayer_cl(dt)
 	end
 
 	-- TO-DO: this probably breaks if FWPN_SV_CALLONCE_PRIM is true and you press both at once
-	local empty_sec = (self.ammoAltLoadedMax ~= WEAPON_NOCLIP and self.ammoAltTotal == 0) or (self.ammoAltLoadedMax == WEAPON_NOCLIP and empty_prim) or self:SV_DontFireAltCond()
+	local empty_sec = not self:hasFunc("SecondaryAttack") or (self.ammoAltLoadedMax ~= WEAPON_NOCLIP and self.ammoAltTotal == 0) or (self.ammoAltLoadedMax == WEAPON_NOCLIP and empty_prim) or self:SV_DontFireAltCond()
 	if self.isLocal and self.inSecondary == true then
 		-- enforce order
 		self.inPrimary = false
@@ -573,7 +573,7 @@ function baseWeap:MDL_CallAnimator(dt)
 	tickToolAnimator(client.PWB_ANIMATOR[self.owner], dt, nil, self.owner)
 end
 
--- applies model poses, recoil, idle and angular offsets
+-- Applies model poses, recoil, idle and angular offsets
 function baseWeap:MDL_Animate(dt)
 	if self.isLocal then
 		self:MDL_ApplyPos(dt)
@@ -632,9 +632,9 @@ function baseWeap:MDL_DecayPunchAng(dt)
 	self.recoilAngVel = VecSub(self.recoilAngVel, VecScale(self.recoilAng, springForceMagnitude))
 
 	-- don't wrap around
-	self.recoilAng[1] = Clamp(self.recoilAng[1], -89,  89 )
-	self.recoilAng[2] = Clamp(self.recoilAng[2], -179, 179)
-	self.recoilAng[3] = Clamp(self.recoilAng[3], -89,  89 )
+	self.recoilAng[1] = clamp(self.recoilAng[1], -89,  89 )
+	self.recoilAng[2] = clamp(self.recoilAng[2], -179, 179)
+	self.recoilAng[3] = clamp(self.recoilAng[3], -89,  89 )
 end
 
 -- MODEL_PUNCHANGRESET: Resets angular recoil of the weapon model
@@ -1061,6 +1061,10 @@ function baseWeap:PrecacheSFX()
 	end
 
 	self.snds = precachedSounds
+end
+
+function baseWeap:hasFunc(function_name)
+    return self[function_name] ~= baseWeap[function_name]
 end
 
 --=========================================================================

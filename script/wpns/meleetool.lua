@@ -119,9 +119,6 @@ function C_Melee:PrimaryAttack(dt)
 	self.nextFire = self:GetNextAttackDelay(0.5)
 end
 
--- OPTIMIZATION: Add this to make sure it doesn't check for alt fire
-function C_Melee:SV_DontFireAltCond() return true end
-
 function C_Melee:CheckHit()
 	self.hitDelay = GetTime() + 0.01
 

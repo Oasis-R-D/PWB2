@@ -121,9 +121,9 @@ function client.PUNCH_Decay(dt)
 	vecPunchAngleVel = VecSub(vecPunchAngleVel, VecScale(vecPunchAngle, springForceMagnitude))
 
 	-- don't wrap around
-	vecPunchAngle[1] = Clamp(vecPunchAngle[1], -89,  89 )
-	vecPunchAngle[2] = Clamp(vecPunchAngle[2], -179, 179)
-	vecPunchAngle[3] = Clamp(vecPunchAngle[3], -89,  89 )
+	vecPunchAngle[1] = clamp(vecPunchAngle[1], -89,  89 )
+	vecPunchAngle[2] = clamp(vecPunchAngle[2], -179, 179)
+	vecPunchAngle[3] = clamp(vecPunchAngle[3], -89,  89 )
 end
 
 function client.PUNCH_Axis(axis, punch, mult)
@@ -189,7 +189,7 @@ function client.PUNCH_MachineGunKick(maxVerticleKickAngle, fireDurationTime, sli
 
 	--Clip each component
 	for i=1, 3 do
-		final[i] = Clamp(final[i], -clip[i], clip[i])
+		final[i] = clamp(final[i], -clip[i], clip[i])
 
 		--Return the result
 		vecScratch[i] = final[i] - vecPunchAngle[i]
@@ -238,7 +238,7 @@ function client.BloodParticles(pos, dir, damage, playerhit)
 	end
 
 	local size = impactsize/5
-	size = Clamp(size, 0.02, 0.035)
+	size = clamp(size, 0.02, 0.035)
 
 	local playervel = GetPlayerVelocity(playerhit)
 

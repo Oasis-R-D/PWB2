@@ -161,9 +161,6 @@ function C_PattGun:PrimaryAttack(dt)
 	self.nextFire = self:GetNextAttackDelay(0.09009)
 end
 
--- OPTIMIZATION: Add this to make sure it doesn't check for alt fire
-function C_PattGun:SV_DontFireAltCond() return true end
-
 function C_PattGun:ResetShots()
 	self.shot = 1
 end
@@ -184,7 +181,7 @@ end
 function C_PattGun:GetViewpunch()
 	local PUNCH_Recoil = SprayPattern[self.shot]
 	PUNCH_Recoil[2] = PUNCH_Recoil[2] * 0.66
-	PUNCH_Recoil[1] = Clamp(PUNCH_Recoil[1], 4, 10) / 1.7
+	PUNCH_Recoil[1] = clamp(PUNCH_Recoil[1], 4, 10) / 1.7
 	return PUNCH_Recoil
 end
 

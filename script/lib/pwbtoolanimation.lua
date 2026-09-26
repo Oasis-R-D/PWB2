@@ -7,7 +7,7 @@ local function getSignedAngle(vec0, vec1, axis)
     local v1 = VecNormalize(VecSub(vec1, VecScale(axis, dot1)))
 
     local dotv = VecDot(v0, v1)
-    local angle = math.acos(Clamp(dotv, -1.0, 1.0))
+    local angle = math.acos(clamp(dotv, -1.0, 1.0))
 
     local c = VecCross(v0,v1)
     if VecDot(c, axis) < 0.0 then
@@ -360,13 +360,13 @@ function getAimRotation(target, pivot)
     local YAW_MAX_DOWN = math.rad(5)
     local PITCH_MAX = math.rad(80.0)
 
-    local pitch = Clamp(getSignedAngle(Vec(0.0,0.0,-1.0), d, Vec(1.0,0.0,0.0)), -PITCH_MAX, PITCH_MAX)
+    local pitch = clamp(getSignedAngle(Vec(0.0,0.0,-1.0), d, Vec(1.0,0.0,0.0)), -PITCH_MAX, PITCH_MAX)
     local yaw = getSignedAngle(Vec(0.0,0.0,-1.0), d, Vec(0.0,1.0,0.0))
 
     if pitch < 0.0 then
-        yaw = Clamp(yaw, -YAW_MAX_DOWN, YAW_MAX_DOWN)
+        yaw = clamp(yaw, -YAW_MAX_DOWN, YAW_MAX_DOWN)
     else
-        yaw = Clamp(yaw, -YAW_MAX_UP, YAW_MAX_UP)
+        yaw = clamp(yaw, -YAW_MAX_UP, YAW_MAX_UP)
     end
 
     local rot = QuatRotateQuat(QuatAxisAngle(Vec(0.0,1.0,0.0), math.deg(yaw)), QuatAxisAngle(Vec(1.0,0.0,0.0), math.deg(pitch)))
@@ -445,7 +445,7 @@ end
 
 function getCrouching(playerId)
     local height = VecDot(VecSub(GetPlayerEyeTransform(playerId).pos, GetPlayerTransform(playerId).pos), GetPlayerUp(playerId))
-    return 1.0 - (Clamp(height, 0.85, 1.7) - 0.85)/(1.7 - 0.85)
+    return 1.0 - (clamp(height, 0.85, 1.7) - 0.85)/(1.7 - 0.85)
 end
 
 function getJumping(playerId)
@@ -465,7 +465,7 @@ function getSwimming(playerId)
     local inWater, depth = IsPointInWater(VecAdd(pt.pos, Vec(0,0.2,0)))
 
     if inWater and depth > 0.0 then
-        return Clamp(1.0/depth, 0.0, 1.0)
+        return clamp(1.0/depth, 0.0, 1.0)
     end
 
     return 0.0
