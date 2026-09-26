@@ -674,11 +674,26 @@ end
 
 -- MODEL_APPLYPOS: Applies positional recoil, idle cycle and the Y offset
 function baseWeap:MDL_ApplyPos(dt)
-	local idlePos = Vec(
-		 math.sin(self.idleCycleTime*0.5) + math.cos(self.idleCycleTime*0.25),
-		-math.sin(self.idleCycleTime*0.5) + math.cos(self.idleCycleTime*0.25),
-		0
-	)
+	if self.isLocal and not GetBool("game.thirdperson") then
+		-- add a nice shifting effect
+		local shiftedPos = TransformToLocalVec(
+			GetBodyTransform(GetToolBody(self.owner)),
+			Vec(0, -0.03 * self.idleCycleScale, 0)
+		)
+
+		local idlePos = Vec(
+			math.sin(self.idleCycleTime*0.5) + math.cos(self.idleCycleTime*0.25),
+			-math.sin(self.idleCycleTime*0.5) + math.cos(self.idleCycleTime*0.25),
+			0
+		)
+
+		idlePos = VecScale(VecSub(VecScale(idlePos, 0.01), Vec(0.01, 0.01, 0)), self.idleCycleScale)
+
+		client.PWB_ANIMATOR[self.owner].offsetTransform.pos = VecSub(VecAdd(self.recoilPos, idlePos), shiftedPos)
+	else
+		-- PWB_ANIMATOR already has it's own shifting and idle effect
+		client.PWB_ANIMATOR[self.owner].offsetTransform.pos = self.recoilPos
+	end
 
 	self.idleCycleTime = self.idleCycleTime + dt
 
@@ -687,26 +702,6 @@ function baseWeap:MDL_ApplyPos(dt)
 	else
 		self.idleCycleScale = Lerp(self.idleCycleScale, 1.0, dt)
 	end
-
-	idlePos = VecScale(VecSub(VecScale(idlePos, 0.01), Vec(0.01, 0.01, 0)), self.idleCycleScale)
-	
-	local b = GetToolBody()
-	local shiftedPos = Vec()
-	if self.isLocal then
-		-- add a nice shifting effect
-		shiftedPos = TransformToLocalVec(
-			GetBodyTransform(b),
-			Vec(0, -0.03 * self.idleCycleScale, 0)
-		)
-	else
-		-- add a nice shifting effect
-		shiftedPos = TransformToLocalVec(
-			GetBodyTransform(b),
-			Vec(0, -0.01 * self.idleCycleScale, 0)
-		)
-	end
-
-	client.PWB_ANIMATOR[self.owner].offsetTransform.pos = VecSub(VecAdd(self.recoilPos, idlePos), shiftedPos)
 end
 
 --=========================================================================

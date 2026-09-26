@@ -191,7 +191,10 @@ end
 
 
 function C_Gun:Update(dt)
-	if #self.projectiles == 0 then return end
+	-- Only simulate on local device
+	if client and not self.isLocal then return
+	elseif server and not IsPlayerHost(self.owner) then return
+	elseif #self.projectiles == 0 then return end
 
 	for index, data in pairs(self.projectiles) do
 		if data.totalDist > 80 then
