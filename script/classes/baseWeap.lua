@@ -328,7 +328,7 @@ function baseWeap:tickPlayer_cl(dt)
 	end
 
 	-- TO-DO: this probably breaks if FWPN_SV_CALLONCE_PRIM is true and you press both at once
-	local empty_sec = false or self:SV_DontFireAltCond() or (self.ammoAltLoadedMax ~= WEAPON_NOCLIP and self.ammoAltTotal == 0) or (self.ammoAltLoadedMax == WEAPON_NOCLIP and empty_prim)
+	local empty_sec = (self.ammoAltLoadedMax ~= WEAPON_NOCLIP and self.ammoAltTotal == 0) or (self.ammoAltLoadedMax == WEAPON_NOCLIP and empty_prim) or self:SV_DontFireAltCond()
 	if self.isLocal and self.inSecondary == true then
 		-- enforce order
 		self.inPrimary = false

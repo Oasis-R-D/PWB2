@@ -153,14 +153,24 @@ function C_ADSgun:SecondaryAttack(dt, ads)
 
 		if self.isLocal then
 			self:ServerWpnCall("SecondaryAttack", dt, ads)
-			if ads then client.FOV_set(0.9) else client.FOV_set(1) end
+			if ads then
+				client.FOV_set(0.9)
+
+				self:MDL_PunchAngReset()
+				self:MDL_PunchAng(Vec(-1, 0, 0.5))
+			else
+				client.FOV_set(1)
+
+				self:MDL_PunchAngReset()
+				self:MDL_PunchAng(Vec(1, 0, -0.5))
+			end
 		end
 	else
 		self.ads = ads
 	end
 
 	self.nextFire = self:GetNextAttackDelay(0.33)
-	self.nextAltFire = GetTime() + 0.33
+	self.nextAltFire = self.nextFire
 end
 
 function C_ADSgun:WeaponIdle()

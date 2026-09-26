@@ -24,8 +24,6 @@ function baseWeap:KF_ApplyAnimation(shapeIndex, offsetTransform)
     shapeTransform.rot = QuatRotateQuat(offsetTransform.rot, shapeTransform.rot)
 
     SetShapeLocalTransform(GetBodyShapes(GetToolBody(self.owner))[shapeIndex], shapeTransform)
-
-    if PWB_SETTING.debug then DebugPrint(VecStr(shapeTransform.pos) .. " NEW: " .. VecStr(self.animNextFrameInfo[shapeIndex].pos)) end
 end
 
 function baseWeap:KF_Animate(dt)

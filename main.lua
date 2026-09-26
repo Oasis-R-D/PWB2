@@ -163,19 +163,31 @@ end
 
 -- Doesn't need used
 function server.tick(dt)
-   for p in PlayersRemoved() do
-      RemovePlayer(p)
-   end
+   for p, wpns in pairs(PLAYER_WEAPONS) do
+      local tool = GetPlayerTool(p)
 
-   for _, wpns in pairs(PLAYER_WEAPONS) do
       for i=1, GLOBAL_WEAPONS_AMNT do
-         wpns[i]:Tick(dt)
+         local wpnPlyr = wpns[i]
+
+         if tool == wpnPlyr.toolID then
+            wpnPlyr:tickPlayer_sv(dt)
+         elseif wpnPlyr.holstered == false then
+            wpnPlyr:BaseHolster()
+         end
+
+         wpnPlyr:Tick(dt)
       end
    end
 end
 
 -- Runs firing code
 function server.update(dt)
+   for p in PlayersRemoved() do
+      RemovePlayer(p)
+   end
+
+   CheckDeathReset()
+
    AIM_RecoilTick(dt)
 
    for p in PlayersAdded() do
@@ -189,21 +201,9 @@ function server.update(dt)
       end
 	end
 
-   CheckDeathReset()
-
-   for p, wpns in pairs(PLAYER_WEAPONS) do
-      local tool = GetPlayerTool(p)
-
+   for _, wpns in pairs(PLAYER_WEAPONS) do
       for i=1, GLOBAL_WEAPONS_AMNT do
-         local wpnPlyr = wpns[i]
-
-         if tool == wpnPlyr.toolID then
-            wpnPlyr:tickPlayer_sv(dt)
-         elseif wpnPlyr.holstered == false then
-            wpnPlyr:BaseHolster()
-         end
-
-         wpnPlyr:Update(dt)
+         wpns[i]:Update(dt)
       end
    end
 end
@@ -219,6 +219,12 @@ end
 
 -- Runs majority of weapon code
 function client.tick(dt)
+   for p in PlayersRemoved() do
+      RemovePlayer(p)
+   end
+
+   CheckDeathReset()
+
    for p, wpns in pairs(PLAYER_WEAPONS) do
       local tool = GetPlayerTool(p)
       for i=1, GLOBAL_WEAPONS_AMNT do
@@ -233,7 +239,11 @@ function client.tick(dt)
       end
    end
 
+   client.FOV_Apply(dt)
+
    client.PUNCH_Apply(dt)
+
+   client.VFX_DynLightDraw(dt)
 
    client.settingsTick()
 end
@@ -254,12 +264,6 @@ function client.update(dt)
       end
 	end
 
-   for p in PlayersRemoved() do
-      RemovePlayer(p)
-   end
-
-   CheckDeathReset()
-
    for _, wpns in pairs(PLAYER_WEAPONS) do
       for i=1, GLOBAL_WEAPONS_AMNT do
          wpns[i]:Update(dt)
@@ -275,10 +279,7 @@ function client.update(dt)
       end
    end
 
-   client.FOV_Apply(dt)
    client.PUNCHBASIC_Apply(dt)
-
-   client.VFX_DynLightDraw(dt)
 
    client.TENT_Update(dt, 10 --[[Gravity]])
 end
