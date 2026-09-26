@@ -586,6 +586,8 @@ function baseWeap:MDL_Animate(dt)
 		end
 
 		client.PWB_ANIMATOR[self.owner].offsetTransform.rot = QuatEuler(self.recoilAng[1], self.recoilAng[2], self.recoilAng[3])
+
+		self:KF_Animate(dt)
 	else
 		client.PWB_ANIMATOR[self.owner].offsetTransform.pos = self.recoilPos
 	end
@@ -593,8 +595,6 @@ function baseWeap:MDL_Animate(dt)
 	self:MDL_DecayPunchPos(dt)
 
 	self:MDL_CustomAnimate(dt)
-
-	self:KF_Animate(dt)
 
 	self:MDL_CallAnimator(dt)
 end
@@ -689,13 +689,22 @@ function baseWeap:MDL_ApplyPos(dt)
 	end
 
 	idlePos = VecScale(VecSub(VecScale(idlePos, 0.01), Vec(0.01, 0.01, 0)), self.idleCycleScale)
-
-	-- add a nice shifting effect
+	
 	local b = GetToolBody()
-	local shiftedPos = TransformToLocalVec(
-		GetBodyTransform(b),
-		Vec(0, -0.03 * self.idleCycleScale, 0)
-	)
+	local shiftedPos = Vec()
+	if self.isLocal then
+		-- add a nice shifting effect
+		shiftedPos = TransformToLocalVec(
+			GetBodyTransform(b),
+			Vec(0, -0.03 * self.idleCycleScale, 0)
+		)
+	else
+		-- add a nice shifting effect
+		shiftedPos = TransformToLocalVec(
+			GetBodyTransform(b),
+			Vec(0, -0.01 * self.idleCycleScale, 0)
+		)
+	end
 
 	client.PWB_ANIMATOR[self.owner].offsetTransform.pos = VecSub(VecAdd(self.recoilPos, idlePos), shiftedPos)
 end
