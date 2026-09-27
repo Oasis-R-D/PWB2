@@ -12,7 +12,11 @@ function loadWeaponClasses()
 			if not v.toolPos or v.toolPos == -1 then
 				table.insert(classes, v)
 			else
-				table.insert(classes, v.toolPos, v)
+				if not classes[v.toolPos] then
+					classes[v.toolPos] = v
+				else
+					table.insert(classes, v.toolPos, v)
+				end
 			end
 		end
 	end

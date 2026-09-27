@@ -233,7 +233,7 @@ function baseWeap:Deploy()   		 		  	end -- called on weapon equipped
 function baseWeap:Holster()			  		   	end -- called on weapon unequipped
 
 function baseWeap:PrimaryAttack(dt)   		   	end -- called on firing conditions met
-function baseWeap:SecondaryAttack(dt) 		   	end -- called on secondary firing conditions met (MUST OVERRIDE SV_DontFireAltCond() for it to be called!)
+function baseWeap:SecondaryAttack(dt) 		   	end -- called on secondary firing conditions met
 
 function baseWeap:Reload()            		   	end -- called on reload start
 function baseWeap:WeaponIdle()		  		   	end -- called when no buttons pressed
