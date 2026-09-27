@@ -107,12 +107,11 @@ function C_Shtgn:PrimaryAttack(dt)
 
 		self:muzzleFlash(mt.pos, 0.8)
 
-		self.pumpTime = GetTime() + 0.5
-
 		self.specialReload = 0
 
-		if self.ammoLoaded ~= 0 then
-		else
+		self.pumpTime = GetTime() + 0.5
+
+		if self.ammoLoaded == 0 then
 			self.timeWeaponIdle = 1
 		end
 	else
@@ -157,12 +156,11 @@ function C_Shtgn:SecondaryAttack(dt)
 
 		self:muzzleFlash(mt.pos, 1.2, Vec(1.33, 1, 1))
 
-		self.pumpTime = GetTime() + 0.95
-
 		self.specialReload = 0
 
-		if self.ammoLoaded ~= 0 then
-		else
+		self.pumpTime = GetTime() + 0.95
+
+		if self.ammoLoaded == 0 then
 			self.timeWeaponIdle = 1.5
 		end
 	else
@@ -183,14 +181,14 @@ function C_Shtgn:Reload()
 
 	local curTime = GetTime()
 
-	-- don't reload until recoil is done
-	if self.nextFire > curTime then
-		return end
-
 	local mt = GetToolLocationWorldTransform("muzzle", self.owner)
 
 	-- check to see if we're ready to reload
 	if self.specialReload == 0 then
+		-- don't reload until recoil is done
+		if self.nextFire > curTime then
+			return end
+
 		if self.isLocal then 
 			self:MDL_PunchAng(Vec(0, 2, -10))
 			PlaySound(self.snds["reload"], mt.pos, 300)
@@ -201,15 +199,13 @@ function C_Shtgn:Reload()
 		-- hold gun straight
 		client.PWB_ANIMATOR[self.owner].timeSinceFire = 0.0
 
-		self.specialReload = 3
+		self.specialReload = 1
 
 		self.timeWeaponIdle = curTime + 0.6
 
 		self.nextFire = self:GetNextAttackDelay(1.0)
 		self.nextAltFire = curTime + 1.0
-
-		return
-	elseif self.specialReload == 1 or self.specialReload == 3 then
+	elseif self.specialReload == 1 then
 		-- waiting for gun to move to side
 		if self.timeWeaponIdle > curTime then
 			return end
@@ -237,38 +233,37 @@ function C_Shtgn:Reload()
 end
 
 function C_Shtgn:WeaponIdle()
-	self.playEmptySound = true
-
 	if server then return end
+
+	self.playEmptySound = true
 
 	local curTime = GetTime()
 
-	if self.timeWeaponIdle < curTime then
-		if self.ammoLoaded == 0 and self.specialReload == 0 and self.ammoLoaded ~= self.ammoTotal then
+	if self.timeWeaponIdle > curTime then
+		return
+	end
+
+	if self.ammoLoaded == 0 and self.specialReload == 0 and self.ammoLoaded ~= self.ammoTotal then
+		self:Reload()
+	elseif self.specialReload ~= 0 then
+		if self.ammoLoaded ~= self.ammoLoadedMax and self.ammoLoaded ~= self.ammoTotal then
 			self:Reload()
-		elseif self.specialReload ~= 0 then
-			if self.ammoLoaded ~= self.ammoLoadedMax and self.ammoLoaded ~= self.ammoTotal then
-				self:Reload()
-			else
-				if self.pumpTime == -1 then
-					self.pumpTime = 0
+			return
+		end
 
-					-- reload debounce has timed out
-					if self.isLocal then
-						self.slideTime = 0
+		self.specialReload = 0
+		self.timeWeaponIdle = curTime + 1.5
 
-						-- shell ejection
-						client.TENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_shtgn.xml", FSFX_SHTGN)
-					end
+		if self.pumpTime == -1 then
+			self.pumpTime = 0
 
-					local mt = GetToolLocationWorldTransform("muzzle", self.owner)
-
-					PlaySound(self.snds["pump"], mt.pos, 300)
-				end
-
-				self.specialReload = 0
-				self.timeWeaponIdle = curTime + 1.5
+			-- reload debounce has timed out
+			if self.isLocal then
+				self.slideTime = 0
 			end
+
+			local mt = GetToolLocationWorldTransform("muzzle", self.owner)
+			PlaySound(self.snds["pump"], mt.pos, 300)
 		end
 	end
 end
@@ -304,6 +299,7 @@ function C_Shtgn:MDL_CustomAnimate(dt)
 		self.slide = shapes[3]
 		self.slideTransform = GetShapeLocalTransform(self.slide)
 	end
+
 	if self.slide and self.slideTime ~= nil then
 		self.slideTime = self.slideTime + dt
 

@@ -198,6 +198,7 @@ function client.PUNCH_MachineGunKick(maxVerticleKickAngle, fireDurationTime, sli
 	--Add it to the view punch
 	-- NOTE: mult is tuned to match the old effect before the punch became simulated
 	client.PUNCH_Vec(vecScratch, 10)
+	return vecScratch
 end
 
 --============================================================================================
