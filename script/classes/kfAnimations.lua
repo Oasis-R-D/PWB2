@@ -1,6 +1,6 @@
 function Anim(...)
     local keyFrames = {...}
-    table.insert(keyFrames, false) -- terminator value
+    table.insert(keyFrames, 0) -- terminator value
     return keyFrames
 end
 
@@ -99,10 +99,15 @@ function baseWeap:KF_Advance(dt)
 	local anim = self.anims[self.animIndex]
 
     repeat
+        if anim[self.animFrame] == 0 or not anim[self.animFrame] then
+            self.animFrame = self.animFrame + 1
+            break
+        end
+
         self.animFrameInfo[anim[self.animFrame][1]] = ExtractValues(anim[self.animFrame])
 
         self:KF_NewFrame(anim[self.animFrame])
-    until type(anim[self.animFrame]) ~= "table"
+    until anim[self.animFrame] == 0
 
     if not anim[self.animFrame] then -- end of anim
         self:KF_Reset()
@@ -112,10 +117,14 @@ function baseWeap:KF_Advance(dt)
 
         local i = self.animFrame
         repeat -- steal next frame's data
+            if anim[i] == 0 or not anim[i] then
+                break
+            end
+
             self.animNextFrameInfo[anim[i][1]] = ExtractValues(anim[i])
 
             i = i + 1
-        until type(anim[i]) ~= "table"
+        until anim[i] == 0
     end
 end
 
