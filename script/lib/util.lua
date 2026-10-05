@@ -24,6 +24,20 @@ function loadWeaponClasses()
 	return classes
 end
 
+-- Finds entity classes based on their 'E_' (CLASS_) prefix
+function loadEntityClasses()
+	local prefix = "E_"
+	local classes = {}
+
+	for k, v in pairs(_G) do
+		if type(k) == "string" and type(v) == "table" and string.sub(k, 1, #prefix) == prefix then
+			table.insert(classes, v)
+		end
+	end
+
+	return classes
+end
+
 function RemovePlayer(p)
 	PLAYER_WEAPONS[p] = nil
     AIM_RecoilSet(p, nil)

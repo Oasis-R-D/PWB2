@@ -26,19 +26,6 @@ C_Shtgn.flags = addFlags(0, FWPN_SV_CALLONCE_PRIM,
 								 FWPN_CLICK_SEC) -- Weapon flags
 C_Shtgn.snds = 0 -- Prechached SFX list, set on INIT
 
--- override initVars to add new variables
-function C_Shtgn:initVars(owner)
-	baseWeap.initVars(self, owner)
-
-	if client and self.isLocal then
-		self.body = 0
-		self.slide = 0
-		self.slideTransform = Transform()
-
-		self.slideTime = nil
-	end
-end
-
 --=========================================================================
 -- Define the weapon's SFX / VFX
 --=========================================================================
@@ -259,7 +246,7 @@ function C_Shtgn:WeaponIdle()
 
 			-- reload debounce has timed out
 			if self.isLocal then
-				self.slideTime = 0
+				self:KF_SetAnim(C_Shtgn.ANIM_PUMP)
 			end
 
 			local mt = GetToolLocationWorldTransform("muzzle", self.owner)
@@ -275,7 +262,7 @@ function C_Shtgn:tickPlayer_cl(dt)
 		PlaySound(self.snds["pump"], mt.pos, 300)
 
 		if self.isLocal then
-			self.slideTime = 0
+			self:KF_SetAnim(C_Shtgn.ANIM_PUMP)
 
 			-- shell ejection
 			client.TENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_shtgn.xml", FSFX_SHTGN)
@@ -285,46 +272,4 @@ function C_Shtgn:tickPlayer_cl(dt)
 	end
 
 	baseWeap.tickPlayer_cl(self, dt)
-end
-
-function C_Shtgn:MDL_CustomAnimate(dt)
-	if not self.isLocal then return end
-
-	--Animate Slide
-	local GunBody = GetToolBody()
-	if self.body ~= GunBody then
-		self.body = GunBody
-		-- Slide is the third shape in vox file. Remember original position in attachment frame
-		local shapes = GetBodyShapes(GunBody)
-		self.slide = shapes[3]
-		self.slideTransform = GetShapeLocalTransform(self.slide)
-	end
-
-	if self.slide and self.slideTime ~= nil then
-		self.slideTime = self.slideTime + dt
-
-		local UseValue = self.slideTime
-
-		-- don't go over, add a delay between the pump forward!
-		if self.slideTime >= 0.375 then
-			self.slideTime = 0.375
-		elseif self.slideTime > 0.125 and self.slideTime < 0.25 then
-			UseValue = 0.125 -- lock back for a little
-		elseif self.slideTime >= 0.25 then
-			UseValue = self.slideTime - 0.125
-		end
-
-		-- Slide has returned
-		if self.slideTime >= 0.375 then
-			SetShapeLocalTransform(self.slide, self.slideTransform) -- force back just in case
-			self.slideTime = nil
-		else
-			local position = Vec(0, 0, 0.10 * math.sin(4 * math.pi * UseValue))
-			local TOffset = Transform(position)
-			client.PWB_ANIMATOR[self.owner].leftHand.transform.pos = position
-
-			local t = TransformToParentTransform(TOffset, self.slideTransform)
-			SetShapeLocalTransform(self.slide, t)
-		end
-	end
 end

@@ -118,6 +118,7 @@ GLOBAL_HEADSHOTMULT = 2.0
 
 -- ANIMATIONS
 #include "script/wpns/anims/adsgun.lua"
+#include "script/wpns/anims/testshotgun.lua"
 
 -- UI
 #include "script/lib/menu.lua"
