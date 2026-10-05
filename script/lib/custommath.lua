@@ -32,38 +32,16 @@ FWPN_SV_CALLONCE_SEC  = leftShift(4) -- Does 1 servercall every secondary fire i
 FWPN_NOAUTORELOAD    = leftShift(5) -- Don't automatically start reloading weapon on empty
 FWPN_NOALTACTIONPOSE = leftShift(6) -- Don't automatically do the action animation when holding grab
 
--- TEMP ENTS
---[[ UNUSED
-FTENT_NONE = 0
-FTENT_SINEWAVE = leftShift(0)
-FTENT_GRAVITY = leftShift(1)
-FTENT_ROTATE = leftShift(2)
-FTENT_SLOWGRAVITY = leftShift(3)
-FTENT_SMOKETRAIL = leftShift(4)
-FTENT_COLLIDEWORLD = leftShift(5)
-FTENT_FLICKER = leftShift(6)
-FTENT_FADEOUT = leftShift(7)
-FTENT_SPRANIMATE = leftShift(8)
-FTENT_HITSOUND = leftShift(9)
-FTENT_SPIRAL = leftShift(10)
-FTENT_SPRCYCLE = leftShift(11)
-FTENT_COLLIDEALL = leftShift(12)	 -- will collide with world and slideboxes
-FTENT_PERSIST = leftShift(13)		 -- tent is not removed when unable to draw
-FTENT_COLLIDEKILL = leftShift(14)	 -- tent is removed upon collision with anything
-FTENT_PLYRATTACHMENT = leftShift(15) -- tent is attached to a player (owner)
-FTENT_SPRANIMATELOOP = leftShift(16) -- animating sprite doesn't die when last frame is displayed
-FTENT_SPARKSHOWER = leftShift(17)
-FTENT_NOMODEL = leftShift(18)	   -- Doesn't have a model, never try to draw ( it just triggers other things )
-FTENT_CLIENTCUSTOM = leftShift(19) -- Must specify callback.  Callback function is responsible for killing tempent and updating fields ( unless other flags specify how to do things )
-FTENT_BUOYANT = leftShift(20)
-]]
 
 -- TEMP ENT IMPACT SFX
 FSFX_NONE  = 0
 FSFX_BRASS = leftShift(0)
 FSFX_SHTGN = leftShift(1)
--- more for material types but we don't exactly have func_breakable here
+-- more for material types but we don't have func_breakable here
 
+-- ENT FLAGS
+FENT_NONE = 0
+FENT_FAKEPHYSICS = leftShift(0) -- Use GoldSRC physics instead of TD. Can be changed at any time (must give model physical tag!)
 ----------------------------------------------------------------------------------------------
 -- hacky bit operators (ONLY TAKES POWER OF 2! [otherwise these'd be very expensive])
 ----------------------------------------------------------------------------------------------

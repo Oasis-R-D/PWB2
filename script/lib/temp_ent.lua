@@ -180,10 +180,9 @@ function client.TENT_Update(
 
 				-- Gravity ----------------------------------------------------
 				if pTemp.active then
-					pTemp.velocity[2] = pTemp.velocity[2] + gravity
-
-					-- From Post-Human
-					if IsPointInWater(pTemp.origin) == true then
+					if IsPointInWater(pTemp.origin) == false then
+						pTemp.velocity[2] = pTemp.velocity[2] + gravity
+					else
 						pTemp.velocity[2] = pTemp.velocity[2] - gravity
 
 						pTemp.velocity = VecScale(pTemp.velocity, 0.98)
