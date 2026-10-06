@@ -51,7 +51,7 @@ function baseWeap:KF_Animate(dt)
         if shapeIndex == "hand_l" then
             client.PWB_ANIMATOR[self.owner].leftHand.transform = offsetTransform
         elseif shapeIndex == "hand_r" then
-            client.PWB_ANIMATOR[self.owner].leftHand.transform = offsetTransform
+            client.PWB_ANIMATOR[self.owner].rightHand.transform = offsetTransform
         else
             self:KF_ApplyAnimation(shapeIndex, offsetTransform)
         end
@@ -77,7 +77,7 @@ function baseWeap:KF_NewFrame(keyFrame)
         client.PWB_ANIMATOR[self.owner].leftHand.transform = Transform(pos, rot)
         return
     elseif shapeIndex == "hand_r" then
-        client.PWB_ANIMATOR[self.owner].leftHand.transform = Transform(pos, rot)
+        client.PWB_ANIMATOR[self.owner].rightHand.transform = Transform(pos, rot)
         return
     end
 
@@ -153,6 +153,7 @@ function baseWeap:KF_Deploy() -- reset anims
     local shapes = GetBodyShapes(GetToolBody())
     for i = 1, #shapes do
         if self.shapeTransforms[i] then
+            -- Doesn't actually reset?
             SetShapeLocalTransform(shapes[i], GetShapeLocalTransform(shapes[i]))
         end
     end
@@ -164,4 +165,8 @@ function baseWeap:KF_Reset() -- reset anims
     self.animNextFrameInfo = {}
     self.animFrame = 1
     self.animFrameTime = 0
+
+    -- Reset hand transform
+    client.PWB_ANIMATOR[self.owner].leftHand.transform = Transform()
+    client.PWB_ANIMATOR[self.owner].rightHand.transform = Transform()
 end

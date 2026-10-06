@@ -195,7 +195,7 @@ function C_Shtgn:Reload()
 
 		self.specialReload = 2
 
-		PlayFireSound(self.snds["load"], mt.pos, 300)
+		PlayFireSound(self.snds["load"], mt.pos)
 
 		self:MDL_PunchPos(Vec(0, 0.1, 0.1))
 		if self.isLocal then
@@ -244,7 +244,7 @@ function C_Shtgn:WeaponIdle()
 			end
 
 			local mt = GetToolLocationWorldTransform("muzzle", self.owner)
-			PlaySound(self.snds["pump"], mt.pos, 300)
+			PlaySound(self.snds["pump"], mt.pos)
 		end
 	end
 end
@@ -253,7 +253,7 @@ function C_Shtgn:tickPlayer_cl(dt)
 	if self.pumpTime > 0 and self.pumpTime <= GetTime() then
 		local mt = GetToolLocationWorldTransform("muzzle", self.owner)
 
-		PlaySound(self.snds["pump"], mt.pos, 300)
+		PlaySound(self.snds["pump"], mt.pos)
 
 		if self.isLocal then
 			self:KF_SetAnim(C_Shtgn.ANIM_PUMP)
