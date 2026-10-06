@@ -112,9 +112,6 @@ function C_PattGun:GetAccuracy()
 end
 
 function C_PattGun:PrimaryAttack(dt)
-	local mt = GetToolLocationWorldTransform("muzzle", self.owner)
-	if not mt then return end
-
 	if self.lastFireTime < GetTime() - 0.4 then
 		self.shot = 1
 	end
@@ -145,13 +142,13 @@ function C_PattGun:PrimaryAttack(dt)
 			client.TENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
 		end
 
-		self:muzzleFlash(mt.pos, 0.8)
+		self:muzzleFlash(self.muzzle, 0.8)
 	else
-		PlayFireSound(self.snds["fire"], mt.pos, 300)
+		PlayFireSound(self.snds["fire"], self.muzzle, 300)
 	end
 
 	-- Fire before viewpunch offsets it (only happens in SP though because MP viewpunch is weird)
-	self:FireBulletsPlayer(1, GetPlayerEyeTransform(self.owner).pos, self:GetAccuracy(), 100)
+	self:FireBulletsPlayer(1, self.eyePos, self:GetAccuracy(), 100)
 
 	AIM_RecoilSet(self.owner, SprayPattern[self.shot])
 	self.shot = self.shot + 1

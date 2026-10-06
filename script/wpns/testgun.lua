@@ -52,9 +52,6 @@ end
 --=========================================================================
 
 function C_Gun:PrimaryAttack(dt)
-	local mt = GetToolLocationWorldTransform("muzzle", self.owner)
-	if not mt then return end
-
 	if client then
 		if self.ammoLoaded <= 0 then
 			self:PlayEmptySound()
@@ -84,23 +81,20 @@ function C_Gun:PrimaryAttack(dt)
 			client.TENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
 		end
 
-		self:muzzleFlash(mt.pos, 0.8)
+		self:muzzleFlash(self.muzzle, 0.8)
 	else
-		PlayFireSound(self.snds["fire"], mt.pos, 300)
+		PlayFireSound(self.snds["fire"], self.muzzle, 300)
 	end
 
 	baseWeap.DepleteAmmo(self, 1, 1)
 
-	self:FireBulletsPlayer(1, GetPlayerEyeTransform(self.owner).pos, GLOBAL_5DEGREES, 100)
+	self:FireBulletsPlayer(1, self.eyePos, GLOBAL_5DEGREES, 100)
 
 	self.nextFire = self:GetNextAttackDelay(0.075)
 	self.nextAltFire = GetTime() + 0.075
 end
 
 function C_Gun:SecondaryAttack(dt)
-	local mt = GetToolLocationWorldTransform("muzzle", self.owner)
-	if not mt then return end
-
 	if client then
 		if self.ammoAltTotal <= 0 then
 			self:PlayEmptySound()
@@ -126,14 +120,14 @@ function C_Gun:SecondaryAttack(dt)
 			client.TENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
 		end
 
-		self:muzzleFlash(mt.pos, 0.8)
+		self:muzzleFlash(self.muzzle, 0.8)
 
 		self.ammoAltTotal = self.ammoAltTotal - 1
 	else
-		PlayFireSound(self.snds["fire"], mt.pos, 300)
+		PlayFireSound(self.snds["fire"], self.muzzle, 300)
 	end
 
-	self:FireProjectilePlayer(1, mt.pos, GLOBAL_1DEGREE)
+	self:FireProjectilePlayer(1, self.muzzle, GLOBAL_1DEGREE)
 
 	self.nextFire = self:GetNextAttackDelay(0.5)
 	self.nextAltFire = self.nextFire

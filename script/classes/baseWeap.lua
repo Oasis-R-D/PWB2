@@ -133,6 +133,12 @@ function baseWeap:initVars(owner)
 
 	-- which player owns this instance
 	self.owner				= owner
+
+	-- Muzzle position
+	self.muzzle				= Vec()
+
+	-- Eye position
+	self.eyePos				= Vec()
 end
 
 --=========================================================================
@@ -269,8 +275,10 @@ function baseWeap:tickPlayer_cl(dt)
 
 	self:MDL_Animate(dt)
 
-	local curTime = GetTime()
-	self.ammoTotal = GetToolAmmo(self.toolID, self.owner)
+	local curTime   = GetTime()
+	self.ammoTotal  = GetToolAmmo(self.toolID, self.owner)
+	self.muzzle		= GetToolLocationWorldTransform("muzzle", self.owner).pos
+	self.eyePos     = GetPlayerEyeTransform(self.owner).pos
 
 	if self.isLocal then
 		for index, sound in pairs(self.followingSNDS) do
@@ -378,8 +386,10 @@ function baseWeap:tickPlayer_sv(dt)
 	if PWB_SETTING.debug then
 		self:Debug() end
 
-	local curTime = GetTime()
+	local curTime  = GetTime()
 	self.ammoTotal = GetToolAmmo(self.toolID, self.owner)
+	self.muzzle	   = GetToolLocationWorldTransform("muzzle", self.owner).pos
+	self.eyePos    = GetPlayerEyeTransform(self.owner).pos
 
 	for index, sound in pairs(self.followingSNDS) do
 		if (sound[2] - curTime) > dt then
@@ -483,6 +493,9 @@ function baseWeap:BaseDeploy(curTime)
 end
 
 function baseWeap:BaseHolster()
+	self.holstered = true
+	self:Holster()
+
 	if client then
 		-- Cancel reloads
 		self.inReload = false
@@ -502,8 +515,10 @@ function baseWeap:BaseHolster()
 
 	self.lastShotInHoldTime = 0.0
 
-	self.holstered = true
-	self:Holster()
+	
+
+	self.muzzle = nil -- we set this every frame, just saves memory
+	self.eyePos = nil -- ^^
 end
 
 function baseWeap:DefaultReload(fDelay)
