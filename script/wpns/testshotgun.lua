@@ -61,12 +61,6 @@ end
 -- Weapon functions
 --=========================================================================
 
-function C_Shtgn:Holster()
-	if client then
-		client.PWB_ANIMATOR[self.owner].leftHand.transform.pos = Vec()
-	end
-end
-
 function C_Shtgn:PrimaryAttack(dt)
 	local mt = GetToolLocationWorldTransform("muzzle", self.owner)
 	if not mt then return end
