@@ -49,9 +49,15 @@ function baseWeap:KF_Animate(dt)
         local offsetTransform = Transform(pos, rot)
 
         if shapeIndex == "hand_l" then
-            client.PWB_ANIMATOR[self.owner].leftHand.transform = offsetTransform
+            client.PWB_ANIMATOR[self.owner].leftHand.transform = Transform(
+                VecAdd(pos, self.armTransforms[shapeIndex].pos),
+                QuatRotateQuat(self.armTransforms[shapeIndex].rot, rot)
+            )
         elseif shapeIndex == "hand_r" then
-            client.PWB_ANIMATOR[self.owner].rightHand.transform = offsetTransform
+            client.PWB_ANIMATOR[self.owner].rightHand.transform = Transform(
+                VecAdd(pos, self.armTransforms[shapeIndex].pos),
+                QuatRotateQuat(self.armTransforms[shapeIndex].rot, rot)
+            )
         else
             self:KF_ApplyAnimation(shapeIndex, offsetTransform)
         end
@@ -74,10 +80,26 @@ function baseWeap:KF_NewFrame(keyFrame)
     if PWB_SETTING.debug then DebugPrint("THIS FRAME: " .. self.animFrame / 2) end
 
     if shapeIndex == "hand_l" then
-        client.PWB_ANIMATOR[self.owner].leftHand.transform = Transform(pos, rot)
+        local hand = client.PWB_ANIMATOR[self.owner].leftHand.transform
+        if not self.armTransforms[shapeIndex] then
+            self.armTransforms[shapeIndex] = TransformCopy(hand)
+        end
+
+        hand = Transform(
+            VecAdd(pos, self.armTransforms[shapeIndex].pos),
+            QuatRotateQuat(self.armTransforms[shapeIndex].rot, rot)
+        )
         return
     elseif shapeIndex == "hand_r" then
-        client.PWB_ANIMATOR[self.owner].rightHand.transform = Transform(pos, rot)
+        local hand = client.PWB_ANIMATOR[self.owner].rightHand.transform
+        if not self.armTransforms[shapeIndex] then
+            self.armTransforms[shapeIndex] = TransformCopy(hand)
+        end
+
+        hand = Transform(
+            VecAdd(pos, self.armTransforms[shapeIndex].pos),
+            QuatRotateQuat(self.armTransforms[shapeIndex].rot, rot)
+        )
         return
     end
 
@@ -87,7 +109,10 @@ function baseWeap:KF_NewFrame(keyFrame)
         self.shapeTransforms[shapeIndex] = GetShapeLocalTransform(shape)
 
         local min, max = GetShapeBounds(shape)
-        self.shapeCenters[shapeIndex] = TransformToLocalPoint(GetBodyTransform(GetToolBody(self.owner)), VecLerp(min, max, 0.5))
+        self.shapeCenters[shapeIndex] = TransformToLocalPoint(
+            GetBodyTransform(GetToolBody(self.owner)),
+            VecLerp(min, max, 0.5)
+        )
     end
 
     self:KF_ApplyAnimation(shapeIndex, Transform(pos, rot))
@@ -167,6 +192,10 @@ function baseWeap:KF_Reset() -- reset anims
     self.animFrameTime = 0
 
     -- Reset hand transform
-    client.PWB_ANIMATOR[self.owner].leftHand.transform = Transform()
-    client.PWB_ANIMATOR[self.owner].rightHand.transform = Transform()
+    if self.armTransforms then
+        client.PWB_ANIMATOR[self.owner].leftHand.transform = TransformCopy(self.armTransforms["hand_l"])
+        client.PWB_ANIMATOR[self.owner].rightHand.transform = TransformCopy(self.armTransforms["hand_r"])   
+    end
+
+    self.armTransforms = {}
 end

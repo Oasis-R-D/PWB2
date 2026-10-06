@@ -277,7 +277,9 @@ function baseWeap:tickPlayer_cl(dt)
 
 	local curTime   = GetTime()
 	self.ammoTotal  = GetToolAmmo(self.toolID, self.owner)
-	self.muzzle		= GetToolLocationWorldTransform("muzzle", self.owner).pos
+
+	local m = GetToolLocationWorldTransform("muzzle", self.owner)
+	self.muzzle	    = m and m.pos or Vec()
 	self.eyePos     = GetPlayerEyeTransform(self.owner).pos
 
 	if self.isLocal then
@@ -388,7 +390,9 @@ function baseWeap:tickPlayer_sv(dt)
 
 	local curTime  = GetTime()
 	self.ammoTotal = GetToolAmmo(self.toolID, self.owner)
-	self.muzzle	   = GetToolLocationWorldTransform("muzzle", self.owner).pos
+
+	local m = GetToolLocationWorldTransform("muzzle", self.owner)
+	self.muzzle	   = m and m.pos or Vec()
 	self.eyePos    = GetPlayerEyeTransform(self.owner).pos
 
 	for index, sound in pairs(self.followingSNDS) do

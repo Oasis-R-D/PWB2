@@ -62,6 +62,7 @@ function server.SpawnFireHook(pos, chance)
 end
 
 function PlayFireSound(snd, pos, vol)
+	vol = vol or 1
 	StopSound(snd)
 	PlaySound(snd, pos, vol)
 end

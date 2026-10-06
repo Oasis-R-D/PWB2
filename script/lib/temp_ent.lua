@@ -183,8 +183,6 @@ function client.TENT_Update(
 					if IsPointInWater(pTemp.origin) == false then
 						pTemp.velocity[2] = pTemp.velocity[2] + gravity
 					else
-						pTemp.velocity[2] = pTemp.velocity[2] - gravity
-
 						pTemp.velocity = VecScale(pTemp.velocity, 0.98)
 						pTemp.angles = VecScale(pTemp.angles, 0.98)
 

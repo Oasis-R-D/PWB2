@@ -1,20 +1,10 @@
+curEntSlot = 1
+
 --============================================================================================
 -- 	 Entity OR projectile code (undecided)
 --============================================================================================
 
 baseEnt = {}
-
-function baseEnt:init_sv(wpnSlot)
-	-- must be called like this
-	baseEnt.PrecacheSFX(self)
-	self.entSlot = wpnSlot
-end
-
-function baseEnt:init_cl(wpnSlot)
-	-- must be called like this
-	baseEnt.PrecacheSFX(self)
-	self.entSlot = wpnSlot
-end
 
 -- entity class constructor
 -- to add a new entity just do WPNPTR = baseEnt:new(CHILD, owner) where CHILD is {}
@@ -34,7 +24,27 @@ function baseEnt:new(obj, owner)
     self.__index = self
 
     instance:initVars(owner)
+
+    instance.entSlot = curEntSlot
+    curEntSlot = curEntSlot + 1
+
     return instance
+end
+
+-- defines sound data per entity class
+-- sounds are automatically parsed from the snd folder
+-- dist and loop are optional and default to values shown in table
+-- index is optional and defaults to order loaded (shown below)
+-- x sv (index 1 on sv)
+-- y cl (index 1 on cl)
+-- z cl (index 2 on cl)
+-- NOTE: if you really want to save space, 
+-- you can access sounds from other entity classes instead of duplicating them
+function baseWeap:Sounds()
+	return {
+--  	   SOUND	  load to	  [index]      [loop]  [dist]
+		{"SOUND.ogg", "sv|cl", "name/num/nil", false,	10}
+	}
 end
 
 -----------------------------------------------------------
@@ -58,11 +68,12 @@ function baseEnt:initVars(owner)
     -- Physical representation (both can be present!)
     self.model       = false -- 3D model (if applicable)
     self.sprite      = false -- Sprite model (if applicable)
+    self.spriteScale = 1
 
     self.origin      = Vec() -- needs var in case not using body
-    
+
     -- FAKE PHYSICS VARS
-        self.active = true, -- hasn't hit the ground?
+        self.active = true -- hasn't hit the ground?
         self.bounceFactor = 1.0
 
         self.prevOrigin = Vec()
@@ -70,19 +81,19 @@ function baseEnt:initVars(owner)
         self.angleVel = Vec()
         self.velocity = Vec()
 
-    self:flags()
+    self.flags = self:addflags()
 end
 
 -- Override for more flags
-function baseEnt:flags()
-    self.flags = addFlags(0, 0)
+function baseEnt:addflags()
+    return addFlags(FENT_NONE, 0)
 end
 
 function baseEnt:PrecacheSFX()
 	local precachedSounds = {}
 	local soundsLoaded = 0
 
-	for i, sounddata in ipairs(self:Sounds()) do
+	for _, sounddata in ipairs(self:Sounds()) do
 		-- Distance defaults to 10 on SV + CL
 		sounddata[5] = sounddata[5] and sounddata[5] or 10
 
@@ -111,10 +122,14 @@ function baseEnt:PrecacheSFX()
 	self.snds = precachedSounds
 end
 
+--=========================================================================
+--	NETWORKING
+--	Used to communicate between a entities server and client representation
+--=========================================================================
+
 function ReceiveEntCall(func, slot, ...)
 	local ent = SPAWNED_ENTITIES[slot]
-
-	if not ent then return end
+	if not ent then error("EntCall couldn't find function:" .. func) return end
 
 	ent[func](ent, ...)
 end
@@ -127,11 +142,17 @@ function baseEnt:ClientEntCall(receivers, func, ...)
 	ClientCall(receivers, "ReceiveEntCall", func, self.entSlot, ...)
 end
 
+--=========================================================================
+--	BACKEND FUNCS
+--  These are used by the entity code for very specific purposes 
+--  and shouldn't (under normal circumstanced) be overriden.
+--=========================================================================
+
 function baseEnt:RunPhysics_Real(dt)
     self.origin = GetBodyTransform(self.model).pos
 
     local vel = GetBodyVelocity(self.model)
-    local didHit, dist, shape, playerId, playerDamageFactor, normal = QueryShot(self.origin, VecNormalize(vel), VecLength(vel), 0, self.owner)
+    local didHit, _, shape, playerId, playerDamageFactor, normal = QueryShot(self.origin, VecNormalize(vel), VecLength(vel), 0, self.owner)
     if not didHit or shape == self.lastTouched or playerId == self.lastTouched then
         return
     end
@@ -157,7 +178,7 @@ function baseEnt:RunPhysics_Fake(dt)
         -- Collision ----------------------------------------------------
         local betweenDir = VecNormalize(self.velocity)
         local betweenLen = VecLength(self.velocity) * dt
-        local gravity = -dt * cl_gravity
+        local gravity = -dt * GetGravity[2]
 
         QueryRequire("visible physical")
         local hit, dist, traceNormal = QueryRaycast(self.prevOrigin, betweenDir, betweenLen)
@@ -178,6 +199,7 @@ function baseEnt:RunPhysics_Fake(dt)
             damp = self.bounceFactor
             damp = damp * 0.5
             if traceNormal[2] > 0.9 then -- Hit floor?
+                -- TO-DO: improve gravity here (only works with normal gravity!!)
                 if self.velocity[2] <= 0 and self.velocity[2] >= gravity * 2 then
                     damp = 0 -- Stop
                     self.active = false
@@ -191,7 +213,6 @@ function baseEnt:RunPhysics_Fake(dt)
             -- Reflect velocity
             if damp ~= 0 then
                 proj = VecDot(self.velocity, traceNormal)
-                --VectorMA(self.velocity, -proj * 2, traceNormal, self.velocity)
                 self.velocity = VecAdd(self.velocity, VecScale(traceNormal, -proj * 2))
 
                 -- Reflect rotation (fake)
@@ -207,8 +228,8 @@ function baseEnt:RunPhysics_Fake(dt)
         -- Gravity ----------------------------------------------------
         if self.active then
             if IsPointInWater(self.origin) == false then
-                self.velocity = VecAdd(self.velocity, GetGravity())
-            else -- TO-DO: more sophisticated buoyancy using water plane normal
+                self.velocity[2] = self.velocity[2] + gravity
+            else
                 self.velocity = VecScale(self.velocity, 0.98)
                 self.angles = VecScale(self.angles, 0.98)
 
@@ -240,12 +261,38 @@ function baseEnt:Tick(dt)
     if client and self.sprite then
         -- DRAW CAMERA FACING SPRITE HERE
 
-	    local t = Transform(self.origin, GetCameraTransform().rot)
+	    local spriteTrans = Transform(self.origin)
+        spriteTrans.rot = QuatRotateQuat(GetCameraTransform().rot, QuatEuler(0,0,GetRandomFloat(-15, 15)))
+
+        -- Create the flashSPR variable to hold the sprite
+        if not baseWeap.flashSPR then baseWeap.flashSPR = LoadSprite("gfx/glare.png") end
+
+        DrawSprite(baseWeap.flashSPR, spriteTrans, size, size, color[1], color[2], color[3], 1.0, true, true, true)
     end
 
     if self.nextThink <= t then
         self:think() -- should work!
     end
+end
+
+function baseEnt:init_sv()
+	-- must be called like this
+	baseEnt.PrecacheSFX(self)
+
+    -- Delete the raw sounds now that they are uneeded
+	FREE(self.init_sv)
+	FREE(self.Sounds)
+	FREE(self.PrecacheSFX)
+end
+
+function baseEnt:init_cl()
+	-- must be called like this
+	baseEnt.PrecacheSFX(self)
+
+    -- Delete the raw sounds now that they are uneeded
+    FREE(self.init_cl)
+	FREE(self.Sounds)
+	FREE(self.PrecacheSFX)
 end
 
 function tickEntity(dt)
