@@ -1,4 +1,4 @@
-curEntSlot = 1
+local curEntSlot = 1
 
 --============================================================================================
 -- 	 Entity OR projectile code (undecided)
@@ -25,7 +25,7 @@ function baseEnt:new(obj, owner)
 
     instance:initVars(owner)
 
-    instance.entSlot = curEntSlot
+    instance.slot = curEntSlot
     curEntSlot = curEntSlot + 1
 
     return instance
@@ -40,7 +40,7 @@ end
 -- z cl (index 2 on cl)
 -- NOTE: if you really want to save space, 
 -- you can access sounds from other entity classes instead of duplicating them
-function baseWeap:Sounds()
+function baseEnt:Sounds()
 	return {
 --  	   SOUND	  load to	  [index]      [loop]  [dist]
 		{"SOUND.ogg", "sv|cl", "name/num/nil", false,	10}
@@ -58,35 +58,49 @@ function baseEnt:initVars(owner)
     -- which player owns this instance
 	self.owner	     = owner
 
-    self.nextThink   = false
+    -- Next time to run self:think() (GetTime() + X)
+    self.nextThink   = 0
+
+    -- Called when GetTime() reaches self.nextThink
     self.think       = function() end -- pointer to think func
 
+    -- Called when ent impacts a new object
     self.touch       = function() end -- pointer to touch func
+`   
+    -- Last touched object, makes sure touch is only called for a impact once
+    self.lastTouched = -1    
 
-    self.lastTouched = -1    -- Last touched object, makes sure touch is only called for a impact once
+    self.origin      = Vec()
 
-    -- Physical representation (both can be present!)
-    self.model       = false -- 3D model (if applicable)
-    self.sprite      = false -- Sprite model (if applicable)
-    self.spriteScale = 1
-
-    self.origin      = Vec() -- needs var in case not using body
+    self.flags       = self:addflags()
 
     -- FAKE PHYSICS VARS
-        self.active = true -- hasn't hit the ground?
+        self.active       = true -- hasn't hit the ground?
         self.bounceFactor = 1.0
 
-        self.prevOrigin = Vec()
-        self.angles = Vec()
-        self.angleVel = Vec()
-        self.velocity = Vec()
+        self.prevOrigin   = Vec()
+        self.angles       = Vec()
+        self.angleVel     = Vec()
+        self.velocity     = Vec()
 
-    self.flags = self:addflags()
+    -- Physical representation (both can be present!)
+    self.model           = false -- 3D model     (if applicable)
+    if client then
+        self.sprite      = false -- Sprite model (if applicable)
+        self.spriteScale = 1
+    end
 end
 
 -- Override for more flags
 function baseEnt:addflags()
     return addFlags(FENT_NONE, 0)
+end
+
+function baseEnt:setModel(model)
+    self.model = model
+
+    if client then return end
+    self:ClientEntCall(0, "setModel", model)
 end
 
 function baseEnt:PrecacheSFX()
@@ -128,18 +142,18 @@ end
 --=========================================================================
 
 function ReceiveEntCall(func, slot, ...)
-	local ent = SPAWNED_ENTITIES[slot]
-	if not ent then error("EntCall couldn't find function:" .. func) return end
+	local ent = GLOBAL_SPAWNED_ENTITIES[slot]
+	if not ent then error("EntCall couldn't find ent:" .. slot) return end
 
 	ent[func](ent, ...)
 end
 
 function baseEnt:ServerEntCall(func, ...)
-	ServerCall("ReceiveEntCall", func, self.entSlot, ...)
+	ServerCall("ReceiveEntCall", func, self.slot, ...)
 end
 
 function baseEnt:ClientEntCall(receivers, func, ...)
-	ClientCall(receivers, "ReceiveEntCall", func, self.entSlot, ...)
+	ClientCall(receivers, "ReceiveEntCall", func, self.slot, ...)
 end
 
 --=========================================================================
@@ -152,7 +166,7 @@ function baseEnt:RunPhysics_Real(dt)
     self.origin = GetBodyTransform(self.model).pos
 
     local vel = GetBodyVelocity(self.model)
-    local didHit, _, shape, playerId, playerDamageFactor, normal = QueryShot(self.origin, VecNormalize(vel), VecLength(vel), 0, self.owner)
+    local didHit, _, shape, playerId = QueryShot(self.origin, VecNormalize(vel), VecLength(vel), 0, self.owner)
     if not didHit or shape == self.lastTouched or playerId == self.lastTouched then
         return
     end
@@ -178,7 +192,7 @@ function baseEnt:RunPhysics_Fake(dt)
         -- Collision ----------------------------------------------------
         local betweenDir = VecNormalize(self.velocity)
         local betweenLen = VecLength(self.velocity) * dt
-        local gravity = -dt * GetGravity[2]
+        local gravity = -dt * GetGravity()[2]
 
         QueryRequire("visible physical")
         local hit, dist, traceNormal = QueryRaycast(self.prevOrigin, betweenDir, betweenLen)
@@ -203,6 +217,7 @@ function baseEnt:RunPhysics_Fake(dt)
                 if self.velocity[2] <= 0 and self.velocity[2] >= gravity * 2 then
                     damp = 0 -- Stop
                     self.active = false
+                    self.nextActiveCheck = GetTime() + 0.1
                     self.angles[1] = 0
                 end
             end
@@ -240,6 +255,14 @@ function baseEnt:RunPhysics_Fake(dt)
                 self.velocity[2] = self.velocity[2] + ((math.sin(3 * GetTime()) * 0.00127) + 0.0127)
             end
         end
+    elseif self.nextActiveCheck <= GetTime() then
+        QueryRequire("visible physical")
+        local hit = QueryRaycast(self.origin, Vec(0, -GetGravity()[2]), dt)
+        if not hit then
+            self.active = true
+        end
+
+        self.nextActiveCheck = GetTime() + 0.1
     end
 
     -- bodies must be on the server!
@@ -257,17 +280,20 @@ function baseEnt:Tick(dt)
         self:RunPhysics_Real(dt) -- only works with a body
     end
 
-    -- sprites are simulated on clients
-    if client and self.sprite then
-        -- DRAW CAMERA FACING SPRITE HERE
+    -- sprites are only simulated on clients
+    if self.sprite then
+	    local spriteTrans = Transform(
+            self.origin,
+            GetCameraTransform().rot
+        )
+        
+        -- Create the drawnSPR variable to hold the sprite
+        if not self.drawnSPR then
+            self.drawnSPR = LoadSprite(self.sprite)
+            self.sprite = true -- dummy value to keep drawing running
+        end
 
-	    local spriteTrans = Transform(self.origin)
-        spriteTrans.rot = QuatRotateQuat(GetCameraTransform().rot, QuatEuler(0,0,GetRandomFloat(-15, 15)))
-
-        -- Create the flashSPR variable to hold the sprite
-        if not baseWeap.flashSPR then baseWeap.flashSPR = LoadSprite("gfx/glare.png") end
-
-        DrawSprite(baseWeap.flashSPR, spriteTrans, size, size, color[1], color[2], color[3], 1.0, true, true, true)
+        DrawSprite(self.drawnSPR, spriteTrans, self.spriteScale, self.spriteScale, 1.0, 1.0, 1.0, 1.0, true, true, true)
     end
 
     if self.nextThink <= t then
@@ -293,10 +319,4 @@ function baseEnt:init_cl()
     FREE(self.init_cl)
 	FREE(self.Sounds)
 	FREE(self.PrecacheSFX)
-end
-
-function tickEntity(dt)
-    for _, ent in pairs(SPAWNED_ENTITIES) do
-        ent:Tick(dt)
-    end
 end
