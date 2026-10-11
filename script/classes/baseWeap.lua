@@ -206,7 +206,7 @@ function baseWeap:muzzleFlash(pos, size, color)
 end
 
 -- defines sound data per weapon class
--- sounds are automatically parsed from the snd folder
+-- sounds are automatically parsed from the mod's snd folder unless baseSND is true
 -- dist and loop are optional and default to values shown in table
 -- index is optional and defaults to order loaded (shown below)
 -- x sv (index 1 on sv)
@@ -216,8 +216,8 @@ end
 -- you can access sounds from other weapon classes instead of duplicating them
 function baseWeap:Sounds()
 	return {
---  	   SOUND	  load to	  [index]      [loop]  [dist]
-		{"SOUND.ogg", "sv|cl", "name/num/nil", false,	10}
+--  	   SOUND	  load to	  [index]      [loop] [baseSND] [dist]
+		{"SOUND.ogg", "sv|cl", "name/num/nil",  false,	false,    10}
 	}
 end
 
@@ -737,7 +737,7 @@ end
 
 -- this works on both client and the server (as long as you call it with the proper args)
 function ReceiveCall(func, owner, slot, ...)
-	local wpn = PLAYER_WEAPONS[owner][slot]
+	local wpn = GLOBAL_PLYR_WEAPONS[owner][slot]
 
 	if not wpn then return end
 
@@ -1054,8 +1054,9 @@ function baseWeap:PrecacheSFX()
 	local soundsLoaded = 0
 
 	for i, sounddata in ipairs(self:Sounds()) do
+		local prefix = sounddata[5] and "" or "MOD/"
 		-- Distance defaults to 10 on SV + CL
-		sounddata[5] = sounddata[5] and sounddata[5] or 10
+		sounddata[6] = sounddata[6] and sounddata[6] or 10
 
 		-- Set the index
 		sounddata[3] = sounddata[3] and sounddata[3] or (soundsLoaded + 1)
@@ -1064,17 +1065,17 @@ function baseWeap:PrecacheSFX()
             soundsLoaded = soundsLoaded + 1
 
 			if sounddata[4] and sounddata[4] == true then
-                precachedSounds[sounddata[3]] = LoadLoop("MOD/snd/" .. sounddata[1], sounddata[5])
+                precachedSounds[sounddata[3]] = LoadLoop(prefix .. "snd/" .. sounddata[1], sounddata[5])
             else
-                precachedSounds[sounddata[3]] = LoadSound("MOD/snd/" .. sounddata[1], sounddata[5])
+                precachedSounds[sounddata[3]] = LoadSound(prefix .. "snd/" .. sounddata[1], sounddata[5])
             end
 		elseif client and sounddata[2] == "cl" then
             soundsLoaded = soundsLoaded + 1
 
             if sounddata[4] and sounddata[4] == true then
-                precachedSounds[sounddata[3]] = LoadLoop("MOD/snd/" .. sounddata[1], sounddata[5])
+                precachedSounds[sounddata[3]] = LoadLoop(prefix .. "snd/" .. sounddata[1], sounddata[5])
             else
-                precachedSounds[sounddata[3]] = LoadSound("MOD/snd/" .. sounddata[1], sounddata[5])
+                precachedSounds[sounddata[3]] = LoadSound(prefix .. "snd/" .. sounddata[1], sounddata[5])
             end
 		end
 	end

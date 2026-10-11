@@ -105,14 +105,19 @@ GLOBAL_20DEGREES  = 0.17365
 GLOBAL_HEADSHOTMULT = 2.0
 
 -- MAIN
+#include "script/classes/baseEnt.lua"
 #include "script/classes/baseWeap.lua"
 #include "script/classes/kfAnimations.lua"
+
+-- ENTITIES
+-- none!
 
 -- WEAPONS
 #include "script/wpns/testgun.lua"
 #include "script/wpns/adsgun.lua"
 #include "script/wpns/patterngun.lua"
 #include "script/wpns/testshotgun.lua"
+#include "script/wpns/dragonbreath.lua"
 
 #include "script/wpns/meleetool.lua"
 

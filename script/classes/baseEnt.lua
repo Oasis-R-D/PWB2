@@ -26,7 +26,11 @@ function baseEnt:new(obj, owner)
     instance:initVars(owner)
 
     instance.slot = curEntSlot
+    GLOBAL_SPAWNED_ENTITIES[curEntSlot] = instance
+
     curEntSlot = curEntSlot + 1
+
+    instance:Spawn()
 
     return instance
 end
@@ -66,13 +70,13 @@ function baseEnt:initVars(owner)
 
     -- Called when ent impacts a new object
     self.touch       = function() end -- pointer to touch func
-`   
+
     -- Last touched object, makes sure touch is only called for a impact once
-    self.lastTouched = -1    
+    self.lastTouched = -1
 
     self.origin      = Vec()
 
-    self.flags       = self:addflags()
+    self.flags       = self:spawnFlags()
 
     -- FAKE PHYSICS VARS
         self.active       = true -- hasn't hit the ground?
@@ -82,25 +86,26 @@ function baseEnt:initVars(owner)
         self.angles       = Vec()
         self.angleVel     = Vec()
         self.velocity     = Vec()
+        self.gravityMult  = 1
 
     -- Physical representation (both can be present!)
-    self.model           = false -- 3D model     (if applicable)
+    self.body           = false -- 3D body     (if applicable)
     if client then
-        self.sprite      = false -- Sprite model (if applicable)
+        self.sprite      = false -- Sprite body (if applicable)
         self.spriteScale = 1
     end
 end
 
 -- Override for more flags
-function baseEnt:addflags()
+function baseEnt:SpawnFlags()
     return addFlags(FENT_NONE, 0)
 end
 
-function baseEnt:setModel(model)
-    self.model = model
+function baseEnt:SetModel(body)
+    self.body = body
 
     if client then return end
-    self:ClientEntCall(0, "setModel", model)
+    self:ClientEntCall(0, "SetModel", body)
 end
 
 function baseEnt:PrecacheSFX()
@@ -136,6 +141,11 @@ function baseEnt:PrecacheSFX()
 	self.snds = precachedSounds
 end
 
+-- Collision uses QueryShot, includes players by default
+function baseEnt:CollisionSettings()
+    QueryRequire('visible physical')
+end
+
 --=========================================================================
 --	NETWORKING
 --	Used to communicate between a entities server and client representation
@@ -162,10 +172,13 @@ end
 --  and shouldn't (under normal circumstanced) be overriden.
 --=========================================================================
 
-function baseEnt:RunPhysics_Real(dt)
-    self.origin = GetBodyTransform(self.model).pos
 
-    local vel = GetBodyVelocity(self.model)
+function baseEnt:RunPhysics_Real(dt)
+    self.origin = GetBodyTransform(self.body).pos
+
+    local vel = GetBodyVelocity(self.body)
+
+    self:CollisionSettings()
     local didHit, _, shape, playerId = QueryShot(self.origin, VecNormalize(vel), VecLength(vel), 0, self.owner)
     if not didHit or shape == self.lastTouched or playerId == self.lastTouched then
         return
@@ -174,6 +187,8 @@ function baseEnt:RunPhysics_Real(dt)
     self.lastTouched = playerId ~= 0 and playerId or shape
     self:touch()
 end
+
+
 
 function baseEnt:RunPhysics_Fake(dt)
     self.prevOrigin = VecCopy(self.origin)
@@ -192,10 +207,10 @@ function baseEnt:RunPhysics_Fake(dt)
         -- Collision ----------------------------------------------------
         local betweenDir = VecNormalize(self.velocity)
         local betweenLen = VecLength(self.velocity) * dt
-        local gravity = -dt * GetGravity()[2]
+        local gravity = -dt * GetGravity()[2] * self.gravityMult
 
-        QueryRequire("visible physical")
-        local hit, dist, traceNormal = QueryRaycast(self.prevOrigin, betweenDir, betweenLen)
+        self:CollisionSettings()
+        local hit, dist, shape, playerId, _, traceNormal = QueryShot(self.prevOrigin, betweenDir, betweenLen)
 
         if hit == true then
             local proj, damp
@@ -223,6 +238,7 @@ function baseEnt:RunPhysics_Fake(dt)
             end
 
             if damp > 0 and betweenLen / dt > 1 then
+                self.lastTouched = playerId ~= 0 and playerId or shape
                 self:touch() end  -- Hacky fix
 
             -- Reflect velocity
@@ -256,7 +272,7 @@ function baseEnt:RunPhysics_Fake(dt)
             end
         end
     elseif self.nextActiveCheck <= GetTime() then
-        QueryRequire("visible physical")
+        self:CollisionSettings()
         local hit = QueryRaycast(self.origin, Vec(0, -GetGravity()[2]), dt)
         if not hit then
             self.active = true
@@ -266,8 +282,8 @@ function baseEnt:RunPhysics_Fake(dt)
     end
 
     -- bodies must be on the server!
-    if server and self.model then
-        SetBodyTransform(self.model, Transform(self.origin, QuatEuler(self.angles[1], self.angles[2], self.angles[3])))
+    if server and self.body then
+        SetBodyTransform(self.body, Transform(self.origin, QuatEuler(self.angles[1], self.angles[2], self.angles[3])))
     end
 end
 
@@ -286,7 +302,7 @@ function baseEnt:Tick(dt)
             self.origin,
             GetCameraTransform().rot
         )
-        
+
         -- Create the drawnSPR variable to hold the sprite
         if not self.drawnSPR then
             self.drawnSPR = LoadSprite(self.sprite)

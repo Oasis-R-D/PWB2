@@ -53,3 +53,9 @@ C_Shtgn.ANIM_PUMP = 1 -- just for readability
 C_Shtgn.anims = {
     pump
 }
+
+C_DB.ANIM_PUMP = 1 -- just for readability
+
+C_DB.anims = {
+    pump
+}

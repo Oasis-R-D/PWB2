@@ -21,9 +21,9 @@ C_Shtgn.dmg_world		 = 0.35					 -- Size of hole in meters
 C_Shtgn.dmg_plyr		 = 0.1					 -- 0.0-1.0
 
 C_Shtgn.flags = addFlags(0, FWPN_SV_CALLONCE_PRIM,
-								 FWPN_SV_CALLONCE_SEC,
-								 FWPN_CLICK_PRIM,
-								 FWPN_CLICK_SEC) -- Weapon flags
+							FWPN_SV_CALLONCE_SEC,
+							FWPN_CLICK_PRIM,
+							FWPN_CLICK_SEC) -- Weapon flags
 C_Shtgn.snds = 0 -- Prechached SFX list, set on INIT
 
 --=========================================================================
