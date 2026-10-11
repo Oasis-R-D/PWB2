@@ -260,6 +260,7 @@ function C_Shtgn:WeaponIdle()
 		self.timeWeaponIdle = curTime + 1.5
 
 		if self.pumpTime == -1 then
+			self.nextFire = self:GetNextAttackDelay(0.25)
 			self.pumpTime = 0
 
 			-- reload debounce has timed out
