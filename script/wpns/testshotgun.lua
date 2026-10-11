@@ -69,6 +69,22 @@ function C_Shtgn:PrimaryAttack(dt)
 			return
 		end
 
+		if self.pumpTime == -1 then
+			self.specialReload = 0
+			self.timeWeaponIdle = GetTime() + 1.5
+
+			self.nextFire = self:GetNextAttackDelay(0.25)
+			self.pumpTime = 0
+
+			-- reload debounce has timed out
+			if self.isLocal then
+				self:KF_SetAnim(C_DB.ANIM_PUMP)
+			end
+
+			PlaySound(self.snds["pump"], self.muzzle)
+			return
+		end
+
 		self:MDL_PunchPos(Vec(0, 0.1, GetRandomFloat(0.15, 0.2)))
 
 		if self.isLocal then
@@ -109,6 +125,22 @@ function C_Shtgn:SecondaryAttack(dt)
 		if self.ammoLoaded <= 1 then
 			self:PlayEmptySound()
 			self:Reload()
+			return
+		end
+
+		if self.pumpTime == -1 then
+			self.specialReload = 0
+			self.timeWeaponIdle = GetTime() + 1.5
+
+			self.nextFire = self:GetNextAttackDelay(0.25)
+			self.pumpTime = 0
+
+			-- reload debounce has timed out
+			if self.isLocal then
+				self:KF_SetAnim(C_DB.ANIM_PUMP)
+			end
+
+			PlaySound(self.snds["pump"], self.muzzle)
 			return
 		end
 
@@ -164,7 +196,7 @@ function C_Shtgn:Reload()
 
 		if self.isLocal then 
 			self:MDL_PunchAng(Vec(0, 2, -10))
-			PlaySound(self.snds["reload"], self.muzzle, 300)
+			PlaySound(self.snds["reload"], self.muzzle)
 		end
 
 		if self.ammoLoaded == 0 then self.pumpTime = -1 end

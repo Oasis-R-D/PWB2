@@ -71,6 +71,22 @@ function C_DB:PrimaryAttack(dt)
 			return
 		end
 
+		if self.pumpTime == -1 then
+			self.specialReload = 0
+			self.timeWeaponIdle = GetTime() + 1.5
+
+			self.nextFire = self:GetNextAttackDelay(0.25)
+			self.pumpTime = 0
+
+			-- reload debounce has timed out
+			if self.isLocal then
+				self:KF_SetAnim(C_DB.ANIM_PUMP)
+			end
+
+			PlaySound(self.snds["pump"], self.muzzle)
+			return
+		end
+
 		self:MDL_PunchPos(Vec(0, 0.2, GetRandomFloat(0.2, 0.3)))
 
 		self:FiringVFX()
@@ -94,8 +110,6 @@ function C_DB:PrimaryAttack(dt)
 
 		self.specialReload = 0
 
-		self.pumpTime = GetTime() + 0.5
-
 		if self.ammoLoaded == 0 then
 			self.timeWeaponIdle = 1
 		end
@@ -107,7 +121,7 @@ function C_DB:PrimaryAttack(dt)
 
 	self:FireProjectilePlayer(8, self.eyePos, GLOBAL_10DEGREES)
 
-	self.nextFire = self:GetNextAttackDelay(0.75)
+	self.nextFire = self:GetNextAttackDelay(0.5)
 	self.nextAltFire = self.nextFire
 end
 
@@ -125,7 +139,7 @@ function C_DB:Reload()
 
 		if self.isLocal then 
 			self:MDL_PunchAng(Vec(0, 2, -10))
-			PlaySound(self.snds["reload"], self.muzzle, 300)
+			PlaySound(self.snds["reload"], self.muzzle)
 		end
 
 		if self.ammoLoaded == 0 then self.pumpTime = -1 end
@@ -189,6 +203,7 @@ function C_DB:WeaponIdle()
 		self.timeWeaponIdle = curTime + 1.5
 
 		if self.pumpTime == -1 then
+			self.nextFire = self:GetNextAttackDelay(0.25)
 			self.pumpTime = 0
 
 			-- reload debounce has timed out
@@ -199,23 +214,6 @@ function C_DB:WeaponIdle()
 			PlaySound(self.snds["pump"], self.muzzle)
 		end
 	end
-end
-
-function C_DB:tickPlayer_cl(dt)
-	if self.pumpTime > 0 and self.pumpTime <= GetTime() then
-		PlaySound(self.snds["pump"], self.muzzle)
-
-		if self.isLocal then
-			self:KF_SetAnim(C_DB.ANIM_PUMP)
-
-			-- shell ejection
-			client.TENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_shtgn.xml", FSFX_SHTGN)
-		end
-
-		self.pumpTime = 0
-	end
-
-	baseWeap.tickPlayer_cl(self, dt)
 end
 
 C_DB.projectiles = {}
@@ -348,16 +346,12 @@ function C_DB:Update(dt)
 
 
 				-- jitters due to only being called every other frame (sounds cool though)
-				PlayLoop(self.snds["fly"], data.curPos, 100)
+				PlayLoop(self.snds["fly"], data.curPos)
 			end
 
 			-- damage, vfx
 			if hit or data.totalDist > data.maxDist then
 				if hitPlayer == 0 then
-					-- get mat type BEFORE we break it
-					local pos = VecSub(data.curPos, VecScale(normal, 0.05))
-					local matType = GetShapeMaterialAtPos(shape, pos)
-
 					if server then
 						ApplyBodyImpulse(GetShapeBody(shape), data.curPos, VecScale(data.curDir, 800 * 4))
 						MakeHole(data.curPos, 0.35*data.pow, 0.2*data.pow, 0.1*data.pow)
@@ -381,6 +375,7 @@ function C_DB:Update(dt)
 				else
 					if server then
 						ApplyPlayerDamage(hitPlayer, self.dmg_plyr, self.toolName, self.owner)
+						PlayFireSound(self.snds["impact"], data.curPos)
 					else
 						ProjectileHitVFX(data)
 					end

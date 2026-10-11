@@ -1065,17 +1065,17 @@ function baseWeap:PrecacheSFX()
             soundsLoaded = soundsLoaded + 1
 
 			if sounddata[4] and sounddata[4] == true then
-                precachedSounds[sounddata[3]] = LoadLoop(prefix .. "snd/" .. sounddata[1], sounddata[5])
+                precachedSounds[sounddata[3]] = LoadLoop(prefix .. "snd/" .. sounddata[1], sounddata[6])
             else
-                precachedSounds[sounddata[3]] = LoadSound(prefix .. "snd/" .. sounddata[1], sounddata[5])
+                precachedSounds[sounddata[3]] = LoadSound(prefix .. "snd/" .. sounddata[1], sounddata[6])
             end
 		elseif client and sounddata[2] == "cl" then
             soundsLoaded = soundsLoaded + 1
 
             if sounddata[4] and sounddata[4] == true then
-                precachedSounds[sounddata[3]] = LoadLoop(prefix .. "snd/" .. sounddata[1], sounddata[5])
+                precachedSounds[sounddata[3]] = LoadLoop(prefix .. "snd/" .. sounddata[1], sounddata[6])
             else
-                precachedSounds[sounddata[3]] = LoadSound(prefix .. "snd/" .. sounddata[1], sounddata[5])
+                precachedSounds[sounddata[3]] = LoadSound(prefix .. "snd/" .. sounddata[1], sounddata[6])
             end
 		end
 	end
