@@ -288,10 +288,10 @@ function baseEnt:RunPhysics_Fake(dt)
                 self.angles = VecScale(self.angles, 0.98)
 
                 if self.velocity[2] < 0 then
-                    self.velocity[2] = self.velocity[2] * 0.95
+                    self.velocity[2] = self.velocity[2] * 0.95 * self.gravityMult
                 end
 
-                self.velocity[2] = self.velocity[2] + ((math.sin(3 * GetTime()) * 0.00127) + 0.0127)
+                self.velocity[2] = self.velocity[2] + ((math.sin(3 * GetTime()) * 0.00127) + 0.0127) * self.gravityMult
             end
         end
     elseif self.nextActiveCheck <= GetTime() then
