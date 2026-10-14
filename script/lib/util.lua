@@ -72,6 +72,40 @@ function FREE(obj)
 	obj = nil
 end
 
+function PrecacheSFX(self)
+	local precachedSounds = {}
+	local soundsLoaded = 0
+
+	for i, sounddata in ipairs(self:Sounds()) do
+		local prefix = sounddata[5] and "" or "MOD/"
+		-- Distance defaults to 10 on SV + CL
+		sounddata[6] = sounddata[6] and sounddata[6] or 10
+
+		-- Set the index
+		sounddata[3] = sounddata[3] and sounddata[3] or (soundsLoaded + 1)
+
+		if server and sounddata[2] == "sv" then
+            soundsLoaded = soundsLoaded + 1
+
+			if sounddata[4] and sounddata[4] == true then
+                precachedSounds[sounddata[3]] = LoadLoop(prefix .. "snd/" .. sounddata[1], sounddata[6])
+            else
+                precachedSounds[sounddata[3]] = LoadSound(prefix .. "snd/" .. sounddata[1], sounddata[6])
+            end
+		elseif client and sounddata[2] == "cl" then
+            soundsLoaded = soundsLoaded + 1
+
+            if sounddata[4] and sounddata[4] == true then
+                precachedSounds[sounddata[3]] = LoadLoop(prefix .. "snd/" .. sounddata[1], sounddata[6])
+            else
+                precachedSounds[sounddata[3]] = LoadSound(prefix .. "snd/" .. sounddata[1], sounddata[6])
+            end
+		end
+	end
+
+	self.snds = precachedSounds
+end
+
 ----------------------------------------------------------------------------------------------
 -- Weapon UTILs
 ----------------------------------------------------------------------------------------------

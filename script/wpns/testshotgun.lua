@@ -78,7 +78,7 @@ function C_Shtgn:PrimaryAttack(dt)
 
 			-- reload debounce has timed out
 			if self.isLocal then
-				self:KF_SetAnim(C_DB.ANIM_PUMP)
+				self:KF_SetAnim(C_Shtgn.ANIM_PUMP)
 			end
 
 			PlaySound(self.snds["pump"], self.muzzle)
@@ -137,7 +137,7 @@ function C_Shtgn:SecondaryAttack(dt)
 
 			-- reload debounce has timed out
 			if self.isLocal then
-				self:KF_SetAnim(C_DB.ANIM_PUMP)
+				self:KF_SetAnim(C_Shtgn.ANIM_PUMP)
 			end
 
 			PlaySound(self.snds["pump"], self.muzzle)

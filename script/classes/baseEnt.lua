@@ -8,7 +8,7 @@ baseEnt = {}
 
 -- entity class constructor
 -- to add a new entity just do WPNPTR = baseEnt:new(CHILD, owner) where CHILD is {}
-function baseEnt:new(obj, owner)
+function baseEnt:new(obj, pos, ang, owner)
     owner = owner or -1
 
     -- make new table
@@ -23,11 +23,15 @@ function baseEnt:new(obj, owner)
     setmetatable(instance, self)
     self.__index = self
 
-    instance:initVars(owner)
+    instance:initVars()
+
+    instance.owner = owner
+    instance.origin = VecCopy(pos)
+    instance.angles = VecCopy(ang)
 
     instance.slot = curEntSlot
-    GLOBAL_SPAWNED_ENTITIES[curEntSlot] = instance
 
+    GLOBAL_SPAWNED_ENTITIES[curEntSlot] = instance
     curEntSlot = curEntSlot + 1
 
     instance:Spawn()
@@ -58,9 +62,9 @@ end
 -- at the beginning if overriding vars
 -- at the end otherwise if preferred
 -----------------------------------------------------------
-function baseEnt:initVars(owner)
+function baseEnt:initVars()
     -- which player owns this instance
-	self.owner	     = owner
+	self.owner	     = 0
 
     -- Next time to run self:think() (GetTime() + X)
     self.nextThink   = 0
@@ -76,20 +80,21 @@ function baseEnt:initVars(owner)
 
     self.origin      = Vec()
 
-    self.flags       = self:spawnFlags()
+    self.flags       = self:SpawnFlags()
 
     -- FAKE PHYSICS VARS
-        self.active       = true -- hasn't hit the ground?
-        self.bounceFactor = 1.0
+        self.active        = true -- hasn't hit the ground?
+        self.bounceFactor  = 1.0
 
-        self.prevOrigin   = Vec()
-        self.angles       = Vec()
-        self.angleVel     = Vec()
-        self.velocity     = Vec()
-        self.gravityMult  = 1
+        self.prevOrigin    = Vec()
+        self.angles        = Vec()
+        self.angleVel      = Vec()
+        self.velocity      = Vec()
+        self.gravityMult   = -1
+        self.collideRadius = 0.05 -- keep decently high to prevent clipping
 
     -- Physical representation (both can be present!)
-    self.body           = false -- 3D body     (if applicable)
+    self.body            = false -- 3D body     (if applicable)
     if client then
         self.sprite      = false -- Sprite body (if applicable)
         self.spriteScale = 1
@@ -101,49 +106,48 @@ function baseEnt:SpawnFlags()
     return addFlags(FENT_NONE, 0)
 end
 
-function baseEnt:SetModel(body)
-    self.body = body
+function baseEnt:SetModel(XML, index, clBody)
+    if client then
+        self.body = clBody
+        return
+    end
 
-    if client then return end
-    self:ClientEntCall(0, "SetModel", body)
+    local TDent = Spawn(XML, Transform(self.origin, GetBodyTransform(self.body).rot))
+    self.body = TDent[index]
+
+    self:ClientEntCall(0, "SetModel", 0, 0, self.body)
 end
 
-function baseEnt:PrecacheSFX()
-	local precachedSounds = {}
-	local soundsLoaded = 0
+function baseEnt:SetSprite(Sprite)
+    if client then
+        self.sprite = Sprite
+        self.drawnSPR = nil
+        return
+    end
+end
 
-	for _, sounddata in ipairs(self:Sounds()) do
-		-- Distance defaults to 10 on SV + CL
-		sounddata[5] = sounddata[5] and sounddata[5] or 10
-
-		-- Set the index
-		sounddata[3] = sounddata[3] and sounddata[3] or (soundsLoaded + 1)
-
-		if server and sounddata[2] == "sv" then
-            soundsLoaded = soundsLoaded + 1
-
-			if sounddata[4] and sounddata[4] == true then
-                precachedSounds[sounddata[3]] = LoadLoop("MOD/snd/" .. sounddata[1], sounddata[5])
-            else
-                precachedSounds[sounddata[3]] = LoadSound("MOD/snd/" .. sounddata[1], sounddata[5])
-            end
-		elseif client and sounddata[2] == "cl" then
-            soundsLoaded = soundsLoaded + 1
-
-            if sounddata[4] and sounddata[4] == true then
-                precachedSounds[sounddata[3]] = LoadLoop("MOD/snd/" .. sounddata[1], sounddata[5])
-            else
-                precachedSounds[sounddata[3]] = LoadSound("MOD/snd/" .. sounddata[1], sounddata[5])
-            end
-		end
-	end
-
-	self.snds = precachedSounds
+function baseEnt:SetOrigin(origin)
+    self.origin = VecCopy(origin)
+    if server and self.body then
+        SetBodyTransform(self.body, Transform(origin, GetBodyTransform(self.body).rot))
+    end
 end
 
 -- Collision uses QueryShot, includes players by default
 function baseEnt:CollisionSettings()
     QueryRequire('visible physical')
+    QueryRejectBody(self.body)
+end
+
+function baseEnt:DeleteThis()
+    if server then Delete(self.body) end
+    GLOBAL_SPAWNED_ENTITIES[self.slot] = nil
+end
+
+-- Gets the returned values of the raytrace that last called Touch()
+function baseEnt:GetTouchTrace()
+    --    dist shape plyrHit surfNormal
+    return 0,    0,     0,     Vec()
 end
 
 --=========================================================================
@@ -176,19 +180,23 @@ end
 function baseEnt:RunPhysics_Real(dt)
     self.origin = GetBodyTransform(self.body).pos
 
+    if not self:hasFunc("touch") then return end
+
     local vel = GetBodyVelocity(self.body)
 
     self:CollisionSettings()
-    local didHit, _, shape, playerId = QueryShot(self.origin, VecNormalize(vel), VecLength(vel), 0, self.owner)
+    local didHit, dist, shape, playerId, _, normal = QueryShot(self.origin, VecNormalize(vel), VecLength(vel), self.collideRadius, self.owner)
     if not didHit or shape == self.lastTouched or playerId == self.lastTouched then
         return
+    end
+
+    self.GetTouchTrace = function()
+        return dist, shape, playerId, normal
     end
 
     self.lastTouched = playerId ~= 0 and playerId or shape
     self:touch()
 end
-
-
 
 function baseEnt:RunPhysics_Fake(dt)
     self.prevOrigin = VecCopy(self.origin)
@@ -210,36 +218,43 @@ function baseEnt:RunPhysics_Fake(dt)
         local gravity = -dt * GetGravity()[2] * self.gravityMult
 
         self:CollisionSettings()
-        local hit, dist, shape, playerId, _, traceNormal = QueryShot(self.prevOrigin, betweenDir, betweenLen)
+        local hit, dist, shape, playerId, _, traceNormal = QueryShot(self.prevOrigin, betweenDir, betweenLen, self.collideRadius)
 
         if hit == true then
             local proj, damp
 
-            -- Pull away from walls
-            local useDist = dist
-            if traceNormal[2] < 0.9 then
-                useDist = useDist - 0.01
-            end
-
             -- Place at contact point
-            self.origin = VecAdd(self.prevOrigin, VecScale(betweenDir, useDist))
+            self.origin = VecAdd(self.prevOrigin, VecScale(betweenDir, dist))
+
+            -- Pull out
+            self.origin = VecAdd(self.origin, VecScale(traceNormal, self.collideRadius))
 
             -- Damp velocity
             damp = self.bounceFactor
             damp = damp * 0.5
             if traceNormal[2] > 0.9 then -- Hit floor?
-                -- TO-DO: improve gravity here (only works with normal gravity!!)
-                if self.velocity[2] <= 0 and self.velocity[2] >= gravity * 2 then
+                -- TO-DO: only works with normal gravity!!
+                -- Also the range needs tweaked per collideRadius. Fix?
+                if self.velocity[2] <= 0 and self.velocity[2] > -2 then
+                    DebugPrint("STOPP")
                     damp = 0 -- Stop
                     self.active = false
                     self.nextActiveCheck = GetTime() + 0.1
                     self.angles[1] = 0
+                    self.velocity = Vec()
                 end
             end
 
             if damp > 0 and betweenLen / dt > 1 then
-                self.lastTouched = playerId ~= 0 and playerId or shape
-                self:touch() end  -- Hacky fix
+                if self:hasFunc("touch") then
+                    self.GetTouchTrace = function()
+                        return dist, shape, playerId, traceNormal
+                    end
+
+                    self.lastTouched = playerId ~= 0 and playerId or shape
+                    self:touch()
+                end
+            end
 
             -- Reflect velocity
             if damp ~= 0 then
@@ -273,7 +288,7 @@ function baseEnt:RunPhysics_Fake(dt)
         end
     elseif self.nextActiveCheck <= GetTime() then
         self:CollisionSettings()
-        local hit = QueryRaycast(self.origin, Vec(0, -GetGravity()[2]), dt)
+        local hit = QueryShot(self.origin, VecNormalize(GetGravity()), self.collideRadius*1.25, self.collideRadius)
         if not hit then
             self.active = true
         end
@@ -290,6 +305,9 @@ end
 function baseEnt:Tick(dt)
     local t = GetTime()
 
+    -- Reset now that we are in a new spot
+    self.GetTouchTrace = baseEnt.GetTouchTrace
+
     if hasFlag(self.flags, FENT_FAKEPHYSICS) then
         self:RunPhysics_Fake(dt) -- works with bodies and sprites
     else
@@ -300,7 +318,7 @@ function baseEnt:Tick(dt)
     if self.sprite then
 	    local spriteTrans = Transform(
             self.origin,
-            GetCameraTransform().rot
+            GetPlayerCameraTransform().rot
         )
 
         -- Create the drawnSPR variable to hold the sprite
@@ -313,26 +331,39 @@ function baseEnt:Tick(dt)
     end
 
     if self.nextThink <= t then
+        self.nextThink = math.huge
         self:think() -- should work!
     end
 end
 
 function baseEnt:init_sv()
-	-- must be called like this
-	baseEnt.PrecacheSFX(self)
+    PrecacheSFX(self)
 
     -- Delete the raw sounds now that they are uneeded
 	FREE(self.init_sv)
 	FREE(self.Sounds)
-	FREE(self.PrecacheSFX)
 end
 
 function baseEnt:init_cl()
-	-- must be called like this
-	baseEnt.PrecacheSFX(self)
+	PrecacheSFX(self)
 
     -- Delete the raw sounds now that they are uneeded
     FREE(self.init_cl)
 	FREE(self.Sounds)
-	FREE(self.PrecacheSFX)
+end
+
+function baseEnt:hasFunc(function_name)
+    return self[function_name] ~= baseWeap[function_name]
+end
+
+
+-- Some entities only exist on the server or client
+-- tells programmer that that is the case 
+-- if client/server then entTypeError() return end
+function entTypeError()
+    if client then
+        error("server entity used on client! May lead to undefined behaviour!", 3)
+    else
+        error("client entity used on server! May lead to undefined behaviour!", 3)
+    end
 end

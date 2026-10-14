@@ -127,13 +127,12 @@ function client.TENT_Update(
 					local proj, damp
 
 					-- Pull away from walls
-					local useDist = dist
 					if traceNormal[2] < 0.9 then
-						useDist = useDist - 0.01
+						dist = dist - 0.01
 					end
 
 					-- Place at contact point
-					pTemp.origin = VecAdd(pTemp.prevOrigin, VecScale(betweenDir, useDist))
+					pTemp.origin = VecAdd(pTemp.prevOrigin, VecScale(betweenDir, dist))
 
 					-- Damp velocity
 					damp = pTemp.bounceFactor

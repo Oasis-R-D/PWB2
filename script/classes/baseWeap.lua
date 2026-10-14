@@ -148,26 +148,26 @@ end
 function baseWeap:init_sv(wpnSlot)
 	-- must be called like this
 	baseWeap.init_tool(self)
-	baseWeap.PrecacheSFX(self)
+
+	PrecacheSFX(self)
+
 	self.weaponSlot	= wpnSlot
 
 	-- Delete the raw sounds now that they are uneeded
 	FREE(self.init_sv)
 	FREE(self.init_tool)
 	FREE(self.Sounds)
-	FREE(self.PrecacheSFX)
 	FREE(self.tickPlayer_cl)
 end
 
 function baseWeap:init_cl(wpnSlot)
-	-- must be called like this
-	baseWeap.PrecacheSFX(self)
+	PrecacheSFX(self)
+
 	self.weaponSlot	= wpnSlot
 
 	-- Delete the raw sounds now that they are uneeded
 	FREE(self.init_cl)
 	FREE(self.Sounds)
-	FREE(self.PrecacheSFX)
 	FREE(self.tickPlayer_sv)
 end
 
@@ -1049,40 +1049,6 @@ function baseWeap:PlayFollowingSound(loop, length)
 	self.followingSNDS[#self.followingSNDS + 1] = {loop, (GetTime() + length)}
 end
 
-function baseWeap:PrecacheSFX()
-	local precachedSounds = {}
-	local soundsLoaded = 0
-
-	for i, sounddata in ipairs(self:Sounds()) do
-		local prefix = sounddata[5] and "" or "MOD/"
-		-- Distance defaults to 10 on SV + CL
-		sounddata[6] = sounddata[6] and sounddata[6] or 10
-
-		-- Set the index
-		sounddata[3] = sounddata[3] and sounddata[3] or (soundsLoaded + 1)
-
-		if server and sounddata[2] == "sv" then
-            soundsLoaded = soundsLoaded + 1
-
-			if sounddata[4] and sounddata[4] == true then
-                precachedSounds[sounddata[3]] = LoadLoop(prefix .. "snd/" .. sounddata[1], sounddata[6])
-            else
-                precachedSounds[sounddata[3]] = LoadSound(prefix .. "snd/" .. sounddata[1], sounddata[6])
-            end
-		elseif client and sounddata[2] == "cl" then
-            soundsLoaded = soundsLoaded + 1
-
-            if sounddata[4] and sounddata[4] == true then
-                precachedSounds[sounddata[3]] = LoadLoop(prefix .. "snd/" .. sounddata[1], sounddata[6])
-            else
-                precachedSounds[sounddata[3]] = LoadSound(prefix .. "snd/" .. sounddata[1], sounddata[6])
-            end
-		end
-	end
-
-	self.snds = precachedSounds
-end
-
 function baseWeap:hasFunc(function_name)
     return self[function_name] ~= baseWeap[function_name]
 end
@@ -1125,10 +1091,10 @@ function baseWeap:DumpGlobals()
 
 	if false then
 		DebugWatch(prefix .. "prevPrimFireDelay", 	self.prevPrimFireDelay)
-		DebugWatch(prefix .. "lastShotInHoldTime", 		self.lastShotInHoldTime)
+		DebugWatch(prefix .. "lastShotInHoldTime", 	self.lastShotInHoldTime)
 
 		DebugWatch(prefix .. "timeWeaponIdle", 		self.timeWeaponIdle)
 	end
-	
+
 	DebugWatch(prefix .. "recoil", 				AIM_RecoilGetVec(self.owner))
 end
