@@ -1,4 +1,4 @@
-local curEntSlot = 1
+CurEntSlot = 1
 
 --============================================================================================
 -- 	 Entity OR projectile code (undecided)
@@ -29,10 +29,10 @@ function baseEnt:Create(obj, pos, ang, owner)
     instance.origin = VecCopy(pos)
     instance.angles = VecCopy(ang)
 
-    instance.slot = curEntSlot
+    instance.slot = CurEntSlot
 
-    GLOBAL_SPAWNED_ENTITIES[curEntSlot] = instance
-    curEntSlot = curEntSlot + 1
+    GLOBAL_SPAWNED_ENTITIES[CurEntSlot] = instance
+    CurEntSlot = CurEntSlot + 1
 
     instance:Spawn()
 
@@ -75,9 +75,6 @@ function baseEnt:initVars()
     -- Called when ent impacts a new object
     self.touch       = function() end -- pointer to touch func
 
-    -- Last touched object, makes sure touch is only called for a impact once
-    self.lastTouched = -1
-
     self.origin      = Vec()
 
     self.flags       = self:SpawnFlags()
@@ -86,15 +83,16 @@ function baseEnt:initVars()
         self.active        = true -- hasn't hit the ground?
         self.bounceFactor  = 1.0
 
-        self.prevOrigin    = Vec()
+        --self.prevOrigin    = Vec()
         self.angles        = Vec()
         self.angleVel      = Vec()
         self.velocity      = Vec()
-        self.gravityMult   = -1
+        self.gravityMult   = 1
         self.collideRadius = 0.05 -- keep decently high to prevent clipping
 
     -- Physical representation (both can be present!)
     self.body            = false -- 3D body     (if applicable)
+    self.cl_ent          = false -- true if the body is a client entity
     if client then
         self.sprite      = false -- Sprite body (if applicable)
         self.spriteScale = 1
@@ -106,21 +104,38 @@ function baseEnt:SpawnFlags()
     return addFlags(FENT_NONE, 0)
 end
 
--- Sets the entities model to the body at XML[index], keep clBody nil
-function baseEnt:SetModel(XML, index, clBody)
+-- Creates the entities body (model) entity at XML[index]. Keep clBody nil
+function baseEnt:MDL_SV_SET(XML, index, clBody)
+    Delete(self.body)
+    self.body = nil
+    self.cl_ent = nil
+
     if client then
         self.body = clBody
         return
     end
 
-    if XML == 0 or not XML then 
-        self.body = nil
-        self:ClientEntCall(0, "SetModel", 0, 0, nil)
-    else
+    if XML ~= 0 and XML then
         local TDent = Spawn(XML, Transform(self.origin, GetBodyTransform(self.body).rot))
         self.body = TDent[index]
 
-        self:ClientEntCall(0, "SetModel", 0, 0, self.body)
+        self:ClientEntCall(0, "MDL_SV_SET", 0, 0, self.body)
+    end
+end
+
+-- Creates the entities body (model) entity at XML[index] but on the client
+function baseEnt:MDL_SET(XML, index)
+    Delete(self.body)
+    self.body = nil
+    self.cl_ent = true
+
+    if server then
+        return
+    end
+
+    if XML ~= 0 and XML then
+        local TDent = Spawn(XML, Transform(self.origin, GetBodyTransform(self.body).rot))
+        self.body = TDent[index]
     end
 end
 
@@ -142,13 +157,14 @@ function baseEnt:SetOrigin(origin)
 end
 
 -- Collision uses QueryShot, includes players by default
+-- will not hit owner
 function baseEnt:QuerySettings()
     QueryRequire('visible physical')
     QueryRejectBody(self.body)
 end
 
 function baseEnt:DeleteThis()
-    if server then Delete(self.body) end
+    if server or (self.cl_ent and client) then Delete(self.body) end
     GLOBAL_SPAWNED_ENTITIES[self.slot] = nil
 end
 
@@ -194,7 +210,7 @@ function baseEnt:RunPhysics_Real(dt)
 
     self:QuerySettings()
     local didHit, dist, shape, playerId, _, normal = QueryShot(self.origin, VecNormalize(vel), VecLength(vel), self.collideRadius, self.owner)
-    if not didHit or shape == self.lastTouched or playerId == self.lastTouched then
+    if not didHit or shape == select(2, self:GetTouchTrace()) or playerId == select(3, self:GetTouchTrace()) then
         return
     end
 
@@ -202,7 +218,6 @@ function baseEnt:RunPhysics_Real(dt)
         return dist, shape, playerId, normal
     end
 
-    self.lastTouched = playerId ~= 0 and playerId or shape
     self:touch()
 end
 
@@ -223,10 +238,10 @@ function baseEnt:RunPhysics_Fake(dt)
         -- Collision ----------------------------------------------------
         local betweenDir = VecNormalize(self.velocity)
         local betweenLen = VecLength(self.velocity) * dt
-        local gravity = -dt * GetGravity()[2] * self.gravityMult
+        local gravity = dt * GetGravity()[2] * self.gravityMult
 
         self:QuerySettings()
-        local hit, dist, shape, playerId, _, traceNormal = QueryShot(self.prevOrigin, betweenDir, betweenLen, self.collideRadius)
+        local hit, dist, shape, playerId, _, traceNormal = QueryShot(self.prevOrigin, betweenDir, betweenLen, self.collideRadius, self.owner)
 
         if hit == true then
             local proj, damp
@@ -244,7 +259,6 @@ function baseEnt:RunPhysics_Fake(dt)
                 -- TO-DO: only works with normal gravity!!
                 -- Also the range needs tweaked per collideRadius. Fix?
                 if self.velocity[2] <= 0 and self.velocity[2] > -2 then
-                    DebugPrint("STOPP")
                     damp = 0 -- Stop
                     self.active = false
                     self.nextActiveCheck = GetTime() + 0.1
@@ -253,13 +267,12 @@ function baseEnt:RunPhysics_Fake(dt)
                 end
             end
 
-            if damp > 0 and betweenLen / dt > 1 then
+            if betweenLen / dt > 1 then
                 if self:hasFunc("touch") then
                     self.GetTouchTrace = function()
                         return dist, shape, playerId, traceNormal
                     end
 
-                    self.lastTouched = playerId ~= 0 and playerId or shape
                     self:touch()
                 end
             end
@@ -296,7 +309,7 @@ function baseEnt:RunPhysics_Fake(dt)
         end
     elseif self.nextActiveCheck <= GetTime() then
         self:QuerySettings()
-        local hit = QueryShot(self.origin, VecNormalize(GetGravity()), self.collideRadius*1.25, self.collideRadius)
+        local hit = QueryShot(self.origin, VecNormalize(GetGravity()), self.collideRadius*1.25, self.collideRadius, self.owner)
         if not hit then
             self.active = true
         end
@@ -304,17 +317,18 @@ function baseEnt:RunPhysics_Fake(dt)
         self.nextActiveCheck = GetTime() + 0.1
     end
 
-    -- bodies must be on the server!
-    if server and self.body then
+    -- check if the body is on client or server
+    if not self.cl_ent then
+        if server and self.body then
+            SetBodyTransform(self.body, Transform(self.origin, QuatEuler(self.angles[1], self.angles[2], self.angles[3])))
+        end
+    elseif client and self.body then
         SetBodyTransform(self.body, Transform(self.origin, QuatEuler(self.angles[1], self.angles[2], self.angles[3])))
     end
 end
 
 function baseEnt:Tick(dt)
     local t = GetTime()
-
-    -- Reset now that we are in a new spot
-    self.GetTouchTrace = baseEnt.GetTouchTrace
 
     if hasFlag(self.flags, FENT_FAKEPHYSICS) then
         self:RunPhysics_Fake(dt) -- works with bodies and sprites
@@ -362,16 +376,4 @@ end
 
 function baseEnt:hasFunc(function_name)
     return self[function_name] ~= baseWeap[function_name]
-end
-
-
--- Some entities only exist on the server or client
--- tells programmer that that is the case 
--- if client/server then entTypeError() return end
-function entTypeError()
-    if client then
-        error("server entity used on client! May lead to undefined behaviour!", 3)
-    else
-        error("client entity used on server! May lead to undefined behaviour!", 3)
-    end
 end

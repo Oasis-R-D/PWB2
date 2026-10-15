@@ -14,7 +14,7 @@ function server.settingUPD(key, value)
 end
 
 local function InitBool(key, default, onSV)
-    local value = default 
+    local value = default
     if HasKey("savegame.mod.pwb." .. key) then
         value = GetBool("savegame.mod.pwb." .. key)
     else

@@ -943,7 +943,7 @@ end
 
 function baseWeap:DepleteAmmo(ammoReduced, clipReduced)
 	if server then
-		local ammo = GetToolAmmo(self.toolID, self.owner)
+		local ammo = self.ammoTotal
 		if ammo < 9999 then
 			ammoReduced = ammoReduced or 1
 			SetToolAmmo(self.toolID, ammo-ammoReduced, self.owner)
