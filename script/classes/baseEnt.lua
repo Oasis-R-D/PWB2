@@ -104,7 +104,7 @@ function baseEnt:SpawnFlags()
     return addFlags(FENT_NONE, 0)
 end
 
--- Creates the entities body (model) entity at XML[index]. Keep clBody nil
+-- Creates the entities body (model) entity at XML[index] on the server. Keep clBodynil
 function baseEnt:MDL_SV_SET(XML, index, clBody)
     Delete(self.body)
     self.body = nil
@@ -123,7 +123,7 @@ function baseEnt:MDL_SV_SET(XML, index, clBody)
     end
 end
 
--- Creates the entities body (model) entity at XML[index] but on the client
+-- Creates the entities body (model) entity at XML[index]
 function baseEnt:MDL_SET(XML, index)
     Delete(self.body)
     self.body = nil
@@ -141,11 +141,11 @@ end
 
 -- Sets the entities image sprite, doesn't override model
 function baseEnt:SetSprite(Sprite)
-    if client then
-        self.sprite = Sprite
-        self.drawnSPR = nil
-        return
-    end
+    if not client then
+        return end
+
+    self.sprite = Sprite
+    self.drawnSPR = nil    
 end
 
 function baseEnt:SetOrigin(origin)
@@ -158,7 +158,7 @@ end
 
 -- Collision uses QueryShot, includes players by default
 -- will not hit owner
-function baseEnt:QuerySettings()
+function baseEnt:PHYS_QuerySettings()
     QueryRequire('visible physical')
     QueryRejectBody(self.body)
 end
@@ -169,7 +169,7 @@ function baseEnt:DeleteThis()
 end
 
 -- Gets the returned values of the raytrace that last called Touch()
-function baseEnt:GetTouchTrace()
+function baseEnt:PHYS_GetLastTouchTrace()
     --    dist shape plyrHit surfNormal
     return 0,    0,     0,     Vec()
 end
@@ -200,28 +200,27 @@ end
 --  and shouldn't (under normal circumstanced) be overriden.
 --=========================================================================
 
-
-function baseEnt:RunPhysics_Real(dt)
+function baseEnt:PHYS_RunReal(dt)
     self.origin = GetBodyTransform(self.body).pos
 
     if not self:hasFunc("touch") then return end
 
     local vel = GetBodyVelocity(self.body)
 
-    self:QuerySettings()
+    self:PHYS_QuerySettings()
     local didHit, dist, shape, playerId, _, normal = QueryShot(self.origin, VecNormalize(vel), VecLength(vel), self.collideRadius, self.owner)
-    if not didHit or shape == select(2, self:GetTouchTrace()) or playerId == select(3, self:GetTouchTrace()) then
+    if not didHit or shape == select(2, self:PHYS_GetLastTouchTrace()) or playerId == select(3, self:PHYS_GetLastTouchTrace()) then
         return
     end
 
-    self.GetTouchTrace = function()
+    self.PHYS_GetLastTouchTrace = function()
         return dist, shape, playerId, normal
     end
 
     self:touch()
 end
 
-function baseEnt:RunPhysics_Fake(dt)
+function baseEnt:PHYS_RunFake(dt)
     self.prevOrigin = VecCopy(self.origin)
 
     -- apply velocity
@@ -240,7 +239,7 @@ function baseEnt:RunPhysics_Fake(dt)
         local betweenLen = VecLength(self.velocity) * dt
         local gravity = dt * GetGravity()[2] * self.gravityMult
 
-        self:QuerySettings()
+        self:PHYS_QuerySettings()
         local hit, dist, shape, playerId, _, traceNormal = QueryShot(self.prevOrigin, betweenDir, betweenLen, self.collideRadius, self.owner)
 
         if hit == true then
@@ -269,7 +268,7 @@ function baseEnt:RunPhysics_Fake(dt)
 
             if betweenLen / dt > 1 then
                 if self:hasFunc("touch") then
-                    self.GetTouchTrace = function()
+                    self.PHYS_GetLastTouchTrace = function()
                         return dist, shape, playerId, traceNormal
                     end
 
@@ -293,7 +292,7 @@ function baseEnt:RunPhysics_Fake(dt)
         end
 
         -- Gravity ----------------------------------------------------
-        if self.active then
+        if self.active and gravity ~= 0 then
             if IsPointInWater(self.origin) == false then
                 self.velocity[2] = self.velocity[2] + gravity
             else
@@ -308,21 +307,23 @@ function baseEnt:RunPhysics_Fake(dt)
             end
         end
     elseif self.nextActiveCheck <= GetTime() then
-        self:QuerySettings()
+        self:PHYS_QuerySettings()
         local hit = QueryShot(self.origin, VecNormalize(GetGravity()), self.collideRadius*1.25, self.collideRadius, self.owner)
         if not hit then
             self.active = true
         end
 
-        self.nextActiveCheck = GetTime() + 0.1
+        self.nextActiveCheck = GetTime() + 0.33
     end
+
+    if not self.body then return end
 
     -- check if the body is on client or server
     if not self.cl_ent then
-        if server and self.body then
+        if server then
             SetBodyTransform(self.body, Transform(self.origin, QuatEuler(self.angles[1], self.angles[2], self.angles[3])))
         end
-    elseif client and self.body then
+    elseif client then
         SetBodyTransform(self.body, Transform(self.origin, QuatEuler(self.angles[1], self.angles[2], self.angles[3])))
     end
 end
@@ -331,9 +332,9 @@ function baseEnt:Tick(dt)
     local t = GetTime()
 
     if hasFlag(self.flags, FENT_FAKEPHYSICS) then
-        self:RunPhysics_Fake(dt) -- works with bodies and sprites
+        self:PHYS_RunFake(dt) -- works with bodies and sprites
     else
-        self:RunPhysics_Real(dt) -- only works with a body
+        self:PHYS_RunReal(dt) -- only works with a body
     end
 
     -- sprites are only simulated on clients
@@ -354,7 +355,7 @@ function baseEnt:Tick(dt)
 
     if self.nextThink <= t then
         self.nextThink = math.huge
-        self:think() -- should work!
+        self:think()
     end
 end
 
@@ -375,5 +376,5 @@ function baseEnt:init_cl()
 end
 
 function baseEnt:hasFunc(function_name)
-    return self[function_name] ~= baseWeap[function_name]
+    return self[function_name] ~= baseEnt[function_name]
 end
