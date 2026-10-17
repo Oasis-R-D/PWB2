@@ -184,7 +184,7 @@ function tickToolAnimator(toolAnimator, dt, defaultPoseTransform, playerId, swin
     local playerAnimator = GetPlayerAnimator(playerId)
 
     local thirdPersonAnimation = thirdPerson and playerAnimator ~= 0
-    if  thirdPersonAnimation then
+    if thirdPersonAnimation then
 
         -- Add shoulder movement
         t.pos = VecAdd(t.pos, getBoneAnimationOffset(playerAnimator, "shoulder_r", playerId))

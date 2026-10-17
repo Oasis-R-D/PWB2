@@ -8,7 +8,7 @@ end
 local function ExtractValues(data)
     return {
         pos = VecCopy(data[2]),
-        angles = VecCopy(data[3])
+        rot = QuatCopy(data[3])
     }
 end
 
@@ -40,11 +40,7 @@ function baseWeap:KF_Animate(dt)
         if u > 1 then u = 1 end
 
         local pos = VecLerp(data.pos, self.animNextFrameInfo[shapeIndex].pos, u)
-        local rotEuler = data.angles and VecLerp(data.angles, self.animNextFrameInfo[shapeIndex].angles, u) or nil
-        local rot = nil
-        if rotEuler then
-            rot = QuatEuler(rotEuler[1], rotEuler[2], rotEuler[3])
-        end
+        local rot = data.rot and QuatSlerp(data.rot, self.animNextFrameInfo[shapeIndex].rot, u) or nil
 
         local offsetTransform = Transform(pos, rot)
 
@@ -67,17 +63,13 @@ function baseWeap:KF_Animate(dt)
 end
 
 function baseWeap:KF_NewFrame(keyFrame)
-    local shapeIndex, pos, rotEuler = keyFrame[1], keyFrame[2], keyFrame[3]
-    local rot = rotEuler and QuatEuler(rotEuler[1], rotEuler[2], rotEuler[3]) or nil
+    local shapeIndex, pos, rot = keyFrame[1], keyFrame[2], keyFrame[3]
 
     -- Animation events
     if keyFrame[4] then keyFrame[4]() end
 
     self.animFrameTime = 0
     self.animFrame = self.animFrame + 1
-
-    -- This value is not accurate if you have multiple shapes moving per frame!!!
-    if PWB_SETTING.debug then DebugPrint("THIS FRAME: " .. self.animFrame / 2) end
 
     if shapeIndex == "hand_l" then
         local hand = client.PWB_ANIMATOR[self.owner].leftHand.transform
@@ -194,7 +186,7 @@ function baseWeap:KF_Reset() -- reset anims
     -- Reset hand transform
     if self.armTransforms then
         client.PWB_ANIMATOR[self.owner].leftHand.transform = TransformCopy(self.armTransforms["hand_l"])
-        client.PWB_ANIMATOR[self.owner].rightHand.transform = TransformCopy(self.armTransforms["hand_r"])   
+        client.PWB_ANIMATOR[self.owner].rightHand.transform = TransformCopy(self.armTransforms["hand_r"])
     end
 
     self.armTransforms = {}
