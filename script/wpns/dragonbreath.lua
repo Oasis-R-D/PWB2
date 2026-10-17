@@ -14,13 +14,13 @@ C_DB.casingOrg = Vec(0.02, 0.08, 0.022) -- Where casings are ejected
 C_DB.toolID   = "pbw_dbsg"  	   	   -- Used by the engine. Lowercase and no spaces
 C_DB.toolName = "PWB2 Dragon's Breath" -- Shown in killfeed
 C_DB.toolSlot = 4
-C_DB.toolPos  = 1			   -- placement in the hud column
+C_DB.toolPos  = 1			   		   -- placement in the hud column
 
-C_DB.ammoLoadedMax 	  = 4				  -- Max clip 	 	-- -1 for no clip (pulls from reserve)
-C_DB.ammoAltLoadedMax = 0 				  -- Max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
+C_DB.ammoLoadedMax 	  = 4				   -- Max clip 	 	-- -1 for no clip (pulls from reserve)
+C_DB.ammoAltLoadedMax = 0 				   -- Max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
 C_DB.ammoPickupSize	  = C_DB.ammoLoadedMax -- Defaults to full mag
-C_DB.dmg_world		  = 0.35				  -- Size of hole in meters
-C_DB.dmg_plyr		  = 0.1				  -- 0.0-1.0
+C_DB.dmg_world		  = 0.35			   -- Size of hole in meters
+C_DB.dmg_plyr		  = 0.15			   -- 0.0-1.0
 
 C_DB.flags = addFlags(0, FWPN_SV_CALLONCE_PRIM,
 						 FWPN_CLICK_PRIM) -- Weapon flags
@@ -103,7 +103,7 @@ function C_DB:PrimaryAttack(dt)
 			client.PUNCH_Axis(2, GetRandomFloat(-0.5, 0.5))
 
 			-- make VFX more intense
-			--self:FireProjectilePlayer(4, self.eyePos, GLOBAL_5DEGREES, true)
+			self:FireProjectilePlayer(4, self.eyePos, GLOBAL_5DEGREES, true)
 		end
 
 		self:muzzleFlash(self.muzzle, 5)
@@ -218,9 +218,10 @@ end
 
 C_DB.projectiles = {}
 
-local function ProjectileVars(pos, dir, i)
+local function ProjectileVars(owner, pos, dir, i)
 	SetRandomSeed(shared.seed + i)
 	return {
+		owner 	  = owner,
 		totalDist = 0,
 		maxDist   = GetRandomFloat(18, 30),
 		curPos 	  = VecCopy(pos),
@@ -240,6 +241,7 @@ function C_DB:FireProjectilePlayer(shots, pos, spreadRad, fake)
 		table.insert(
 			self.projectiles, 
 			ProjectileVars(
+				self.owner,
 				posUse,
 				dir,
 				fake and i+GetTime() or i
@@ -319,8 +321,9 @@ client.oddFrame = true
 function C_DB:Update(dt)
 	-- Only simulate on local device
 	if client then
+		if not self.isLocal then return end
 		client.oddFrame = not client.oddFrame
-	 	if not self.isLocal or client.oddFrame then return end
+	 	if client.oddFrame then return end
 		dt = dt * 2
 	elseif server and not IsPlayerHost(self.owner) then return end
 
@@ -343,7 +346,6 @@ function C_DB:Update(dt)
 			if client then
 				PointLight(data.curPos, 0.8, 0.3, 0.1, 0.5)
 				ProjectileVFX(data)
-
 
 				-- jitters due to only being called every other frame (sounds cool though)
 				PlayLoop(self.snds["fly"], data.curPos)
