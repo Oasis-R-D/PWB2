@@ -61,6 +61,9 @@ Player settings can be found at "savegame.mod.pwb.[HERE]" in the registry.
    -  alt fire can use another tools ammo (to add ammo pickups)
 
    -  Source viewpunch and FOV lerping is 'laggy' sometimes (investigate)
+
+   -  Enabling multiple PWB2 mods breaks FOV systems (and is generally wasteful)
+   -  make a separate base mod for VFX?
 ============================================================================================]]
 
 #version 2
@@ -78,7 +81,7 @@ PWB_SETTING = {}
 
 client.PWB_ANIMATOR = {}
 
-client.MAX_TEMPENTS = 128
+client.MAX_TEMPENTS = 48
 
 -- LIBRARYS
 #include "script/lib/pwbtoolanimation.lua"
@@ -110,7 +113,7 @@ GLOBAL_HEADSHOTMULT = 2.0
 #include "script/classes/kfAnimations.lua"
 
 -- ENTITIES
--- none!
+#include "script/ents/grenade.lua"
 
 -- WEAPONS
 #include "script/wpns/testgun.lua"
@@ -120,6 +123,8 @@ GLOBAL_HEADSHOTMULT = 2.0
 #include "script/wpns/dragonbreath.lua"
 
 #include "script/wpns/meleetool.lua"
+
+#include "script/wpns/grenade.lua"
 
 -- ANIMATIONS
 #include "script/wpns/anims/adsgun.lua"
@@ -133,7 +138,7 @@ GLOBAL_HEADSHOTMULT = 2.0
 ----------------------------------------------------------------------------------------------
 
 -- Holds the pointers to the class reference of weapons/entities
-local GLOBAL_WEAPONS = loadWeaponClasses()
+local GLOBAL_WEAPONS  = loadWeaponClasses()
 local GLOBAL_ENTITIES = loadEntityClasses()
 
 -- only calculate this once
@@ -141,7 +146,7 @@ local GLOBAL_WEAPONS_AMNT  = #GLOBAL_WEAPONS
 local GLOBAL_ENTITIES_AMNT = #GLOBAL_ENTITIES
 
 -- pointers to each player's weapons
-GLOBAL_PLYR_WEAPONS  = {}
+GLOBAL_PLYR_WEAPONS     = {}
 
 -- pointers to spawned enities
 GLOBAL_SPAWNED_ENTITIES = {}
@@ -170,6 +175,10 @@ function server.init()
    for weapon=1, GLOBAL_WEAPONS_AMNT do
       baseWeap.init_sv(GLOBAL_WEAPONS[weapon], weapon)
    end
+
+   for entity=1, GLOBAL_ENTITIES_AMNT do
+      baseEnt.init_sv(GLOBAL_ENTITIES[entity])
+   end
 end
 
 -- Doesn't need used
@@ -191,7 +200,7 @@ function server.tick(dt)
    end
 
    for _, ent in pairs(GLOBAL_SPAWNED_ENTITIES) do
-      ent:tickEntity(dt)
+      ent:Tick(dt)
    end
 end
 
@@ -232,7 +241,7 @@ function client.init()
    end
 
    for entity=1, GLOBAL_ENTITIES_AMNT do
-      baseEnt.init_cl(GLOBAL_ENTITIES[entity], entity)
+      baseEnt.init_cl(GLOBAL_ENTITIES[entity])
    end
 end
 
@@ -267,7 +276,7 @@ function client.tick(dt)
    client.settingsTick()
 
    for _, ent in pairs(GLOBAL_SPAWNED_ENTITIES) do
-      ent:tickEntity(dt)
+      ent:Tick(dt)
    end
 end
 

@@ -115,9 +115,6 @@ function C_Gun:SecondaryAttack(dt)
 
 			self:MDL_PunchAngReset(-15)
 			self:MDL_PunchAng(Vec(GetRandomFloat(2, 3), GetRandomFloat(-0.5, 0.5), GetRandomFloat(-1, 1)))
-
-			-- shell ejection
-			client.TENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
 		end
 
 		self:muzzleFlash(self.muzzle, 0.8)
@@ -127,7 +124,7 @@ function C_Gun:SecondaryAttack(dt)
 		PlayFireSound(self.snds["fire"], self.muzzle, 300)
 	end
 
-	self:FireProjectilePlayer(1, self.muzzle, GLOBAL_1DEGREE)
+	self:FireProjectilePlayer(1, self.muzzle, GLOBAL_2DEGREES)
 
 	self.nextFire = self:GetNextAttackDelay(0.5)
 	self.nextAltFire = self.nextFire
@@ -147,6 +144,39 @@ function C_Gun:WeaponIdle()
 	self.playEmptySound = true
 end
 
+function C_Gun:FireProjectilePlayer(shots, pos, spreadRad)
+	for i=1, shots do
+		local posUse, dir = AIM_GetSpreadedAim(pos, spreadRad, 80, self.owner, i)
+
+		-- Apply aim recoil
+		if spreadRad ~= -1 then dir = AIM_RecoilApply(self.owner, posUse, dir) end
+
+		-- Entity based projectiles
+		E_Gren.Fire(Transform(pos, QuatLookAt(pos, VecAdd(pos, dir))), self.owner)
+
+		--[[ Update based projectiles
+		table.insert(
+			self.projectiles, 
+			ProjectileVars(
+				client and Spawn("MOD/models/xml/gren_m203.xml", Transform(pos))[1] or 0, -- body
+				posUse,
+				dir
+			)
+		)
+		]]
+
+		PostEvent("pwb_shot_m203", posUse, dir, self.dmg_world, self.dmg_plyr)
+	end
+
+	-- Reset seed AFTER using it on both server and client
+	-- Can be unreliable at high latency
+	if server then shared.seed = GetRandomInt(0,10000) end
+end
+
+--[[=======================================================================
+-- Update based projectiles
+--=========================================================================
+
 C_Gun.projectiles = {}
 
 local function ProjectileVars(mdl, pos, dir)
@@ -159,29 +189,7 @@ local function ProjectileVars(mdl, pos, dir)
 	}
 end
 
-function C_Gun:FireProjectilePlayer(shots, pos, spreadRad)
-	for i=1, shots do
-		local posUse, dir = AIM_GetSpreadedAim(pos, spreadRad, 80, self.owner, i)
 
-		-- Apply aim recoil
-		if spreadRad ~= -1 then dir = AIM_RecoilApply(self.owner, posUse, dir) end
-
-		table.insert(
-			self.projectiles, 
-			ProjectileVars(
-				client and Spawn("MOD/models/xml/gren_m203.xml", Transform(pos))[1] --[[body]] or 0,
-				posUse,
-				dir
-			)
-		)
-
-		PostEvent("pwb_shot_m203", posUse, dir, self.dmg_world, self.dmg_plyr)
-	end
-
-	-- Reset seed AFTER using it on both server and client
-	-- Can be unreliable at high latency
-	if server then shared.seed = GetRandomInt(0,10000) end
-end
 
 
 function C_Gun:Update(dt)
@@ -233,3 +241,4 @@ function C_Gun:Update(dt)
 		end
 	end
 end
+]]

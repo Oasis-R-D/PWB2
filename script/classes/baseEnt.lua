@@ -39,21 +39,17 @@ function baseEnt:Create(obj, pos, ang, owner)
     return instance
 end
 
--- defines sound data per entity class
--- sounds are automatically parsed from the snd folder
--- dist and loop are optional and default to values shown in table
--- index is optional and defaults to order loaded (shown below)
--- x sv (index 1 on sv)
--- y cl (index 1 on cl)
--- z cl (index 2 on cl)
--- NOTE: if you really want to save space, 
--- you can access sounds from other entity classes instead of duplicating them
-function baseEnt:Sounds()
-	return {
---  	   SOUND	  load to	  [index]      [loop]  [dist]
-		{"SOUND.ogg", "sv|cl", "name/num/nil", false,	10}
-	}
-end
+-----------------------------------------------------------
+-- Static values for this specific entity.
+--
+---These are shared for all instances of
+-- the class and they don't need redefined
+-- for a entity if using the default value.
+--
+-- Entities can define their own
+-- custom static values if needed.
+-----------------------------------------------------------
+baseEnt.snds  = 0 -- Prechached SFX list, set on INIT
 
 -----------------------------------------------------------
 -- Values that ALL weapons share/use
@@ -99,16 +95,62 @@ function baseEnt:initVars()
     end
 end
 
+-- defines sound data per entity class
+-- sounds are automatically parsed from the snd folder
+-- dist and loop are optional and default to values shown in table
+-- index is optional and defaults to order loaded (shown below)
+-- x sv (index 1 on sv)
+-- y cl (index 1 on cl)
+-- z cl (index 2 on cl)
+-- NOTE: if you really want to save space, 
+-- you can access sounds from other entity classes instead of duplicating them
+function baseEnt:Sounds()
+	return {
+--  	   SOUND	  load to	  [index]      [loop]  [dist]
+		{"SOUND.ogg", "sv|cl", "name/num/nil", false,	10}
+	}
+end
+
 -- Override for more flags
 function baseEnt:SpawnFlags()
     return addFlags(FENT_NONE, 0)
 end
 
+--=========================================================================
+--  GENERAL
+--  General fucntions used for certain important things
+--=========================================================================
+
+function baseEnt:SetOrigin(origin)
+    self.origin = VecCopy(origin)
+    self.prevOrigin = VecCopy(origin)
+
+    -- check if the body is on client or server
+
+    if not self.cl_ent then
+        if server then
+            SetBodyTransform(self.body, Transform(origin, GetBodyTransform(self.body).rot))
+        end
+    elseif client then
+        SetBodyTransform(self.body, Transform(origin, GetBodyTransform(self.body).rot))
+    end
+end
+
+function baseEnt:DeleteThis()
+    Delete(self.body)
+    GLOBAL_SPAWNED_ENTITIES[self.slot] = nil
+end
+
+--=========================================================================
+--  MODEL
+--  Sets the entities physical 
+--=========================================================================
+
 -- Creates the entities body (model) entity at XML[index] on the server. Keep clBodynil
-function baseEnt:MDL_SV_SET(XML, index, clBody)
+function baseEnt:MDL_SET_SV(XML, index, clBody)
     Delete(self.body)
     self.body = nil
-    self.cl_ent = nil
+    self.cl_ent = false
 
     if client then
         self.body = clBody
@@ -119,7 +161,7 @@ function baseEnt:MDL_SV_SET(XML, index, clBody)
         local TDent = Spawn(XML, Transform(self.origin, GetBodyTransform(self.body).rot))
         self.body = TDent[index]
 
-        self:ClientEntCall(0, "MDL_SV_SET", 0, 0, self.body)
+        self:ClientEntCall(0, "MDL_SET_SV", 0, 0, self.body)
     end
 end
 
@@ -130,6 +172,7 @@ function baseEnt:MDL_SET(XML, index)
     self.cl_ent = true
 
     if server then
+        if PWB_SETTING.debug then error("MDL_SET() on server, intentional?", 2) end
         return
     end
 
@@ -139,39 +182,15 @@ function baseEnt:MDL_SET(XML, index)
     end
 end
 
--- Sets the entities image sprite, doesn't override model
-function baseEnt:SetSprite(Sprite)
+-- Sets the entities image sprite, doesn't override actual model
+function baseEnt:MDL_SET_SPRITE(Sprite)
     if not client then
-        return end
+        if PWB_SETTING.debug then error("MDL_SET_SPRITE() on server, intentional?", 2) end
+        return
+    end
 
     self.sprite = Sprite
-    self.drawnSPR = nil    
-end
-
-function baseEnt:SetOrigin(origin)
-    self.origin = VecCopy(origin)
-    self.prevOrigin = VecCopy(origin)
-    if server and self.body then
-        SetBodyTransform(self.body, Transform(origin, GetBodyTransform(self.body).rot))
-    end
-end
-
--- Collision uses QueryShot, includes players by default
--- will not hit owner
-function baseEnt:PHYS_QuerySettings()
-    QueryRequire('visible physical')
-    QueryRejectBody(self.body)
-end
-
-function baseEnt:DeleteThis()
-    if server or (self.cl_ent and client) then Delete(self.body) end
-    GLOBAL_SPAWNED_ENTITIES[self.slot] = nil
-end
-
--- Gets the returned values of the raytrace that last called Touch()
-function baseEnt:PHYS_GetLastTouchTrace()
-    --    dist shape plyrHit surfNormal
-    return 0,    0,     0,     Vec()
+    self.drawnSPR = nil
 end
 
 --=========================================================================
@@ -195,10 +214,22 @@ function baseEnt:ClientEntCall(receivers, func, ...)
 end
 
 --=========================================================================
---	BACKEND FUNCS
---  These are used by the entity code for very specific purposes 
---  and shouldn't (under normal circumstanced) be overriden.
+--  PHYSICS
+--  Runs GoldSource styled (or real) physics and calls self.touch()
 --=========================================================================
+
+-- Collision uses QueryShot, includes players by default
+-- will not hit owner
+function baseEnt:PHYS_QuerySettings()
+    QueryRequire('visible physical')
+    QueryRejectBody(self.body)
+end
+
+-- Gets the returned values of the raytrace that last called Touch()
+function baseEnt:PHYS_GetLastTouchTrace()
+    --    dist shape plyrHit surfNormal
+    return 0,   -1,    -1,     Vec()
+end
 
 function baseEnt:PHYS_RunReal(dt)
     self.origin = GetBodyTransform(self.body).pos
@@ -208,13 +239,13 @@ function baseEnt:PHYS_RunReal(dt)
     local vel = GetBodyVelocity(self.body)
 
     self:PHYS_QuerySettings()
-    local didHit, dist, shape, playerId, _, normal = QueryShot(self.origin, VecNormalize(vel), VecLength(vel), self.collideRadius, self.owner)
+    local didHit, dist, shape, playerId, _, normal = QueryShot(self.origin, VecNormalize(vel), VecLength(vel) * dt + self.collideRadius, self.collideRadius, self.owner)
     if not didHit or shape == select(2, self:PHYS_GetLastTouchTrace()) or playerId == select(3, self:PHYS_GetLastTouchTrace()) then
         return
     end
 
     self.PHYS_GetLastTouchTrace = function()
-        return dist, shape, playerId, normal
+        return dist, shape > 0 and shape or -1, playerId > 0 and playerId or -1, normal
     end
 
     self:touch()
@@ -269,7 +300,7 @@ function baseEnt:PHYS_RunFake(dt)
             if betweenLen / dt > 1 then
                 if self:hasFunc("touch") then
                     self.PHYS_GetLastTouchTrace = function()
-                        return dist, shape, playerId, traceNormal
+                        return dist, shape > 0 and shape or -1, playerId > 0 and playerId or -1, traceNormal
                     end
 
                     self:touch()
@@ -328,6 +359,14 @@ function baseEnt:PHYS_RunFake(dt)
     end
 end
 
+function baseEnt:hasFunc(function_name)
+    return self[function_name] ~= baseEnt[function_name]
+end
+
+--=========================================================================
+-- Main entity ticking
+--=========================================================================
+
 function baseEnt:Tick(dt)
     local t = GetTime()
 
@@ -359,6 +398,10 @@ function baseEnt:Tick(dt)
     end
 end
 
+--=========================================================================
+-- Init funcs
+--=========================================================================
+
 function baseEnt:init_sv()
     PrecacheSFX(self)
 
@@ -375,6 +418,3 @@ function baseEnt:init_cl()
 	FREE(self.Sounds)
 end
 
-function baseEnt:hasFunc(function_name)
-    return self[function_name] ~= baseEnt[function_name]
-end
