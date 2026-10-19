@@ -1,8 +1,57 @@
 CurEntSlot = 1
 
---============================================================================================
--- 	 Entity OR projectile code (undecided)
---============================================================================================
+--[[==========================================================================================
+ 	 HALF-LIFE STYLE ENTITY CODE
+     This system allows you to 'easily' create scripted objects without needing an
+     entire secondary script, allowing for easier communication with main weapon systems.
+
+     USAGE:
+     --- WORLD INTERACTIONS
+
+     - TOUCH
+     Entities call a 'touch' function when touching either a unique object (on real physics) or
+     when hitting an object at an average speed (on fake physics). the touch function is set by
+     doing self.touch = [FUNCTION NAME]. 
+     You can get the last touch's data by using the function PHYS_GetLastTouchTrace.
+     Giving you distance, shape hit, player hit and the surface normal.
+     
+     - SPAWN
+     Entities call Spawn() when first initialized, helpful for declaring variables and
+     intitalizing systems. However custom creation functions are usually used for the same
+     purpose.
+     
+     - THINK
+     Entities use a 'think' function for looping logic, this is set by
+     doing self.think = [FUNCTION NAME] and then setting the next time it will be called using
+     self.nextThink = GetTime() + [TIME]. nextThink must be set inside the think function for
+     it to be called continuously.
+     
+     COMMON TROUBLESHOOTING:
+     --- Client body transform is pointing to the origin
+     When an entity is deleted, the server typically reaches the delete first. make sure
+     to store and update the transform on the client in a way to keep it after deletion.
+     
+     --- Server's body doesn't exist on client for a short time after using MDL_SET_SV.
+     The server body is found using a tag with the entity's slot, this means it may take
+     some time to get the body on the client when latency is high.
+
+     --- Velocity and body options
+     Velocity, origin and angles are set using .velocity, .origin and .angles only
+     when using the fake physics. 
+     
+     For real physics, origin is only used to access the bodies origin.
+     Use Set and Get BodyVelocity() and such for entities using real physics.
+
+     --- Server can't access data on client bodies using real physics
+
+     --- EntCall error
+     This error happens when an entity tries to reach it's server/client side counterpart
+     when it's slot on that side is not there. 
+     
+     Nil typically happens when CurEntSlot is not properly incremented on each side when an
+     entity is spawned or when one side is deleted before the call is received, try not to use
+     calls during a subroutine that deletes an entity.
+--==========================================================================================]]
 
 baseEnt = {}
 
@@ -137,8 +186,9 @@ function baseEnt:SetOrigin(origin)
 end
 
 function baseEnt:DeleteThis()
-    Delete(self.body)
+    if (client and self.cl_ent) or server then Delete(self.body) end
     GLOBAL_SPAWNED_ENTITIES[self.slot] = nil
+    self = nil
 end
 
 --=========================================================================
@@ -146,38 +196,39 @@ end
 --  Sets the entities physical 
 --=========================================================================
 
--- Creates the entities body (model) entity at XML[index] on the server. Keep clBodynil
-function baseEnt:MDL_SET_SV(XML, index, clBody)
+-- Creates the entities body (model) entity at XML[index] on the server.
+-- MUST BE CALLED ON CLIENT AS WELL
+function baseEnt:MDL_SET_SV(XML, index, allowStatic, jointExisting, overrideTransform)
     Delete(self.body)
     self.body = nil
     self.cl_ent = false
 
     if client then
-        self.body = clBody
+        self.body = -2
         return
     end
 
     if XML ~= 0 and XML then
-        local TDent = Spawn(XML, Transform(self.origin, GetBodyTransform(self.body).rot))
+        local TDent = Spawn(XML, overrideTransform and overrideTransform or Transform(self.origin), allowStatic, jointExisting)
         self.body = TDent[index]
 
-        self:ClientEntCall(0, "MDL_SET_SV", 0, 0, self.body)
+        SetTag(self.body, "entIndex" .. CurEntSlot)
     end
 end
 
 -- Creates the entities body (model) entity at XML[index]
-function baseEnt:MDL_SET(XML, index)
+function baseEnt:MDL_SET(XML, index, allowStatic, jointExisting, overrideTransform)
     Delete(self.body)
     self.body = nil
     self.cl_ent = true
 
     if server then
-        if PWB_SETTING.debug then error("MDL_SET() on server, intentional?", 2) end
+        if PWB_SETTING.debug then error("MDL_SET() on server! intentional?", 2) end
         return
     end
 
     if XML ~= 0 and XML then
-        local TDent = Spawn(XML, Transform(self.origin, GetBodyTransform(self.body).rot))
+        local TDent = Spawn(XML, overrideTransform and overrideTransform or Transform(self.origin), allowStatic, jointExisting)
         self.body = TDent[index]
     end
 end
@@ -185,7 +236,7 @@ end
 -- Sets the entities image sprite, doesn't override actual model
 function baseEnt:MDL_SET_SPRITE(Sprite)
     if not client then
-        if PWB_SETTING.debug then error("MDL_SET_SPRITE() on server, intentional?", 2) end
+        if PWB_SETTING.debug then error("MDL_SET_SPRITE() on server! intentional?", 2) end
         return
     end
 
@@ -200,7 +251,7 @@ end
 
 function ReceiveEntCall(func, slot, ...)
 	local ent = GLOBAL_SPAWNED_ENTITIES[slot]
-	if not ent then error("EntCall couldn't find ent:" .. slot) return end
+    if not ent then error("EntCalled nil ent: " .. slot .. ", See if you incremented CurEntSlot on both SV|CL or didn't create one of them") return end
 
 	ent[func](ent, ...)
 end
@@ -232,7 +283,9 @@ function baseEnt:PHYS_GetLastTouchTrace()
 end
 
 function baseEnt:PHYS_RunReal(dt)
-    self.origin = GetBodyTransform(self.body).pos
+    if IsHandleValid(self.body) then -- fix client having no origin when server is deleted
+        self.origin = GetBodyTransform(self.body).pos
+    else return end
 
     if not self:hasFunc("touch") then return end
 
@@ -370,6 +423,14 @@ end
 function baseEnt:Tick(dt)
     local t = GetTime()
 
+    -- Receive body from server
+    if self.body == -2 then
+        local body = FindBody("entIndex" .. CurEntSlot, true)
+        if body ~= 0 then
+            self.body = body
+        end
+    end
+
     if hasFlag(self.flags, FENT_FAKEPHYSICS) then
         self:PHYS_RunFake(dt) -- works with bodies and sprites
     else
@@ -417,4 +478,3 @@ function baseEnt:init_cl()
     FREE(self.init_cl)
 	FREE(self.Sounds)
 end
-

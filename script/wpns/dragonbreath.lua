@@ -83,7 +83,7 @@ function C_DB:PrimaryAttack(dt)
 				self:KF_SetAnim(C_DB.ANIM_PUMP)
 			end
 
-			PlaySound(self.snds["pump"], self.muzzle)
+			PlaySound(self.snds["pump"], self.muzzlePos)
 			return
 		end
 
@@ -103,10 +103,10 @@ function C_DB:PrimaryAttack(dt)
 			client.PUNCH_Axis(2, GetRandomFloat(-0.5, 0.5))
 
 			-- make VFX more intense
-			self:FireProjectilePlayer(4, self.eyePos, GLOBAL_5DEGREES, true)
+			self:FireProjectilePlayer(4, self.eye.pos, GLOBAL_5DEGREES, true)
 		end
 
-		self:muzzleFlash(self.muzzle, 5)
+		self:muzzleFlash(self.muzzlePos, 5)
 
 		self.specialReload = 0
 
@@ -114,12 +114,12 @@ function C_DB:PrimaryAttack(dt)
 			self.timeWeaponIdle = 1
 		end
 	else
-		PlayFireSound(self.snds["fire"], self.muzzle, 300)
+		PlayFireSound(self.snds["fire"], self.muzzlePos, 300)
 	end
 
 	baseWeap.DepleteAmmo(self, 1, 1)
 
-	self:FireProjectilePlayer(8, self.eyePos, GLOBAL_10DEGREES)
+	self:FireProjectilePlayer(8, self.eye.pos, GLOBAL_10DEGREES)
 
 	self.nextFire = self:GetNextAttackDelay(0.5)
 	self.nextAltFire = self.nextFire
@@ -139,7 +139,7 @@ function C_DB:Reload()
 
 		if self.isLocal then 
 			self:MDL_PunchAng(Vec(0, 2, -10))
-			PlaySound(self.snds["reload"], self.muzzle)
+			PlaySound(self.snds["reload"], self.muzzlePos)
 		end
 
 		if self.ammoLoaded == 0 then self.pumpTime = -1 end
@@ -162,7 +162,7 @@ function C_DB:Reload()
 
 		self.specialReload = 2
 
-		PlayFireSound(self.snds["load"], self.muzzle)
+		PlayFireSound(self.snds["load"], self.muzzlePos)
 
 		self:MDL_PunchPos(Vec(0, 0.1, 0.1))
 		if self.isLocal then
@@ -211,7 +211,7 @@ function C_DB:WeaponIdle()
 				self:KF_SetAnim(C_DB.ANIM_PUMP)
 			end
 
-			PlaySound(self.snds["pump"], self.muzzle)
+			PlaySound(self.snds["pump"], self.muzzlePos)
 		end
 	end
 end
@@ -403,7 +403,7 @@ function C_DB:FiringVFX()
 	ParticleTile(4)
 	ParticleStretch(0.2)
 	for i=1,20 do
-		SpawnParticle(self.muzzle, VecAdd(VecScale(0.001, 0.001), rndVec(7)), rnd(0.2, 0.7))
+		SpawnParticle(self.muzzlePos, VecAdd(VecScale(0.001, 0.001), rndVec(7)), rnd(0.2, 0.7))
 	end
 
 	ParticleReset()
@@ -416,7 +416,7 @@ function C_DB:FiringVFX()
 	ParticleTile(4)
 	ParticleStretch(0.2)
 	for i=1,10 do
-		SpawnParticle(self.muzzle, VecAdd(VecScale(0.001, 0.001), rndVec(8)), rnd(0.1, 0.6))
+		SpawnParticle(self.muzzlePos, VecAdd(VecScale(0.001, 0.001), rndVec(8)), rnd(0.1, 0.6))
 	end
 
 	ParticleReset()
@@ -431,7 +431,7 @@ function C_DB:FiringVFX()
 	ParticleEmissive(rnd(8, 10), 0, "easeout")
 	ParticleDrag(0)
 	for i=1,4 do
-		SpawnParticle(self.muzzle, Vec(rnd(-2.0,2.0), rnd(-2.0,2.0), rnd(-2.0,2.0)), rnd(0.15,0.45))
+		SpawnParticle(self.muzzlePos, Vec(rnd(-2.0,2.0), rnd(-2.0,2.0), rnd(-2.0,2.0)), rnd(0.15,0.45))
 	end
 
 	ParticleReset()
@@ -446,7 +446,7 @@ function C_DB:FiringVFX()
 	ParticleEmissive(rnd(10, 12), 0, "easeout")
 	ParticleDrag(0)
 	for i=1,4 do
-		SpawnParticle(self.muzzle, Vec(rnd(-2.0,2.0), rnd(-2.0,2.0), rnd(-2.0,2.0)), rnd(0.15,0.45))
+		SpawnParticle(self.muzzlePos, Vec(rnd(-2.0,2.0), rnd(-2.0,2.0), rnd(-2.0,2.0)), rnd(0.15,0.45))
 	end
 
 	ParticleReset()
@@ -461,7 +461,7 @@ function C_DB:FiringVFX()
 	ParticleEmissive(rnd(8, 10), 0, "easeout")
 	ParticleDrag(0.9)	
 	for i=1,2 do
-		SpawnParticle(self.muzzle, Vec(rnd(-1.0,1.0), rnd(-1.0,1.0), rnd(-1.0,1.0)), rnd(0.2,0.3))
+		SpawnParticle(self.muzzlePos, Vec(rnd(-1.0,1.0), rnd(-1.0,1.0), rnd(-1.0,1.0)), rnd(0.2,0.3))
 	end
 
 	ParticleReset()
@@ -476,6 +476,6 @@ function C_DB:FiringVFX()
 	ParticleEmissive(rnd(10, 12), 0, "easeout")
 	ParticleDrag(0.9)
 	for i=1,2 do
-		SpawnParticle(self.muzzle, Vec(rnd(-1.0,1.0), rnd(-1.0,1.0), rnd(-1.0,1.0)), rnd(0.2,0.3))
+		SpawnParticle(self.muzzlePos, Vec(rnd(-1.0,1.0), rnd(-1.0,1.0), rnd(-1.0,1.0)), rnd(0.2,0.3))
 	end
 end

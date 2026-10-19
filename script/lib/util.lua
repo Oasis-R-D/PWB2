@@ -38,13 +38,6 @@ function loadEntityClasses()
 	return classes
 end
 
-function RemovePlayer(p)
-	GLOBAL_PLYR_WEAPONS[p] = nil
-    AIM_RecoilSet(p, nil)
-
-	if client then client.PWB_ANIMATOR[p] = nil end
-end
-
 function findArrayOpening(array)
     local i = 1
 

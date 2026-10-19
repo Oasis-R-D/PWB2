@@ -60,8 +60,6 @@ Player settings can be found at "savegame.mod.pwb.[HERE]" in the registry.
 ==============================================================================================
    -  alt fire can use another tools ammo (to add ammo pickups)
 
-   -  Source viewpunch and FOV lerping is 'laggy' sometimes (investigate)
-
    -  Enabling multiple PWB2 mods breaks FOV systems (and is generally wasteful)
    -  make a separate base mod for VFX?
 ============================================================================================]]
@@ -142,8 +140,8 @@ local GLOBAL_WEAPONS  = loadWeaponClasses()
 local GLOBAL_ENTITIES = loadEntityClasses()
 
 -- only calculate this once
-local GLOBAL_WEAPONS_AMNT  = #GLOBAL_WEAPONS
-local GLOBAL_ENTITIES_AMNT = #GLOBAL_ENTITIES
+GLOBAL_WEAPONS_AMNT  = #GLOBAL_WEAPONS
+GLOBAL_ENTITIES_AMNT = #GLOBAL_ENTITIES
 
 -- pointers to each player's weapons
 GLOBAL_PLYR_WEAPONS     = {}
@@ -156,6 +154,19 @@ GLOBAL_SPAWNED_ENTITIES = {}
 -- MAIN CODE (DO NOT TOUCH UNLESS YOU KNOW WHAT YOU'RE DOING)
 --============================================================================================
 --============================================================================================
+
+-- Destroy weapons on player leave
+local function RemovePlayer(p)
+	local wpns = GLOBAL_PLYR_WEAPONS[p]
+	for j=1, GLOBAL_WEAPONS_AMNT do
+		wpns[j]:Destroy(true)
+	end
+
+	FREE(GLOBAL_PLYR_WEAPONS[p])
+   AIM_RecoilSet(p, nil)
+
+	if client then FREE(client.PWB_ANIMATOR[p]) end
+end
 
 -- Reset player data on death
 local function CheckDeathReset()

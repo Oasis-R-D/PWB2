@@ -142,13 +142,13 @@ function C_PattGun:PrimaryAttack(dt)
 			client.TENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
 		end
 
-		self:muzzleFlash(self.muzzle, 0.8)
+		self:muzzleFlash(self.muzzlePos, 0.8)
 	else
-		PlayFireSound(self.snds["fire"], self.muzzle, 300)
+		PlayFireSound(self.snds["fire"], self.muzzlePos, 300)
 	end
 
 	-- Fire before viewpunch offsets it (only happens in SP though because MP viewpunch is weird)
-	self:FireBulletsPlayer(1, self.eyePos, self:GetAccuracy(), 100)
+	self:FireBulletsPlayer(1, self.eye.pos, self:GetAccuracy(), 100)
 
 	AIM_RecoilSet(self.owner, SprayPattern[self.shot])
 	self.shot = self.shot + 1

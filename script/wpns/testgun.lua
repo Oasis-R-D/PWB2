@@ -81,14 +81,14 @@ function C_Gun:PrimaryAttack(dt)
 			client.TENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_9mm.xml", FSFX_BRASS)
 		end
 
-		self:muzzleFlash(self.muzzle, 0.8)
+		self:muzzleFlash(self.muzzlePos, 0.8)
 	else
-		PlayFireSound(self.snds["fire"], self.muzzle, 300)
+		PlayFireSound(self.snds["fire"], self.muzzlePos, 300)
 	end
 
 	baseWeap.DepleteAmmo(self, 1, 1)
 
-	self:FireBulletsPlayer(1, self.eyePos, GLOBAL_5DEGREES, 100)
+	self:FireBulletsPlayer(1, self.eye.pos, GLOBAL_5DEGREES, 100)
 
 	self.nextFire = self:GetNextAttackDelay(0.075)
 	self.nextAltFire = GetTime() + 0.075
@@ -117,14 +117,14 @@ function C_Gun:SecondaryAttack(dt)
 			self:MDL_PunchAng(Vec(GetRandomFloat(2, 3), GetRandomFloat(-0.5, 0.5), GetRandomFloat(-1, 1)))
 		end
 
-		self:muzzleFlash(self.muzzle, 0.8)
+		self:muzzleFlash(self.muzzlePos, 0.8)
 
 		self.ammoAltTotal = self.ammoAltTotal - 1
 	else
-		PlayFireSound(self.snds["fire"], self.muzzle, 300)
+		PlayFireSound(self.snds["fire"], self.muzzlePos, 300)
 	end
 
-	self:FireProjectilePlayer(1, self.muzzle, GLOBAL_2DEGREES)
+	self:FireProjectilePlayer(1, self.muzzlePos, GLOBAL_2DEGREES)
 
 	self.nextFire = self:GetNextAttackDelay(0.5)
 	self.nextAltFire = self.nextFire
@@ -188,9 +188,6 @@ local function ProjectileVars(mdl, pos, dir)
 		Velocity  = VecScale(dir, 25),
 	}
 end
-
-
-
 
 function C_Gun:Update(dt)
 	-- Only simulate on local device

@@ -81,7 +81,7 @@ function C_Shtgn:PrimaryAttack(dt)
 				self:KF_SetAnim(C_Shtgn.ANIM_PUMP)
 			end
 
-			PlaySound(self.snds["pump"], self.muzzle)
+			PlaySound(self.snds["pump"], self.muzzlePos)
 			return
 		end
 
@@ -99,7 +99,7 @@ function C_Shtgn:PrimaryAttack(dt)
 			client.PUNCH_Axis(2, GetRandomFloat(-0.5, 0.5))
 		end
 
-		self:muzzleFlash(self.muzzle, 0.8)
+		self:muzzleFlash(self.muzzlePos, 0.8)
 
 		self.specialReload = 0
 
@@ -109,12 +109,12 @@ function C_Shtgn:PrimaryAttack(dt)
 			self.timeWeaponIdle = 1
 		end
 	else
-		PlayFireSound(self.snds["fire"], self.muzzle, 300)
+		PlayFireSound(self.snds["fire"], self.muzzlePos, 300)
 	end
 
 	baseWeap.DepleteAmmo(self, 1, 1)
 
-	self:FireBulletsPlayer(6, self.eyePos, GLOBAL_10DEGREES, 80)
+	self:FireBulletsPlayer(6, self.eye.pos, GLOBAL_10DEGREES, 80)
 
 	self.nextFire = self:GetNextAttackDelay(0.75)
 	self.nextAltFire = self.nextFire
@@ -140,7 +140,7 @@ function C_Shtgn:SecondaryAttack(dt)
 				self:KF_SetAnim(C_Shtgn.ANIM_PUMP)
 			end
 
-			PlaySound(self.snds["pump"], self.muzzle)
+			PlaySound(self.snds["pump"], self.muzzlePos)
 			return
 		end
 
@@ -161,7 +161,7 @@ function C_Shtgn:SecondaryAttack(dt)
 			client.TENT_EjectShell(self.owner, self.casingOrg, Vec(1, -0.2, 0), "MOD/models/xml/shell/casing_shtgn.xml", FSFX_SHTGN)
 		end
 
-		self:muzzleFlash(self.muzzle, 1.2, Vec(1.33, 1, 1))
+		self:muzzleFlash(self.muzzlePos, 1.2, Vec(1.33, 1, 1))
 
 		self.specialReload = 0
 
@@ -171,12 +171,12 @@ function C_Shtgn:SecondaryAttack(dt)
 			self.timeWeaponIdle = 1.5
 		end
 	else
-		PlayFireSound(self.snds["fireAlt"], self.muzzle, 300)
+		PlayFireSound(self.snds["fireAlt"], self.muzzlePos, 300)
 	end
 
 	baseWeap.DepleteAmmo(self, 2, 2)
 
-	self:FireBulletsPlayer(12, self.eyePos, GLOBAL_10DEGREES, 80)
+	self:FireBulletsPlayer(12, self.eye.pos, GLOBAL_10DEGREES, 80)
 
 	self.nextFire = self:GetNextAttackDelay(1.5)
 	self.nextAltFire = self.nextFire
@@ -196,7 +196,7 @@ function C_Shtgn:Reload()
 
 		if self.isLocal then 
 			self:MDL_PunchAng(Vec(0, 2, -10))
-			PlaySound(self.snds["reload"], self.muzzle)
+			PlaySound(self.snds["reload"], self.muzzlePos)
 		end
 
 		if self.ammoLoaded == 0 then self.pumpTime = -1 end
@@ -219,7 +219,7 @@ function C_Shtgn:Reload()
 
 		self.specialReload = 2
 
-		PlayFireSound(self.snds["load"], self.muzzle)
+		PlayFireSound(self.snds["load"], self.muzzlePos)
 
 		self:MDL_PunchPos(Vec(0, 0.1, 0.1))
 		if self.isLocal then
@@ -268,14 +268,14 @@ function C_Shtgn:WeaponIdle()
 				self:KF_SetAnim(C_Shtgn.ANIM_PUMP)
 			end
 
-			PlaySound(self.snds["pump"], self.muzzle)
+			PlaySound(self.snds["pump"], self.muzzlePos)
 		end
 	end
 end
 
 function C_Shtgn:tickPlayer_cl(dt)
 	if self.pumpTime > 0 and self.pumpTime <= GetTime() then
-		PlaySound(self.snds["pump"], self.muzzle)
+		PlaySound(self.snds["pump"], self.muzzlePos)
 
 		if self.isLocal then
 			self:KF_SetAnim(C_Shtgn.ANIM_PUMP)

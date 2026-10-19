@@ -135,10 +135,10 @@ function baseWeap:initVars(owner)
 	self.owner				= owner
 
 	-- Muzzle position
-	self.muzzle				= Vec()
+	self.muzzlePos			= Vec()
 
 	-- Eye position
-	self.eyePos				= Vec()
+	self.eye				= Transform()
 end
 
 --=========================================================================
@@ -253,6 +253,10 @@ function baseWeap:MDL_CustomAnimate(dt)	  		end -- called every frame, use for a
 function baseWeap:SV_DontFireCond() 	return false end
 function baseWeap:SV_DontFireAltCond()  return true  end -- don't check by default
 
+-- Called when the player dies or the player leaves
+-- (in which case completely will be true)
+function baseWeap:Destroy(completely)			end
+
 --=========================================================================
 -- Always ran shared update/tick func
 -- Should be overriden per weapon
@@ -279,8 +283,8 @@ function baseWeap:tickPlayer_cl(dt)
 	self.ammoTotal  = GetToolAmmo(self.toolID, self.owner)
 
 	local m = GetToolLocationWorldTransform("muzzle", self.owner)
-	self.muzzle	    = m and m.pos or Vec()
-	self.eyePos     = GetPlayerEyeTransform(self.owner).pos
+	self.muzzlePos = m and m.pos or self.muzzlePos
+	self.eye       = GetPlayerEyeTransform(self.owner)
 
 	if self.isLocal then
 		for index, sound in pairs(self.followingSNDS) do
@@ -306,14 +310,19 @@ function baseWeap:tickPlayer_cl(dt)
 		altfireKeyDown = InputDown("grab", self.owner)
 	end
 
+	-- Check if Deploy/Holster code needs ran
 	if not self.holstered then
 		if GetPlayerGrabBody(self.owner) ~= 0 or GetPlayerVehicle(self.owner) ~= 0 then
 			self:BaseHolster()
 			fireKeyDown, altfireKeyDown = false, false
 		end
-	elseif GetPlayerGrabBody(self.owner) == 0 and GetPlayerVehicle(self.owner) == 0 and GetToolBody(self.owner) then
-		-- deploying weapon
-		self:BaseDeploy(curTime)
+	elseif GetPlayerGrabBody(self.owner) == 0 and GetPlayerVehicle(self.owner) == 0 then
+		if self.holstered == 1 then
+			-- deploying weapon
+			self:BaseDeploy(curTime)
+		else
+			self.holstered = 1
+		end
 	end
 
 	if self.inReload and self.nextFire <= curTime then
@@ -392,8 +401,8 @@ function baseWeap:tickPlayer_sv(dt)
 	self.ammoTotal = GetToolAmmo(self.toolID, self.owner)
 
 	local m = GetToolLocationWorldTransform("muzzle", self.owner)
-	self.muzzle	   = m and m.pos or Vec()
-	self.eyePos    = GetPlayerEyeTransform(self.owner).pos
+	self.muzzlePos = m and m.pos or self.muzzlePos
+	self.eye       = GetPlayerEyeTransform(self.owner)
 
 	for index, sound in pairs(self.followingSNDS) do
 		if (sound[2] - curTime) > dt then
@@ -404,13 +413,18 @@ function baseWeap:tickPlayer_sv(dt)
 		end
 	end
 
+	-- Check if Deploy/Holster code needs ran
 	if not self.holstered then
 		if GetPlayerGrabBody(self.owner) ~= 0 or GetPlayerVehicle(self.owner) ~= 0 then
 			self:BaseHolster()
 		end
 	elseif GetPlayerGrabBody(self.owner) == 0 and GetPlayerVehicle(self.owner) == 0 then
-		-- deploying weapon
-		self:BaseDeploy(curTime)
+		-- Wait 1 frame to let old weapon holster
+		if self.holstered == 1 then
+			self:BaseDeploy(curTime)
+		else
+			self.holstered = 1
+		end
 	end
 
 	-- enforce order
@@ -507,7 +521,7 @@ function baseWeap:BaseHolster()
 
 	if server or self.isLocal then
 		-- Reset following sounds
-		for index, sound in pairs(self.followingSNDS) do
+		for _, sound in pairs(self.followingSNDS) do
 			SetSoundLoopProgress(sound[1])
 		end
 
@@ -519,10 +533,8 @@ function baseWeap:BaseHolster()
 
 	self.lastShotInHoldTime = 0.0
 
-	
-
-	self.muzzle = nil -- we set this every frame, just saves memory
-	self.eyePos = nil -- ^^
+	self.muzzlePos = nil -- we set this every frame, just saves memory
+	self.eye 	   = nil -- ^^
 end
 
 function baseWeap:DefaultReload(fDelay)
@@ -924,7 +936,7 @@ function baseWeap:FireBulletsPlayer(shots, pos, spreadRad, range, impulseMult, r
 			end
 		end
 
-		PostEvent("pwb_shot", posUse, hitLocation, pShape, pPlayer, self.dmg_world, self.dmg_plyr)
+		PostEvent("pwb_shot", posUse, hitLocation, pShape, playerhit, self.dmg_world, self.dmg_plyr)
 	end
 
 	-- Reset seed AFTER using it on both server and client

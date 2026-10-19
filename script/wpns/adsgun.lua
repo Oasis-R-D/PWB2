@@ -111,15 +111,15 @@ function C_ADSgun:PrimaryAttack(dt)
 			self:MDL_PunchPos(Vec(GetRandomFloat(-0.05, 0.05), GetRandomFloat(0.0, 0.025), GetRandomFloat(0.05, 0.1)))
 		end
 
-		self:muzzleFlash(self.muzzle, 0.4)
+		self:muzzleFlash(self.muzzlePos, 0.4)
 	else
-		PlayFireSound(self.snds["fire"], self.muzzle, 300)
+		PlayFireSound(self.snds["fire"], self.muzzlePos, 300)
 	end
 
 	baseWeap.DepleteAmmo(self, 1, 1)
 
 	local inAds = (server and self.ads) or (client and client.PWB_ANIMATOR[self.owner].forceSecondaryActionPose)
-	self:FireBulletsPlayer(1, self.eyePos, inAds and GLOBAL_1DEGREE or GLOBAL_3DEGREES, 100)
+	self:FireBulletsPlayer(1, self.eye.pos, inAds and GLOBAL_1DEGREE or GLOBAL_3DEGREES, 100)
 
 	self.nextFire = self:GetNextAttackDelay(0.133)
 end
