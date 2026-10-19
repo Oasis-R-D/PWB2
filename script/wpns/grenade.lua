@@ -14,8 +14,8 @@ C_GREN.toolName = "PWB2 Grenade"  -- Shown in killfeed
 C_GREN.toolSlot = 4
 C_GREN.toolPos  = 3			   -- placement in the hud column
 
-C_GREN.ammoLoadedMax    = -1				 -- Max clip 	 	-- -1 for no clip (pulls from reserve)
-C_GREN.ammoAltLoadedMax = 0 				 -- Max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
+C_GREN.ammoLoadedMax    = WEAPON_NOCLIP		 -- Max clip 	 	-- -1 for no clip (pulls from reserve)
+C_GREN.ammoAltLoadedMax = WEAPON_NOALTAMMO 	 -- Max alt clip 	-- -1 for no clip (pulls from reserve)
 C_GREN.ammoPickupSize   = 5					 -- Defaults to full mag
 
 C_GREN.flags = addFlags(0, FWPN_SV_CALLONCE_PRIM,

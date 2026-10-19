@@ -35,10 +35,11 @@ C_Melee.toolName = "PWB2 Melee" -- Shown in killfeed
 C_Melee.toolSlot = 1
 C_Melee.toolPos	 = 1			-- placement in the hud column
 
-C_Melee.ammoLoadedMax  = -1   -- Max clip 	 -- -1 for no clip (pulls from reserve)
-C_Melee.ammoPickupSize = 9999 -- Defaults to full mag
-C_Melee.dmg_world	   = 0.4  -- Size of hole in meters
-C_Melee.dmg_plyr	   = 0.05 -- 0.0-1.0
+C_Melee.ammoLoadedMax    = -1   			-- Max clip 	 -- -1 for no clip (pulls from reserve)
+C_Melee.ammoAltLoadedMax = WEAPON_NOALTAMMO -- Max alt clip 	-- -1 for no clip (pulls from reserve)
+C_Melee.ammoPickupSize   = 9999 			-- Defaults to full mag
+C_Melee.dmg_world	     = 0.4  			-- Size of hole in meters
+C_Melee.dmg_plyr	     = 0.05 			-- 0.0-1.0
 
 C_Melee.flags = addFlags(0, FWPN_NOALTACTIONPOSE) -- weapon flags
 C_Melee.snds  = 0 -- Prechached SFX list, set on INIT

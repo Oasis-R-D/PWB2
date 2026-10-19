@@ -16,7 +16,7 @@ C_Gun.toolSlot = 3
 C_Gun.toolPos  = 1			-- placement in the hud column
 
 C_Gun.ammoLoadedMax    = 45					 -- Max clip 	 	-- -1 for no clip (pulls from reserve)
-C_Gun.ammoAltLoadedMax = 3 				 	 -- Max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
+C_Gun.ammoAltLoadedMax = 3 				 	 -- Max alt clip 	-- -1 for no clip (pulls from reserve)
 C_Gun.ammoPickupSize   = C_Gun.ammoLoadedMax -- Defaults to full mag
 C_Gun.dmg_world		   = 0.4				 -- Size of hole in meters
 C_Gun.dmg_plyr		   = 0.05				 -- 0.0-1.0

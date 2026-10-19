@@ -14,6 +14,10 @@ end
 -- CONSTANTS
 ----------------------------------------------------------------------------------------------
 
+-- WEAPON CONSTANTS
+WEAPON_NOALTAMMO = 0
+WEAPON_NOCLIP    = -1
+
 -- WEAPON FLAGS
 -- To apply weapon flags on init using x.flags, use addFlags() to 
 -- add multiple or direct set x.flags to the flag if it's just the 1 flag.
@@ -32,15 +36,13 @@ FWPN_SV_CALLONCE_SEC  = leftShift(4) -- Does 1 servercall every secondary fire i
 FWPN_NOAUTORELOAD    = leftShift(5) -- Don't automatically start reloading weapon on empty
 FWPN_NOALTACTIONPOSE = leftShift(6) -- Don't automatically do the action animation when holding grab
 
-
 -- TEMP ENT IMPACT SFX
 FSFX_NONE  = 0
 FSFX_BRASS = leftShift(0)
 FSFX_SHTGN = leftShift(1)
--- more for material types but we don't have func_breakable here
 
 -- ENT FLAGS
-FENT_NONE = 0
+FENT_NONE        = 0
 FENT_FAKEPHYSICS = leftShift(0) -- Use GoldSRC physics instead of TD. Can be changed at any time (must give model physical tag!)
 ----------------------------------------------------------------------------------------------
 -- hacky bit operators (ONLY TAKES POWER OF 2! [otherwise these'd be very expensive])

@@ -17,7 +17,7 @@ C_DB.toolSlot = 4
 C_DB.toolPos  = 1			   		   -- placement in the hud column
 
 C_DB.ammoLoadedMax 	  = 4				   -- Max clip 	 	-- -1 for no clip (pulls from reserve)
-C_DB.ammoAltLoadedMax = 0 				   -- Max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
+C_DB.ammoAltLoadedMax = WEAPON_NOALTAMMO   -- Max alt clip 	-- -1 for no clip (pulls from reserve)
 C_DB.ammoPickupSize	  = C_DB.ammoLoadedMax -- Defaults to full mag
 C_DB.dmg_world		  = 0.35			   -- Size of hole in meters
 C_DB.dmg_plyr		  = 0.15			   -- 0.0-1.0

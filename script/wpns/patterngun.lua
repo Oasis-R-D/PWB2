@@ -16,7 +16,7 @@ C_PattGun.toolSlot = 3
 C_PattGun.toolPos  = 4					  -- placement in the hud column
 
 C_PattGun.ammoLoadedMax    = 30					  	 -- Max clip 	 	-- -1 for no clip (pulls from reserve)
-C_PattGun.ammoAltLoadedMax = 0 				 	  	 -- Max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
+C_PattGun.ammoAltLoadedMax = WEAPON_NOALTFIRE		 -- Max alt clip 	-- -1 for no clip (pulls from reserve)
 C_PattGun.ammoPickupSize   = C_PattGun.ammoLoadedMax -- Defaults to full mag
 C_PattGun.dmg_world		   = 0.1				     -- Size of hole in meters
 C_PattGun.dmg_plyr		   = 0.31				   	 -- 0.0-1.0

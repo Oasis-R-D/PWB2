@@ -28,7 +28,7 @@ baseWeap.toolSlot = 0
 baseWeap.toolPos  = -1 				 -- placement in the hud column
 
 baseWeap.ammoLoadedMax 	  = 0						-- Max clip 	 	-- -1 for no clip (pulls from reserve)
-baseWeap.ammoAltLoadedMax = 0 						-- Max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
+baseWeap.ammoAltLoadedMax = 0 						-- Max alt clip 	-- -1 for no clip (pulls from reserve)
 baseWeap.ammoPickupSize	  = baseWeap.ammoLoadedMax	-- Defaults to full mag
 baseWeap.dmg_world		  = 0						-- Size of hole in meters
 baseWeap.dmg_plyr		  = 0						-- 0.0-1.0  
@@ -42,8 +42,6 @@ baseWeap.recoilAngDamp	 = 9   -- bigger number makes the response more damped, s
 							   -- currently the system will overshoot, with larger damping values it won't
 
 baseWeap.anims = {} -- Table of keyframed weapon animations. Override this inside of a anim file in wpns/anims (see testanim.lua)
-
-local WEAPON_NOCLIP = -1
 
 -----------------------------------------------------------
 -- Values that ALL weapons share/use

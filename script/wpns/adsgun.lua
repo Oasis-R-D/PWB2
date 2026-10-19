@@ -16,8 +16,7 @@ C_ADSgun.toolSlot = 3
 C_ADSgun.toolPos  = 3		   -- placement in the hud column
 
 C_ADSgun.ammoLoadedMax 	  = 30					   -- Max clip 	 	-- -1 for no clip (pulls from reserve)
-C_ADSgun.ammoAltLoadedMax = 0 					   -- Max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
-C_ADSgun.ammoAltItemID	  = 0 					   -- WpnID of item to drain ammo for when altfiring
+C_ADSgun.ammoAltLoadedMax = WEAPON_NOALTFIRE	   -- Max alt clip 	-- -1 for no clip (pulls from reserve)
 C_ADSgun.ammoPickupSize	  = C_ADSgun.ammoLoadedMax -- Defaults to full mag
 C_ADSgun.dmg_world		  = 0.5					   -- Size of hole in meters
 C_ADSgun.dmg_plyr		  = 0.16				   -- 0.0-1.0

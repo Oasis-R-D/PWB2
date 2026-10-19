@@ -15,7 +15,7 @@ C_Shtgn.toolSlot = 3
 C_Shtgn.toolPos	 = 2			  -- placement in the hud column
 
 C_Shtgn.ammoLoadedMax 	 = 8				     -- Max clip 	 	-- -1 for no clip (pulls from reserve)
-C_Shtgn.ammoAltLoadedMax = 0 					 -- Max alt clip 	-- -1 for no clip (pulls from reserve) 0 for no alt fire
+C_Shtgn.ammoAltLoadedMax = WEAPON_NOALTAMMO 	 -- Max alt clip 	-- -1 for no clip (pulls from reserve)
 C_Shtgn.ammoPickupSize	 = C_Shtgn.ammoLoadedMax -- Defaults to full mag
 C_Shtgn.dmg_world		 = 0.35					 -- Size of hole in meters
 C_Shtgn.dmg_plyr		 = 0.1					 -- 0.0-1.0
