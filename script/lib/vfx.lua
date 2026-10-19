@@ -214,9 +214,12 @@ function client.FOV_Apply(dt)
 	local baseFOV = GetFloat("options.gfx.fov")
 	if not FOV_cur then FOV_cur = baseFOV end
 
+	-- This should fix PWB2 mods conflicting
+	-- However making this a separate module would be more performant
+	if FOV_cur == baseFOV then return end
+
 	local diff = math.abs(FOV_cur - (baseFOV*FOV_mult))
-	local FOV_new = Lerp(FOV_cur, baseFOV*FOV_mult, diff * 0.5 * dt + dt)
-	FOV_cur = FOV_new
+	FOV_cur = Lerp(FOV_cur, baseFOV*FOV_mult, diff * 0.5 * dt + dt)
 
 	SetCameraFov(FOV_cur)
 end
