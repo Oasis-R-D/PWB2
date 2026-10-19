@@ -68,7 +68,10 @@ end
 function C_ADSgun:Holster()
 	if client then
 		client.PWB_ANIMATOR[self.owner].forceSecondaryActionPose = false
-		if self.isLocal then client.FOV_set(1) end
+		if self.isLocal then 
+			client.FOV_set(1)
+			client.PWB_ANIMATOR[self.owner].swayMult = 1.0
+		end
 	else
 		self.ads = false
 	end
@@ -150,11 +153,15 @@ function C_ADSgun:SecondaryAttack(dt, ads)
 		if self.isLocal then
 			self:ServerWpnCall("SecondaryAttack", dt, ads)
 			if ads then
+				client.PWB_ANIMATOR[self.owner].swayMult = 0.01
+
 				client.FOV_set(0.9)
 
 				self:MDL_PunchAngReset()
 				self:MDL_PunchAng(Vec(-1, 0, 0.5))
 			else
+				client.PWB_ANIMATOR[self.owner].swayMult = 1.0
+
 				client.FOV_set(1)
 
 				self:MDL_PunchAngReset()

@@ -209,6 +209,7 @@ end
 
 local FOV_cur = nil
 local FOV_mult = 1
+local FOV_changeTime = 0.001 ^ (1.0 / 0.25 --[[TIME]])
 
 function client.FOV_Apply(dt)
 	local baseFOV = GetFloat("options.gfx.fov")
@@ -218,8 +219,8 @@ function client.FOV_Apply(dt)
 	-- However making this a separate module would be more performant
 	if FOV_cur == baseFOV and FOV_mult == 1 then return end
 
-	local diff = math.abs(FOV_cur - (baseFOV*FOV_mult))
-	FOV_cur = Lerp(FOV_cur, baseFOV*FOV_mult, diff * 0.5 * dt + dt)
+	FOV_cur = Lerp(FOV_cur, baseFOV*FOV_mult, 1 - FOV_changeTime ^ dt)
+	FOV_cur = math.ceil(FOV_cur*100)/100
 
 	SetCameraFov(FOV_cur)
 end
