@@ -216,7 +216,7 @@ function client.FOV_Apply(dt)
 
 	-- This should fix PWB2 mods conflicting
 	-- However making this a separate module would be more performant
-	if FOV_cur == baseFOV then return end
+	if FOV_cur == baseFOV and FOV_mult == 1 then return end
 
 	local diff = math.abs(FOV_cur - (baseFOV*FOV_mult))
 	FOV_cur = Lerp(FOV_cur, baseFOV*FOV_mult, diff * 0.5 * dt + dt)
