@@ -200,10 +200,17 @@ function server.tick(dt)
       for i=1, GLOBAL_WEAPONS_AMNT do
          local wpnPlyr = wpns[i]
 
+         if wpnPlyr.holstered == false and tool ~= wpnPlyr.toolID then
+            wpnPlyr:BaseHolster()
+            break
+         end
+      end
+
+      for i=1, GLOBAL_WEAPONS_AMNT do
+         local wpnPlyr = wpns[i]
+
          if tool == wpnPlyr.toolID then
             wpnPlyr:tickPlayer_sv(dt)
-         elseif wpnPlyr.holstered == false then
-            wpnPlyr:BaseHolster()
          end
 
          wpnPlyr:Tick(dt)
@@ -266,12 +273,20 @@ function client.tick(dt)
 
    for p, wpns in pairs(GLOBAL_PLYR_WEAPONS) do
       local tool = GetPlayerTool(p)
+
+      for i=1, GLOBAL_WEAPONS_AMNT do
+         local wpnPlyr = wpns[i]
+
+         if wpnPlyr.holstered == false and tool ~= wpnPlyr.toolID then
+            wpnPlyr:BaseHolster()
+            break
+         end
+      end
+
       for i=1, GLOBAL_WEAPONS_AMNT do
          local wpnPlyr = wpns[i]
          if tool == wpnPlyr.toolID then
             wpnPlyr:tickPlayer_cl(dt)
-         elseif wpnPlyr.holstered == false then
-            wpnPlyr:BaseHolster()
          end
 
          wpnPlyr:Tick(dt)
@@ -313,10 +328,9 @@ function client.update(dt)
       end
    end
 
-   local tool = GetPlayerTool()
    local wpns = GLOBAL_PLYR_WEAPONS[GetLocalPlayer()]
    for i=1, GLOBAL_WEAPONS_AMNT do
-      if tool == wpns[i].toolID then
+      if not wpns[i].holstered then
          wpns[i]:KF_Advance(dt)
          break
       end
@@ -339,11 +353,10 @@ end
 function client.draw()
    if DontDraw() then return end
 
-   local tool = GetPlayerTool()
    local wpns = GLOBAL_PLYR_WEAPONS[GetLocalPlayer()]
 
    for i=1, GLOBAL_WEAPONS_AMNT do
-      if tool == wpns[i].toolID then
+      if not wpns[i].holstered then
          wpns[i]:DrawHUD()
          break
       end

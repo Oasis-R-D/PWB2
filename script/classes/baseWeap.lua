@@ -315,12 +315,8 @@ function baseWeap:tickPlayer_cl(dt)
 			fireKeyDown, altfireKeyDown = false, false
 		end
 	elseif GetPlayerGrabBody(self.owner) == 0 and GetPlayerVehicle(self.owner) == 0 then
-		if self.holstered == 1 then
-			-- deploying weapon
-			self:BaseDeploy(curTime)
-		else
-			self.holstered = 1
-		end
+		-- deploying weapon
+		self:BaseDeploy(curTime)
 	end
 
 	if self.inReload and self.nextFire <= curTime then
@@ -417,12 +413,8 @@ function baseWeap:tickPlayer_sv(dt)
 			self:BaseHolster()
 		end
 	elseif GetPlayerGrabBody(self.owner) == 0 and GetPlayerVehicle(self.owner) == 0 then
-		-- Wait 1 frame to let old weapon holster
-		if self.holstered == 1 then
-			self:BaseDeploy(curTime)
-		else
-			self.holstered = 1
-		end
+		-- deploying weapon
+		self:BaseDeploy(curTime)
 	end
 
 	-- enforce order
@@ -1057,6 +1049,7 @@ end
 -- length should be the duration of the sound
 -- (feel free to clip off some decimals so it won't overshoot)
 function baseWeap:PlayFollowingSound(loop, length)
+	SetSoundLoopProgress(loop, 0)
 	self.followingSNDS[#self.followingSNDS + 1] = {loop, (GetTime() + length)}
 end
 
