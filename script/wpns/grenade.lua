@@ -97,6 +97,8 @@ function C_GREN:Throw(time)
         angles = VecScale(VecNormalize(angles), GetRandomFloat(-8, 8))
 
 	    E_Gren.Throw(self.muzzlePos, angles, vecThrow, time, self.owner)
+
+		baseWeap.DepleteAmmo(self, 1)
     else
         E_Gren.Throw()
 
