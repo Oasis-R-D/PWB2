@@ -528,7 +528,7 @@ function baseWeap:BaseHolster()
 end
 
 function baseWeap:DefaultReload(fDelay)
-	if self.ammoTotal <= 0 then return false end
+	if self.ammoTotal <= 0 or self.ammoTotal == self.ammoLoaded then return false end
 
 	local j = math.min(self.ammoLoadedMax - self.ammoLoaded, self.ammoTotal)
 	if j <= 0 then return false end
